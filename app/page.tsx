@@ -8,6 +8,7 @@ import { FileText, Building2, Video } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { BaseWindow } from "./components/base-window";
 import { MDXContent } from "./components/mdx-content";
+import { CommandPalette } from "./components/command-palette";
 
 export type BlogPost = {
   metadata: {
@@ -55,11 +56,25 @@ export default function Page() {
   const [finderWindows, setFinderWindows] = useState<FinderWindowState[]>([]);
   const [nextZIndex, setNextZIndex] = useState(1000);
   const [posts, setPosts] = useState<BlogPost[]>([]);
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
 
   useEffect(() => {
     fetch("/api/posts")
       .then((res) => res.json())
       .then((data) => setPosts(data));
+  }, []);
+
+  // Cmd+K keyboard shortcut
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        setIsCommandPaletteOpen(true);
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
   }, []);
 
   const openWindow = (post: BlogPost) => {
@@ -219,6 +234,12 @@ export default function Page() {
             </div>
             <div>{new Date().toLocaleTimeString()}</div>
             <div>{new Date().toLocaleDateString()}</div>
+            <div className="flex items-center space-x-1">
+              <span>Search by</span>
+              <kbd className="px-2 py-1 rounded bg-gray-800 text-gray-300 text-xs">
+                ⌘K
+              </kbd>
+            </div>
           </div>
         </div>
       </div>
@@ -240,17 +261,17 @@ export default function Page() {
           chungtin.eth
         </h1>
         <p className="mb-4">
-          i am a perpetual student of the digital realm, driven by an insatiable
+          I am a perpetual student of the digital realm, driven by an insatiable
           thirst for understanding the fundamental architectures that shape our
           technological future.
           <br />
           <br />
-          my journey centers on the profound intersection of systems programming
+          My journey centers on the profound intersection of systems programming
           and distributed paradigms—where complexity meets elegance, and where
           the very foundations of computation reveal their deepest truths.
           <br />
           <br />
-          my deepest admiration lies with the open source movement—a testament
+          My deepest admiration lies with the open source movement—a testament
           to humanity's capacity for collaborative creation and the
           democratization of knowledge itself.
         </p>
@@ -349,6 +370,8 @@ export default function Page() {
                 title={finderData.title}
                 items={finderData.items}
                 onClose={() => closeFinderWindow(window.id)}
+                onFocus={() => bringFinderToFront(window.id)}
+                zIndex={window.zIndex}
                 initialPosition={window.position}
                 initialSize={window.size}
               />
@@ -365,6 +388,8 @@ export default function Page() {
               key={window.id}
               company={companies[window.companyId]}
               onClose={() => closeCompanyWindow(window.id)}
+              onFocus={() => bringCompanyToFront(window.id)}
+              zIndex={window.zIndex}
               initialPosition={window.position}
               initialSize={window.size}
             />
@@ -382,6 +407,8 @@ export default function Page() {
               onClose={() => closeWindow(window.id)}
               onMinimize={() => minimizeWindow(window.id)}
               onRestore={() => restoreWindow(window.id)}
+              onFocus={() => bringToFront(window.id)}
+              zIndex={window.zIndex}
               initialPosition={window.position}
               initialSize={window.size}
             >
@@ -471,6 +498,16 @@ export default function Page() {
           </div>
         </div>
       )}
+
+      {/* Command Palette */}
+      <CommandPalette
+        isOpen={isCommandPaletteOpen}
+        onClose={() => setIsCommandPaletteOpen(false)}
+        onBlogPostClick={openWindow}
+        onCompanyClick={openCompanyWindow}
+        onFinderClick={openFinderWindow}
+        blogPosts={posts}
+      />
     </div>
   );
 }

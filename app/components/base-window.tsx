@@ -9,6 +9,8 @@ interface BaseWindowProps {
   onClose: () => void;
   onMinimize?: () => void;
   onRestore?: () => void;
+  onFocus?: () => void;
+  zIndex?: number;
   initialPosition?: { x: number; y: number };
   initialSize?: { width: number; height: number };
 }
@@ -19,6 +21,8 @@ export function BaseWindow({
   onClose,
   onMinimize,
   onRestore,
+  onFocus,
+  zIndex = 50,
   initialPosition = { x: 200, y: 200 },
   initialSize = { width: 800, height: 600 },
 }: BaseWindowProps) {
@@ -264,7 +268,7 @@ export function BaseWindow({
         top: position.y,
         width: size.width,
         height: size.height,
-        zIndex: isMaximized ? 9999 : 50,
+        zIndex: isMaximized ? 9999 : zIndex,
         willChange: isDragging || isResizing ? "transform" : "auto",
         backgroundColor: "#0d1117",
         border: "1px solid #21262d",
@@ -302,6 +306,7 @@ export function BaseWindow({
         scale: 0.98,
         transition: { duration: 0.1 },
       }}
+      onClick={() => onFocus?.()}
     >
       {/* Window Header */}
       <div

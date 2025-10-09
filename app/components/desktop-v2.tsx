@@ -1,7 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { FolderOpen, Building2, Video } from "lucide-react";
+import { apps, getFinderApps } from "./app-registry";
+
+// Helper function to adjust color brightness
+const adjustColor = (color: string, amount: number): string => {
+  const hex = color.replace("#", "");
+  const r = Math.max(0, Math.min(255, parseInt(hex.substr(0, 2), 16) + amount));
+  const g = Math.max(0, Math.min(255, parseInt(hex.substr(2, 2), 16) + amount));
+  const b = Math.max(0, Math.min(255, parseInt(hex.substr(4, 2), 16) + amount));
+  return `#${r.toString(16).padStart(2, "0")}${g
+    .toString(16)
+    .padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
+};
 
 interface DesktopApp {
   id: string;
@@ -26,31 +37,15 @@ export function Desktop({
 }: DesktopProps) {
   const [selectedApp, setSelectedApp] = useState<string | null>(null);
 
-  // Create desktop apps with better icon designs
-  const desktopApps: DesktopApp[] = [
-    // Finder Apps
-    {
-      id: "blogs-finder",
-      name: "Blogs",
-      icon: FolderOpen,
-      type: "finder",
-      onClick: () => onFinderClick("blogs"),
-    },
-    {
-      id: "companies-finder",
-      name: "Companies",
-      icon: Building2,
-      type: "finder",
-      onClick: () => onFinderClick("companies"),
-    },
-    {
-      id: "videos-finder",
-      name: "Videos",
-      icon: Video,
-      type: "finder",
-      onClick: () => onFinderClick("videos"),
-    },
-  ];
+  // Create desktop apps from registry
+  const desktopApps: DesktopApp[] = getFinderApps().map((app) => ({
+    id: `${app.id}-finder`,
+    name: app.name,
+    icon: app.icon,
+    type: "finder" as const,
+    color: app.color,
+    onClick: () => onFinderClick(app.finderType!),
+  }));
 
   const handleAppClick = (app: DesktopApp) => {
     setSelectedApp(app.id);
@@ -80,7 +75,12 @@ export function Desktop({
                 style={{
                   width: "50px",
                   height: "50px",
-                  background: `linear-gradient(145deg, #1a1a1a, #2a2a2a)`,
+                  background: app.color
+                    ? `linear-gradient(145deg, ${app.color}, ${adjustColor(
+                        app.color,
+                        -20
+                      )})`
+                    : `linear-gradient(145deg, #1a1a1a, #2a2a2a)`,
                   boxShadow:
                     selectedApp === app.id
                       ? `0 20px 40px rgba(0,0,0,0.6), 0 8px 16px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1)`
@@ -114,7 +114,7 @@ export function Desktop({
                   size={25}
                   className="relative z-10"
                   style={{
-                    color: "white",
+                    color: app.color ? "white" : "white",
                     filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.4))",
                   }}
                 />

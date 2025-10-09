@@ -31,6 +31,8 @@ interface FinderWindowProps {
   title: string;
   items: FileItem[];
   onClose: () => void;
+  onFocus?: () => void;
+  zIndex?: number;
   initialPosition?: { x: number; y: number };
   initialSize?: { width: number; height: number };
 }
@@ -39,6 +41,8 @@ export function FinderWindow({
   title,
   items,
   onClose,
+  onFocus,
+  zIndex,
   initialPosition = { x: 200, y: 200 },
   initialSize = { width: 800, height: 600 },
 }: FinderWindowProps) {
@@ -53,6 +57,8 @@ export function FinderWindow({
     <BaseWindow
       title={title}
       onClose={onClose}
+      onFocus={onFocus}
+      zIndex={zIndex}
       initialPosition={initialPosition}
       initialSize={initialSize}
     >
