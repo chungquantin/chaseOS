@@ -8,7 +8,7 @@ summary: "breakdown post for the architecture of Tanssi as a parachain of the Po
 authors: ["default"]
 ---
 
-![Tanssi Network Visualization](/static/images/tanssi-network-1.jpeg)
+![Tanssi Network Visualization](/blog/tanssi-network-1.jpeg)
 
 ## Adding new feature to runtime is easy, but running an infrastructure isn't.
 
@@ -57,13 +57,13 @@ Let's learn how they do that.
 
 Actually, I don't know if saying "Container as a Service" is a right term to say :D so just make an assumption and hope that someone will correct it. ContainerChain is a core part of the Tanssi's AppChain infrastructure.
 
-![Tanssi Network Visualization](/static/images/tanssi-network-2.jpeg)
+![Tanssi Network Visualization](/blog/tanssi-network-2.jpeg)
 
 Deploying a new AppChain (this deployment process most of the time can be handle through the portal made by Tanssi with the submission of the runtime WASM code) on Tanssi Dancebox (a testnet of the Tanssi Network) will launch a new Tanssi-specialized Parachain (I make it up) or ContainerChain.
 
 This new blockchain that contains your submitted runtime code functions exactly like a Parachain because the ContainerChain is does assigned to the execution core of the Polkadot protocol. The difference between the normal approach and this Tanssi's approach is that you don't have to care about setting up the collator infrastructure for block production. Instead, ContainerChain will be assigned with a set of block producers from the decentralized block producer infrastructure of the Tanssi network.
 
-![Tanssi Network Visualization](/static/images/tanssi-network-3.jpeg)
+![Tanssi Network Visualization](/blog/tanssi-network-3.jpeg)
 
 - Block production: AppChain relies on the mentioned decentralized infrastructure of Tanssi for authoring new block. Tanssi Dancebox acts as the role of OrchestratorChain - the blockchain that keeps the records of the registered ContainerChains. Reference: https://github.com/moondance-labs/tanssi/blob/master/pallets/collator-assignment/src/lib.rs
 - Block finalization: And similar to any Parachain, the collation process happens and sending blocks to the Relaychain for finalizing new block to the global state.
@@ -84,4 +84,4 @@ The first mechanism is the Invulnerables module, which provides a fixed list of 
 
 The second mechanism is the Tanssi staking module. This module helps create a decentralized set of block producers for Tanssi and its appchains by generating a sorted list of block producers based on their staked amounts. Tanssi then appends this sorted list to any invulnerable block producers (if applicable) and begins the block producer assignment process.
 
-![Tanssi Network Visualization](/static/images/tanssi-network-4.jpeg)
+![Tanssi Network Visualization](/blog/tanssi-network-4.jpeg)

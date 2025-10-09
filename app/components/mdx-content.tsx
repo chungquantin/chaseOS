@@ -20,40 +20,62 @@ export function MDXContent({ content }: MDXContentProps) {
           components={{
             // Custom components for better styling
             h1: ({ children }) => (
-              <h1 className="text-3xl font-bold mt-8 mb-4 text-white">
+              <h1
+                className="text-3xl font-bold mt-8 mb-4"
+                style={{ color: "#f0f6fc" }}
+              >
                 {children}
               </h1>
             ),
             h2: ({ children }) => (
-              <h2 className="text-2xl font-bold mt-6 mb-4 text-white">
+              <h2
+                className="text-2xl font-bold mt-6 mb-4"
+                style={{ color: "#f0f6fc" }}
+              >
                 {children}
               </h2>
             ),
             h3: ({ children }) => (
-              <h3 className="text-xl font-semibold mt-4 mb-3 text-white">
+              <h3
+                className="text-xl font-semibold mt-4 mb-3"
+                style={{ color: "#f0f6fc" }}
+              >
                 {children}
               </h3>
             ),
             h4: ({ children }) => (
-              <h4 className="text-lg font-semibold mt-3 mb-2 text-white">
+              <h4
+                className="text-lg font-semibold mt-3 mb-2"
+                style={{ color: "#f0f6fc" }}
+              >
                 {children}
               </h4>
             ),
             p: ({ children }) => (
-              <p className="mb-4 text-gray-200 leading-relaxed">{children}</p>
+              <p className="mb-4 leading-relaxed" style={{ color: "#e6edf3" }}>
+                {children}
+              </p>
             ),
             a: ({ href, children }) => (
               <a
                 href={href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-green-400 hover:text-green-300 hover:underline font-medium"
+                className="hover:underline font-medium"
+                style={{ color: "#58a6ff" }}
               >
                 {children}
               </a>
             ),
             blockquote: ({ children }) => (
-              <blockquote className="border-l-4 border-green-500 pl-4 italic my-4 text-gray-300 bg-gray-900 py-2 rounded-r">
+              <blockquote
+                className="pl-4 italic my-4 py-2 rounded-r"
+                style={{
+                  borderLeft: "4px solid #58a6ff",
+                  backgroundColor: "#161b22",
+                  color: "#8b949e",
+                }}
+              >
                 {children}
               </blockquote>
             ),
@@ -61,7 +83,13 @@ export function MDXContent({ content }: MDXContentProps) {
               const isInline = !className;
               if (isInline) {
                 return (
-                  <code className="bg-gray-900 px-1 py-0.5 rounded text-sm font-mono text-green-400">
+                  <code
+                    className="px-1 py-0.5 rounded text-sm font-mono"
+                    style={{
+                      backgroundColor: "#161b22",
+                      color: "#f85149",
+                    }}
+                  >
                     {children}
                   </code>
                 );
@@ -69,7 +97,13 @@ export function MDXContent({ content }: MDXContentProps) {
               return <code className={className}>{children}</code>;
             },
             pre: ({ children }) => (
-              <pre className="bg-gray-900 p-4 rounded-lg overflow-x-auto my-4 border border-gray-800">
+              <pre
+                className="p-4 rounded-lg overflow-x-auto my-4"
+                style={{
+                  backgroundColor: "#161b22",
+                  border: "1px solid #21262d",
+                }}
+              >
                 {children}
               </pre>
             ),
