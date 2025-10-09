@@ -1,0 +1,125 @@
+---
+title: "Hitchhiker's Guide to Upgrading Polkadot SDK-based Codebases"
+publishedAt: "2024-09-22"
+tags: ["polkadot", "substrate", "technical"]
+draft: false
+blogIndexInclude: true
+summary: "This guide is designed to serve as a reference for Substrate engineers tasked with performing these complex upgrades"
+authors: ["default"]
+---
+
+Upgrading a Substrate-based or parachain blockchain codebase can be a daunting task for even the most seasoned engineers. The challenge doesn’t just lie in keeping up with the latest releases of the **Polkadot SDK**, but also in dealing with the inevitable breaking changes and regressions that occur in Substrate’s underlying libraries—issues that aren’t necessarily the fault of your own code.
+
+This guide is designed to serve as a reference for Substrate engineers tasked with performing these complex upgrades. Drawing on lessons learned from upgrading the _pop-node (Pop Network)_ codebase from **version 1.7.0 to stable2407**—an eight-version leap—this article will walk you through the process, sharing tips and tricks to smooth out the upgrade path.
+
+- **Upgrade 1.7.0 → 1.14.0**: [pop-node PR #178](https://github.com/r0gue-io/pop-node/pull/178)
+
+- **Upgrade 1.14.0 → stable2407**: [pop-node PR #234](https://github.com/r0gue-io/pop-node/pull/234)
+
+Tools that you definitely need for an upgrade
+
+- **psvm**: [Polkadot SDK Version Manager](https://github.com/paritytech/psvm/) - Essential tool for managing Substrate dependencies
+
+You won't know how painful it is without `psvm` so always remember that there is a tool exists. `psvm` helps to manage all your Substrate dependencies in synced together with the provided version. With just one command and you are ready to go:
+
+```zsh
+psvm -v "1.14.0"
+```
+
+- **zepter**: [Rust Workspace Analyzer](https://github.com/ggwpez/zepter) - Automatically analyze, fix, and format Rust features
+
+Another useful tool from Parity contribute to Rust & Polkadot ecosystem. Sometimes you don't know which features that you are missing after version bumps from running psvm or which features that are deprecated. So it is smarter to have a tool handle that for you.
+
+## Steps for the codebase upgrade
+
+### Step 1: Running psvm to bump version of [Polkadot SDK](https://github.com/paritytech/polkadot-sdk) dependencies
+
+Running psvm command to bump versions of your codebase dependencies. Notice that this tool only cover dependencies under the Polkadot SDK repository.
+
+Other crates are not covered by it so you will have to handle version bumps for these crates manually, don't worry, most of the time, there won't be any issues if you don't handle an upgrade for these crates. But what happen if there is an unexpected conflicts in these crates?
+
+### Step 2: Check & synchronize with the Polkadot SDK Release Changelog
+
+- **Polkadot SDK Releases**: [Official Release Page](https://github.com/paritytech/polkadot-sdk/releases) - Track all version updates and changelogs
+
+As an open-source repository, every new update of Polkadot SDK is gathered in a release page on the Github repository. You can check the link that I attach above. So as an user of the Polkadot SDK, how can you use this release page for your upgrade?
+
+1. First, you will need to find the release of a version you are upgrading to, for example, if you are upgrading to 1.9.0, you will need to find [Polkadot v1.9.0 Release](https://github.com/paritytech/polkadot-sdk/releases/tag/polkadot-v1.9.0)
+
+2. Now take a look at the Changelog section of the release.
+
+![Upgrade Polkadot Version](/blog/upgrade-polkadot-version-1.png)
+
+The Changelog section includes two two sub-sections
+
+#### **Changelog for `Node Dev`**
+
+This section focuses on changes related to node development. If your node doesn't have any significant updates, you can typically follow the release changelog and address any adjustments for your node accordingly.
+
+However, if there are critical changes, it's important to carefully evaluate this section. Ensure that core node functionalities, such as node handshaking, P2P networking, and the underlying database, are thoroughly reviewed and remain intact.
+
+> If you've replaced your existing node with the **omni-node**, you likely won't need to make any changes to the node at all.
+
+#### **Changelog for `Runtime Dev`**
+
+Similarly, this section covers changes related to runtime development. It includes updates such as new pallet configurations, added features, or new storage fields within the pallet. All runtime-related modifications will be addressed here.
+
+It's important to note that changes to the runtime must be thoroughly reviewed. If anything is incorrect, such as using the wrong data type for a storage field, a runtime migration will be required to fix the issue. This is more complicated than the node case, as you just need to replace the binary of the node if there is something wrong happens.
+
+However, changes to the runtime layer are usually straightforward, often limited to pallet configurations or the runtime API. As a result, they tend to be easier to review and apply compared to node-level changes, which are more complex.
+
+### Step 3: Compare changes with an existing up-to-date codebase
+
+Having an existing example to compare reduces bugs and unrecognized changes a lot during this process, so you better find an existing codebase that is already updated to the version that you are working on.
+
+In R0GUE, we reference from a repository `base-parachain` which is used as a template for `pop-cli` - a tool for seamless Polkadot development.
+
+- **Reference PR**: [base-parachain upgrade to 1.14.0](https://github.com/r0gue-io/base-parachain/pull/41) - Compare changes when upgrading to 1.14.0
+
+![Upgrade Polkadot Version](/blog/upgrade-polkadot-version-2.png)
+
+- One official source is the Polkadot SDK template. You can visit Polkadot SDK > Select the version tag you are working on > Go to `templates` folder. In here, you can find the parachain template and minimal template, view the commit history of these templates and compare the changes made **between your current version tag with the targeted version tag**.
+
+![Upgrade Polkadot Version](/blog/upgrade-polkadot-version-3.png)
+
+- The another good reference is the **production-ready parachain codebase**, engineers from these parachain team spent a lot of time to review the PR.
+
+![Upgrade Polkadot Version](/blog/upgrade-polkadot-version-4.png)
+
+Most teams follow the [conventional commit rules](https://www.conventionalcommits.org/en/v1.0.0/) so you can filter out closed PRs that start with `chore` or include `upgrade` to find past PRs.
+
+For example, below are closed PRs from [Frequency Chain](https://github.com/frequency-chain/frequency/pulls?q=is%3Apr+is%3Aclosed+chore%28upgrade%29) that follow the pattern `chore(upgrade)`.
+
+![Upgrade Polkadot Version](/blog/upgrade-polkadot-version-5.png)
+
+## Tips & Tricks
+
+### For a large version bump (maybe from 1.0.0 to 1.15.0 👀), use a tool from Tanssi to track all the changes
+
+**Tanssi Version Tracker**: [print-version-bump-info.ts](https://github.com/moondance-labs/tanssi/blob/master/tools/github/print-version-bump-info.ts)
+
+Tanssi has an internal tool to print version bump information between two versions. For example, [Issue #580](https://github.com/moondance-labs/tanssi/issues/580) prints all changes made to the Polkadot SDK from 1.7.0 to 1.10.0.
+
+> Tip: If you are in this position to make a large version bump, you should consider using this tool from Tanssi to track the changes as well.
+
+### Odd things happened in the mismatched patch version after running `psvm`
+
+For detailed context, please take a look at this [Substrate StackExchange post](https://substrate.stackexchange.com/questions/11774/unable-to-compile-upgrade-parachain-node-after-running-psvm-v1-13-0) about upgrading to v1.13.0 (the PR that took me hours and help from colleagues to resolve).
+
+![Upgrade Polkadot Version](/blog/upgrade-polkadot-version-6.png)
+
+Many dependencies need to be updated with `precise` flag due to the mismatches in patch version of the dependencies.
+
+To me, this is the most frustrated experience. It is quite hard to figure out the root cause when you are flooded with hundreds of dependencies when running `cargo tree`.
+
+> Tip: A great tip I received is to clone a working repository and use the `diff` command to compare your `Cargo.lock` file with the one from the working repository. This helps identify any mismatches in dependencies, ensuring everything is aligned and identical.
+
+### Consider using **omni-node** if possible, this will make your life much better.
+
+**Polkadot Forum**: [Omni-node Discussion](https://forum.polkadot.network/t/polkadot-parachain-omni-node-gathering-ideas-and-feedback/7823/23) - Community feedback and ideas
+
+At the time this article was written, the **omni-node** is still WIP (work in progress). But you can already replace your current node with the **omni-node** since polkadot release version **1.11.0**.
+
+Maintaining the node is a tiresome experience for any parachain team, most of the time it brings up more issues that you have to handle aside from your core runtime functionalities.
+
+With the release of the **omni-node**, you don't have to care much about constructing your own node and maintain it. Hence, if you do an upgrade for the node, you just simply replace the **omni-node 1.11.0** (example) to **omni-node 1.14.0**.

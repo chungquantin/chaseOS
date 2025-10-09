@@ -1,0 +1,69 @@
+---
+title: "Breakdown the sharded network design of Polkadot"
+publishedAt: "2024-07-07"
+tags: ["polkadot", "crypto", "technical", "architecture-breakdown"]
+draft: false
+blogIndexInclude: true
+summary: "Discover deeper into how Polkadot is designed to be a fragmented network, or we can say a multi-chain, multi-sharded network as well."
+authors: ["default"]
+---
+
+> **Original Thread**: [Read the full thread on X](https://x.com/chungquantin/status/1809864276850704882)
+
+Landscape of blockchain technology has been filled with different types of protocol, from synchrony to asynchrony, single chain to multi chain. Polkadot stands at the forefront of the blockchain technology breakthrough via the native multi-chain design.
+
+Today, we will discover deeper into how Polkadot is designed to be a fragmented network, or we can say a multi-chain, multi-sharded network as well.
+
+But first, let's learn a bit about sharding and why does it matter to the scalability of the blockchain protocol.
+
+## What is Sharding?
+
+Sharding is scalability concept in computer science. Most of the time, we will be more familiar with Database Sharding. Prior context before the technical breakdown, scaling up the database vertically will face a lot of limitations, hence, we need an approach that can scale out horizontally.
+
+![Sharded Network Visualization](/blog/break-down-the-sharded-network-design-of-polkadot__image_1.jpeg)
+
+By that way, database sharding is a solution we are looking for. Instead of trying to fit a large amount of data into one single database, we try to "shard" (or "chunk") it into smaller chunks of data and share those with other database server.
+
+In Polkadot, the concept of sharding is a bit different because it is applied to the network layer not the database layer. Network sharding in Polkadot in a form of an independent yet interoperable blockchain network called Parachains, simply sub-blockchain but can execute in parallel.
+
+We will discover more about Parachain architecture and how parallel execution happens in the later section. But first, let's learn a bit about the existing problems of the yin-yang design of shared network, a fully synchronous network.
+
+## Problem with a High-Performance Fully Synchronous Network
+
+Even though I worked on a synchronous network before, I mainly described their limitation as a centralized network instead of synchronous. I learnt about the term from the recent "JAM Gray Paper" from Gavin, co-founder of Ethereum and Polkadot.
+
+> **Reference**: [2.4. High-Performance Fully Synchronous Networks - JAM Gray Paper](https://github.com/paritytech/polkadot-sdk/blob/master/docs/jam-gray-paper.pdf) by Gavin Wood
+
+Even though decentralization is not a top primary goal of the synchronous network, the coherency is much better than the sharded network.
+
+For the definition, coherency in a blockchain network refers to the consistency and agreement of data across the DTL (distributed ledger technology). Achieving coherency ensures that all nodes in the network have a synchronized and accurate copy of the blockchain, preventing discrepancies and conflicts.
+
+Blockchain Solana which is a top candidate for the Fully Synchronous Network, has a high requirement for the validator node to reach the goal for high performance. Hence, the number of validator nodes is restricted leading to a more seamless data synchronization across nodes.
+
+However, there is a trade-off in terms of the long-term scalability when high spec requirement (🥵512GB RAM) for the Solana validator node is needed for the data of the network to be stored in each node.
+
+This design is extremely hard for a new validator node to join the network and they must accept to sacrifice the decentralization for the better throughput.
+
+## What is a PARACHAIN?
+
+Parachain is simply a sub-blockchain in the Polkadot network. Every Parachain connects to a Relaychain to use the full features that the protocol brings to it. Parachain has its own set of nodes to handle the block production and collation. Because Parachain is a sub-blockchain, it has all the functionalities and the architecture of a blockchain.
+
+> **Deep Dive**: [Collation Protocol Documentation](https://paritytech.github.io/polkadot-sdk/book/node/collators/collator-protocol.html) - Learn how parachain blocks are collated and included
+
+Parachain uses AURA (Round-robin style) as a block production mechanism and PoA (Proof of Authority) as a consensus mechanism. Deep dive into its block production flow, a set of trusted authorities will be defined on the initialized of the Parachain through Substrate chain specification or added by the super user (Sudo).
+
+![Sharded Network Visualization](/blog/break-down-the-sharded-network-design-of-polkadot__image_2.jpeg)
+
+Every round, an authority from the trusted authority set will be selected in a [Round-Robin style](https://en.wikipedia.org/wiki/Round-robin_scheduling) similar to the way process is scheduled in OS, and starts producing a new block. After this stage, instead of being finalized and added to the chain state of the Parachain, the block is collated to the Parachain Block Inclusion Pipeline - A process of adding a new parachain block to the shared state of a Relaychain.
+
+> **Thread**: [Polkadot's Hybrid Consensus](https://x.com/chungquantin/status/1808726232827318778) - Understanding block production and finality mechanisms
+
+## Execution Core Assignment
+
+Aside from network sharding, Polkadot also introduces a concept of execution sharding. The underlying layer of the whole protocol is called a Polkadot Parachain Host, which provides functions used for building the parachain protocol. A compiled Parachain node is simply a WASM blob, these blobs are assigned to the availability cores.
+
+![Sharded Network Visualization](/blog/break-down-the-sharded-network-design-of-polkadot__image_3.jpeg)
+
+In Polkadot 1.0, one core can only be occupied by one Parachain in a 2-year lease rent. The decision of who occupies the core for the next period is processed through a candle auction called Parachain Auction. However, due to several limitations in term of flexibility, core allocation has been changed to be more flexible in the 2.0 version of the Polkadot protocol.
+
+> **Documentation**: [Availability Core API](https://paritytech.github.io/polkadot-sdk/book/runtime-api/availability-cores.html) - Technical reference for core allocation mechanisms

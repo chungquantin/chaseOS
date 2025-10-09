@@ -1,0 +1,87 @@
+---
+title: "Breakdown Tanssi Network Architecture"
+publishedAt: "2024-08-31"
+tags: ["polkadot", "crypto", "technical", "architecture-breakdown"]
+draft: false
+blogIndexInclude: true
+summary: "breakdown post for the architecture of Tanssi as a parachain of the Polkadot protocol."
+authors: ["default"]
+---
+
+![Tanssi Network Visualization](/static/images/tanssi-network-1.jpeg)
+
+## Adding new feature to runtime is easy, but running an infrastructure isn't.
+
+With the introduction of the Polkadot SDK, particularly Substrate, we've gained access to a powerful framework for building blockchains. I am confident that Substrate offers the richest collection of runtime modules—known as FRAME pallets in Polkadot—that enable developers to easily define and customize various functionalities for their blockchain, much like assembling LEGO pieces.
+
+And must mention that Substrate is designed to abstract away the underlying complexity of building a blockchain like P2P networking, consensus or cryptography. Hence, a new lightweight blockchain that focuses more on the specific functionalities for business use case is introduced and widely known as "Application-specific blockchain"
+
+Hence, numerous improvements have been proposed and implemented in the Polkadot SDK to make the developer experience more seamless. For example, omin-node is one such enhancement:
+https://forum.polkadot.network/t/polkadot-parachain-omni-node-gathering-ideas-and-feedback/7823
+
+And let's not forget that some of the brightest minds in the ecosystem are actively working on solutions to elevate the developer experience for builders to the next level. Shout out to @onpopio for leading the charge!
+
+However there are more challenges than just running a single node and customizing the runtime. Let name some of them:
+
+## Challenge: Infrastructure & Maintenance Cost
+
+The first barrier for any individual builder or any team want to build a parachain on Polkadot would be the cost to run the infrastructure for Parachain collators and the cost for maintaining it. This excludes the cost for research & development.
+
+## Challenge: Collator Infrastructure Setup
+
+Below are the 5 steps I concluded from the article: https://hackmd.io/@s_iGZLIITG6WjSgnFX0pcg/the-collator-setup-guide
+
+1. Build the Polkadot and Parachain binaries
+2. Generate chainspec, runtime wasm, genesis state
+3. Prepare a local Relay Chain
+4. Connect a local Parachain
+5. Launch a collator
+
+These steps are straightforward but you need a decent engineering skill to follow and setup required components for the network.
+
+## Challenge: Parachain Registration
+
+When you ensure that the cost can be covered and collator infrastructure is set up successfully, next step would be finding a slot for your parachain on the Polkadot protocol.
+
+Another financial game would be finding a good price to win the 2-year lease (Parachain auction in Polkadot 1.0) with the reserve for the crowdloan interest token distribution or acquiring core on Coretime Marketplace (Polkadot 2.0 with Agile Coretime) and needed knowledge for core acquisition and management.
+
+With all the three common challenges I listed above, you can see that running an infrastructure for the parachain is not a job for newcomers. So what if you want to get rid of those and only want to focus on customizing the functionalities for your runtime?
+
+## Tanssi Network - a permissionless appchain infrastructure protocol for swift and effortless deployment of application-specific blockchains.
+
+The description says it all about Tanssi: it's designed to streamline the process of launching customized blockchains, making it easier and faster for developers to create and deploy application-specific networks.
+
+Let's learn how they do that.
+
+## ContainerChain and the "Block Production as a Service"
+
+Actually, I don't know if saying "Container as a Service" is a right term to say :D so just make an assumption and hope that someone will correct it. ContainerChain is a core part of the Tanssi's AppChain infrastructure.
+
+![Tanssi Network Visualization](/static/images/tanssi-network-2.jpeg)
+
+Deploying a new AppChain (this deployment process most of the time can be handle through the portal made by Tanssi with the submission of the runtime WASM code) on Tanssi Dancebox (a testnet of the Tanssi Network) will launch a new Tanssi-specialized Parachain (I make it up) or ContainerChain.
+
+This new blockchain that contains your submitted runtime code functions exactly like a Parachain because the ContainerChain is does assigned to the execution core of the Polkadot protocol. The difference between the normal approach and this Tanssi's approach is that you don't have to care about setting up the collator infrastructure for block production. Instead, ContainerChain will be assigned with a set of block producers from the decentralized block producer infrastructure of the Tanssi network.
+
+![Tanssi Network Visualization](/static/images/tanssi-network-3.jpeg)
+
+- Block production: AppChain relies on the mentioned decentralized infrastructure of Tanssi for authoring new block. Tanssi Dancebox acts as the role of OrchestratorChain - the blockchain that keeps the records of the registered ContainerChains. Reference: https://github.com/moondance-labs/tanssi/blob/master/pallets/collator-assignment/src/lib.rs
+- Block finalization: And similar to any Parachain, the collation process happens and sending blocks to the Relaychain for finalizing new block to the global state.
+
+We will dive deep into the process of choosing block producers for the ContainerChain later.
+
+About the benefits of these AppChain when deployed on Tanssi, as you see now it is a part of the Polkadot protocol. Hence, it has an access to all the features that one Parachain has:
+
+- Cross-chain communication with other Parachain.
+- Compatible with all the developer tools, client libraries, IDE...
+- Features like async backing and elastic scaling.
+
+## Decentralized block producers infrastructure
+
+Once the required number of block producers for a given session is determined, Tanssi employs two mechanisms to select the final set of block producers distributed across all chains (Tanssi and its appchains).
+
+The first mechanism is the Invulnerables module, which provides a fixed list of block producers prioritized by the protocol. This module is particularly useful for ensuring block production stability in specific scenarios, such as TestNets.
+
+The second mechanism is the Tanssi staking module. This module helps create a decentralized set of block producers for Tanssi and its appchains by generating a sorted list of block producers based on their staked amounts. Tanssi then appends this sorted list to any invulnerable block producers (if applicable) and begins the block producer assignment process.
+
+![Tanssi Network Visualization](/static/images/tanssi-network-4.jpeg)
