@@ -25,12 +25,15 @@ interface FileItem {
   modified: string;
   description?: string;
   onClick: () => void;
+  children?: FileItem[];
 }
 
 interface FinderWindowProps {
   title: string;
   items: FileItem[];
   onClose: () => void;
+  onMinimize?: () => void;
+  onRestore?: () => void;
   onFocus?: () => void;
   zIndex?: number;
   initialPosition?: { x: number; y: number };
@@ -41,6 +44,8 @@ export function FinderWindow({
   title,
   items,
   onClose,
+  onMinimize,
+  onRestore,
   onFocus,
   zIndex,
   initialPosition = { x: 200, y: 200 },
@@ -48,15 +53,53 @@ export function FinderWindow({
 }: FinderWindowProps) {
   const [viewMode, setViewMode] = useState<"grid" | "list">("list");
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentPath, setCurrentPath] = useState<string[]>(["ChaseOS"]);
+  const [currentItems, setCurrentItems] = useState<FileItem[]>(items);
 
-  const filteredItems = items.filter((item) =>
+  const filteredItems = currentItems.filter((item) =>
     item.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const navigateToFolder = (folderName: string) => {
+    const folder = currentItems.find(
+      (item) => item.name === folderName && item.type === "folder"
+    );
+    if (folder && folder.children) {
+      setCurrentPath([...currentPath, folderName]);
+      setCurrentItems(folder.children);
+    }
+  };
+
+  const navigateBack = () => {
+    if (currentPath.length > 1) {
+      const newPath = currentPath.slice(0, -1);
+      setCurrentPath(newPath);
+
+      // Navigate back to parent items
+      if (newPath.length === 1) {
+        setCurrentItems(items);
+      } else {
+        // Find parent folder and set its children
+        let parentItems = items;
+        for (let i = 1; i < newPath.length; i++) {
+          const parentFolder = parentItems.find(
+            (item) => item.name === newPath[i] && item.type === "folder"
+          );
+          if (parentFolder && parentFolder.children) {
+            parentItems = parentFolder.children;
+          }
+        }
+        setCurrentItems(parentItems);
+      }
+    }
+  };
 
   return (
     <BaseWindow
       title={title}
       onClose={onClose}
+      onMinimize={onMinimize}
+      onRestore={onRestore}
       onFocus={onFocus}
       zIndex={zIndex}
       initialPosition={initialPosition}
@@ -74,6 +117,8 @@ export function FinderWindow({
           <div className="flex items-center space-x-2">
             <button
               className="p-2 rounded-md transition-all duration-150 hover:bg-gray-700"
+              onClick={navigateBack}
+              disabled={currentPath.length <= 1}
               style={{ backgroundColor: "transparent" }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.backgroundColor = "#21262d";
@@ -82,8 +127,58 @@ export function FinderWindow({
                 e.currentTarget.style.backgroundColor = "transparent";
               }}
             >
-              <ArrowLeft size={16} style={{ color: "#8b949e" }} />
+              <ArrowLeft
+                size={16}
+                style={{
+                  color: currentPath.length <= 1 ? "#6e7681" : "#8b949e",
+                }}
+              />
             </button>
+
+            {/* Breadcrumb Navigation */}
+            <div className="flex items-center space-x-1 ml-4">
+              {currentPath.map((path, index) => (
+                <div key={index} className="flex items-center">
+                  {index > 0 && <span className="mx-2 text-gray-500">/</span>}
+                  <button
+                    className="text-sm hover:text-blue-400 transition-colors"
+                    onClick={() => {
+                      if (index < currentPath.length - 1) {
+                        // Navigate to this level
+                        const newPath = currentPath.slice(0, index + 1);
+                        setCurrentPath(newPath);
+
+                        if (newPath.length === 1) {
+                          setCurrentItems(items);
+                        } else {
+                          // Find the correct items for this path
+                          let targetItems = items;
+                          for (let i = 1; i < newPath.length; i++) {
+                            const folder = targetItems.find(
+                              (item) =>
+                                item.name === newPath[i] &&
+                                item.type === "folder"
+                            );
+                            if (folder && folder.children) {
+                              targetItems = folder.children;
+                            }
+                          }
+                          setCurrentItems(targetItems);
+                        }
+                      }
+                    }}
+                    style={{
+                      color:
+                        index === currentPath.length - 1
+                          ? "#f0f6fc"
+                          : "#8b949e",
+                    }}
+                  >
+                    {path}
+                  </button>
+                </div>
+              ))}
+            </div>
             <div className="flex items-center space-x-1">
               <button
                 className={`p-2 rounded-md transition-all duration-150 ${
@@ -199,7 +294,13 @@ export function FinderWindow({
                   <div
                     key={item.id}
                     className="flex items-center px-3 py-2 rounded-md cursor-pointer group transition-all duration-150 ease-out"
-                    onClick={item.onClick}
+                    onClick={() => {
+                      if (item.type === "folder") {
+                        navigateToFolder(item.name);
+                      } else {
+                        item.onClick();
+                      }
+                    }}
                     style={{
                       backgroundColor: "transparent",
                     }}
@@ -241,7 +342,13 @@ export function FinderWindow({
                   <div
                     key={item.id}
                     className="flex flex-col items-center p-4 rounded-lg cursor-pointer group transition-all duration-200 ease-out"
-                    onClick={item.onClick}
+                    onClick={() => {
+                      if (item.type === "folder") {
+                        navigateToFolder(item.name);
+                      } else {
+                        item.onClick();
+                      }
+                    }}
                     style={{
                       backgroundColor: "transparent",
                     }}

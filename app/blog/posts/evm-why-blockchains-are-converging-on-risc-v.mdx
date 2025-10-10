@@ -1,0 +1,106 @@
+---
+title: "EVM 2.0: Why Blockchains Are Converging on RISC-V as the Next Smart Contract Bytecode"
+publishedAt: "2025-10-08"
+tags: ["ethereum", "evm"]
+draft: false
+blogIndexInclude: true
+summary: "The Ethereum Virtual Machine (EVM) is proposed to be upgraded to RISC-V to address high gas fees and complexity. RISC-V offers simplicity, mature tooling, and compatibility with zero-knowledge systems, ensuring existing Solidity contracts remain functional. This transition aims to refine the EVM, enhance performance, and prepare Ethereum for future innovations while maintaining backward compatibility with legacy contracts."
+authors: ["default"]
+---
+
+## Current state of Ethereum Virtual Machine
+
+For over a decade, the **Ethereum Virtual Machine (EVM)** has been the backbone of decentralized computation — powering millions of smart contracts and enabling the rise of decentralized applications. Its simple, stack-based architecture made it approachable and extensible, fueling the explosive growth of the Ethereum ecosystem.
+
+However, as blockchain technology matured, the limitations of the EVM became increasingly apparent. High gas costs, difficulties with formal verification, and inefficient execution models have all exposed the cracks in its once-revolutionary design.
+
+![The Ethereum Virtual Machine](EVM%202%200%20Why%20Blockchains%20Are%20Converging%20on%20RISC-V%20a%20277659b1c8178015a1f1fb4458eef695/Screenshot_2025-10-07_at_10.14.57.png)
+
+The Ethereum Virtual Machine
+
+The EVM worked well in its early years as Ethereum’s execution environment. But the advent of **rollups**, **parallelized blockchains**, and **zero-knowledge systems** now demands a more efficient and verifiable virtual machine. Competing designs such as the **SVM (Solana Virtual Machine)** and **MVM (Move Virtual Machine)** showcase alternative philosophies — from parallel execution to resource-based safety — that make the legacy EVM look increasingly dated.
+
+That said, the EVM remains dominant today, serving billions of transactions and wallets across multiple chains. Yet, the opportunity for innovation is clear — we can do better.
+
+## Vitalik’s Proposal for the Long-term L1 execution layer
+
+With those problems in mind, the co-founder of Etheruem, Vitalik Buterin has published a proposal on the Ethereum Magician’s discussion forum to discuss about what is the reasonable future for the Ethereum’s execution layer. The idea of the proposal is to replace the EVM with RISC-V as the virtual machine language.
+
+https://ethereum-magicians.org/t/long-term-l1-execution-layer-proposal-replace-the-evm-with-risc-v/23617
+
+![Vitalik Buterin, co-founder of Ethereum](EVM%202%200%20Why%20Blockchains%20Are%20Converging%20on%20RISC-V%20a%20277659b1c8178015a1f1fb4458eef695/image.png)
+
+Vitalik Buterin, co-founder of Ethereum
+
+This idea isn’t unique to Ethereum. Across the blockchain landscape, **RISC-V** has been gaining attention as a potential next-generation execution environment.
+
+- In **2023**, core developers in the **Polkadot** ecosystem discussed exploring **RISC-V** as an alternative to **WASM** for executing smart contracts. The discussion — [_Exploring alternatives to WASM for smart contracts_](https://forum.polkadot.network/t/exploring-alternatives-to-wasm-for-smart-contracts/2434) — reflected similar motivations: simplification, performance, and verifiability. _(For more, see the resource repository I compiled on the transition from WASM to PolkaVM for the upcoming JAM era: [learn-jam](https://github.com/openguild-labs/learn-jam))._
+- The **Nervos CKB** blockchain has already implemented a **RISC-V-based VM**, demonstrating the feasibility and advantages of adopting RISC-V as a base instruction set for blockchain computation. [Learn more about Nervos here](https://docs.nervos.org/).
+
+The proposal itself is highly technical, and it wouldn’t be practical to dive into every low-level detail of the suggested changes within this article. On the high level, Vitalik mentions these key problems and changes to the current design.
+
+## Why changes are needed?
+
+The current EVM are packed with precompiles which increase the complexity when adding new features to the EVM. Compares with a simple blockchain like Bitcoin, the EVM are more general-purpose and complicated. (Reference: https://vitalik.eth.limo/general/2025/05/03/simplel1.html)
+
+![Simple architecture of the Bitcoin blockchain](EVM%202%200%20Why%20Blockchains%20Are%20Converging%20on%20RISC-V%20a%20277659b1c8178015a1f1fb4458eef695/Screenshot_2025-10-07_at_09.42.51.png)
+
+Simple architecture of the Bitcoin blockchain
+
+RISC-V provides a compelling alternative.
+
+It is a **standardized virtual machine language**, similar in concept to EVM bytecode, but designed with **minimalism (~47 base instructions)** and backed by a **mature LLVM ecosystem** (Rust, C++, Go).
+
+Other advantages of using RISC-V as the execution layer include:
+
+- Better tooling and developer familiarity.
+- Easier integration with zero-knowledge proving systems.
+- A strong path toward long-term optimization and formal verification.
+
+![Comparison between the EVM and RISC-V](EVM%202%200%20Why%20Blockchains%20Are%20Converging%20on%20RISC-V%20a%20277659b1c8178015a1f1fb4458eef695/image%201.png)
+
+Comparison between the EVM and RISC-V
+
+More than that, RISC-V is an important piece for the zkEVM (Reference: https://zkevm.fyi/trees/internal/isa.html#risc-v-general-purpose-simplicity-and-dominance). As mentioned in the handbook of the zkEVM, RISC-V brings a strong tooling ecosystem and developer familiarity. Differnet from the EVM bytecode, RISC-V is used widely in system programming as well.
+
+## How the VM migration will be executed?
+
+### Opcodes Evolve, Core Concepts Remain
+
+![Screenshot 2025-10-07 at 09.53.32.png](EVM%202%200%20Why%20Blockchains%20Are%20Converging%20on%20RISC-V%20a%20277659b1c8178015a1f1fb4458eef695/Screenshot_2025-10-07_at_09.53.32.png)
+
+This is a breaking change to the current execution layer, but it does not elimiate entire thing we currently have on the EVM. Concepts of **_accounts, cross-contract calls, storage, etc_** are not changed. But a deeper level like some Opcodes are elimiated and likely will be replace by RISC-V syscalls (For reference only, [_RISC Linux syscall table_](https://jborza.com/post/2021-05-11-riscv-linux-syscalls/)).
+
+### RISC-V compatible to smart contract languages
+
+Developers can write smart contracts in Rust or in Solidity, but the expectation for the smart contract language would still be **_Solidity (or Vyper)_** as the common approaches to write smart contracts. Even though **_Rust_** is a strong and type safety system language, it is not a beginner friendly approach compares to scripting languages like Solidity and Vyper, which is relatively similar to **_Javascript and Python_**.
+
+As I am originally coming from the Polkadot ecosystem, the current design that Polkadot has for PolkaVM could be a good material to learn from how things would work if this proposal is passed.
+
+![Compilation process of PolkaVM](EVM%202%200%20Why%20Blockchains%20Are%20Converging%20on%20RISC-V%20a%20277659b1c8178015a1f1fb4458eef695/Screenshot_2025-09-28_at_14.48.49.png)
+
+Compilation process of PolkaVM
+
+### Backward Compability is Ensured
+
+> **Old-style EVM contracts will continue to work and will be fully two-way interoperable** with new-style RISC-V contracts. There are a couple ways to do this, which I will get into later in this post.
+
+As confirmed by Vitalik, legacy smart contracts which are already deployed on Ethereum will remain working without any changes. Think of it like Java bytecode evolving to run on modern JITs: the developer experience stays the same, but the engine underneath is radically better.
+
+![image.png](EVM%202%200%20Why%20Blockchains%20Are%20Converging%20on%20RISC-V%20a%20277659b1c8178015a1f1fb4458eef695/image%202.png)
+
+Vitalik also breaks it down further in https://vitalik.eth.limo/general/2025/05/03/simplel1.html to identify the goal for a seamless VM transition which does not break things but can still bring the EVM to a new state.
+
+## Lean Roadmap’s Execution Layer
+
+![Lean Roadmap’s Core Components](EVM%202%200%20Why%20Blockchains%20Are%20Converging%20on%20RISC-V%20a%20277659b1c8178015a1f1fb4458eef695/Screenshot_2025-10-07_at_07.09.07.png)
+
+Lean Roadmap’s Core Components
+
+> **\*lean execution** is EVM 2.0: a minimal, SNARK-friendly instruction set (possibly RISC-V; pronounced "risk five"), boosting performance while preserving EVM compatibility and its network effects -\* Lean Roadmap, Justin Drake: https://blog.ethereum.org/2025/07/31/lean-ethereum
+
+A while ago, Elastic Hub also published an article about the Lean Roadmap and the vision of [Justin Drake](https://x.com/drakefjustin) for the next decade of Ethereum’s protocol. In the aforementioned proposal, the execution layer will be replaced by the RISC-V to tackle challenging problems of the current EVM.
+
+---
+
+Ethereum’s move toward a **RISC-V-based execution layer** marks the next major evolutionary step for its virtual machine. The transition won’t abandon the EVM’s legacy but will refine it — simplifying the base layer, unlocking new performance potential, and positioning Ethereum for the next decade of innovation.

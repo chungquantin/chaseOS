@@ -1,0 +1,115 @@
+---
+title: "Lean Roadmap: The future infrastructure of Ethereum"
+publishedAt: "2025-10-06"
+tags: ["ethereum", "evm"]
+draft: false
+blogIndexInclude: true
+summary: "DevCon 7 highlighted the future of Ethereum, particularly the Beam Chain proposal by Justin Drake, which aims to upgrade the Beacon Chain and address technical issues while enhancing security against quantum threats. The Lean Roadmap outlines significant upgrades across Ethereum's layers, including Lean Consensus, Lean Data, and Lean Execution, focusing on long-term innovation and adaptation to competitive challenges in the blockchain landscape."
+authors: ["default"]
+---
+
+Attending DevCon 7 in Bangkok was an incredible experience, filled with fresh insights and exciting promises for the future of Ethereum. It was my first time sitting among the audience, listening to presenters share updates on new EIPs and Ethereum’s roadmap. Among all the sessions, the highlight for me was the Main Stage discussion where Justin Drake introduced _Beam Chain_—the most exciting topic of the event, at least for me.
+
+![Justin Drake’s presentation about Beam Chain.](Lean%20Roadmap%20The%20future%20infrastructure%20of%20Ethereum%20271659b1c81780dda3ffe52cf9c97521/image.png)
+
+Justin Drake’s presentation about Beam Chain.
+
+To understand why Beam Chain is one of the most key upgrades Ethereum have in the next decades. Let’s step back and see what Ethereum has changed over the years and what is waiting for us in the future.
+
+> For your context (we will revisit this in the later part of the article), Ethereum Foundation has released a new blog post called [\*“Lean Ethereum”](https://blog.ethereum.org/2025/07/31/lean-ethereum)\* which is a strategic direction for Ethereum in terms of long-term protocol development, and **Beam Chain is the former name for the project now known as Lean Consensus.**
+
+# Current state of Ethereum
+
+Ethereum has undergone a series of major protocol-level upgrades that have fundamentally reshaped the direction of the entire ecosystem. From [\*\*\*The Merge](https://ethereum.org/roadmap/merge/)\*\*\* or [Beacon Chain](https://ethereum.org/roadmap/beacon-chain/) upgrade which transitioned the network’s consensus mechanism from Proof of Work to Proof of Stake, to the more recent [Dencun Upgrade](https://consensys.io/ethereum-dencun-upgrade), which introduced [proto-danksharding (EIP-4844)](https://ethereum.org/roadmap/danksharding/) as the next milestone on the Ethereum roadmap.
+
+And if counting other minor to major protocol improvements from the number of approved EIPs, we can find there are more than a hundred EIPs deployed / reviewed on mainnet every year. (https://eipsinsight.com/, https://www.eips.wtf/).
+
+![Number of yearly EIPs growth chart](Lean%20Roadmap%20The%20future%20infrastructure%20of%20Ethereum%20271659b1c81780dda3ffe52cf9c97521/Screenshot_2025-09-22_at_11.37.18.png)
+
+Number of yearly EIPs growth chart
+
+## Ethereum Mainnet Challenges
+
+Although Ethereum’s token price has been performing strongly in recent months, supported by growing institutional interest and Wall Street adoption ([CNBC](https://www.cnbc.com/2025/08/02/ethereum-turns-10-from-scrappy-experiment-to-wall-streets-invisible-backbone.html)), the challenges facing Ethereum mainnet tell a different story.
+
+_So, what exactly is the issue with Ethereum mainnet?_ Here, we’re not referring to its broader ecosystem of rollups, Plasma chains, or sidechains such as [**Optimism**](https://docs.optimism.io/) or [**zkSync**](https://www.zksync.io/). We’re talking specifically about Ethereum as a standalone Layer 1 network.
+
+The Dencun Upgrade addressed throughput bottlenecks by introducing [blob storage](<https://www.nervos.org/knowledge-base/what_are_blobs_in_ethereum_(explainCKBot)>), which lowered costs and spurred the creation of more rollups on Ethereum. However, this shift also meant that most new applications migrated to these scalable rollups or alternative L1s, causing user activity on mainnet itself to decline.
+
+![Future of Ethereum (1): Beam Chain - [https://medium.com/@organmo/future-of-ethereum-1-beam-chain-52492e39af62](https://medium.com/@organmo/future-of-ethereum-1-beam-chain-52492e39af62)](Lean%20Roadmap%20The%20future%20infrastructure%20of%20Ethereum%20271659b1c81780dda3ffe52cf9c97521/image%201.png)
+
+Future of Ethereum (1): Beam Chain - [https://medium.com/@organmo/future-of-ethereum-1-beam-chain-52492e39af62](https://medium.com/@organmo/future-of-ethereum-1-beam-chain-52492e39af62)
+
+On top of that, Dencun changed the rollup fee model completely: rollups stopped submitting fees directly to Ethereum, raising concerns about the long-term economic sustainability of the base chain.
+
+In this context, criticisms began to surface—claims that **_“Ethereum’s rollup-centric roadmap is flawed”_** or that **_“Ethereum’s development is too slow to succeed.”_** These critiques highlight the tension between Ethereum’s long-term vision and the immediate realities of its evolving ecosystem.
+
+# About Justin Drake
+
+https://x.com/drakefjustin
+
+If you are not familiar with Justin Drake ([Linkedin](https://www.linkedin.com/in/drakefjustin/?originalSubdomain=uk)), he is a prominent researcher at the Ethereum Foundation (since December 2017). Justin is widely recognized for his expertise in cryptographic protocols and blockchain technology.
+
+![image.png](Lean%20Roadmap%20The%20future%20infrastructure%20of%20Ethereum%20271659b1c81780dda3ffe52cf9c97521/image%202.png)
+
+He has played a central role in the development of Ethereum 2.0, with a focus on Proof of Stake (PoS) and sharding. His contributions also tackle challenges like data availability and block withholding attacks, introducing innovative ideas such as the “**Blob**” concept in the mentioned Dencun Upgrade.
+
+# Lean Consensus Breakdown
+
+### Beam Chain Overview
+
+Beam Chain was proposed by Justin Drake and was introduced first time in the DevCon 7 in Bangkok.
+
+And to understand what are works need to be done, take a look at the below timeline from the DevCon presentation.
+
+![[https://www.youtube.com/watch?v=8mJDt8TGebc](https://www.youtube.com/watch?v=8mJDt8TGebc)](Lean%20Roadmap%20The%20future%20infrastructure%20of%20Ethereum%20271659b1c81780dda3ffe52cf9c97521/Screenshot_2025-09-22_at_12.27.20.png)
+
+[https://www.youtube.com/watch?v=8mJDt8TGebc](https://www.youtube.com/watch?v=8mJDt8TGebc)
+
+Feeling overwhelmed? That’s understandable. These are significant changes to the Ethereum protocol, and they’re part of a long-term roadmap—a four-year plan, not something that can be accomplished overnight.
+
+As can be see on the timeline, Drake’s Beam Chain proposal touches every part of the Ethereum protocol, covering 3 core layers: [\*\*\*Data layer (DL), Execution Layer (EL) and Consensus Layer (CL)](https://ethereum.org/developers/docs/networking-layer/)\*\*\*
+
+> _“The goal is to try and transition in a safe and fast manner from the Beacon chain that we have today, to this Beam chain, which is much, much closer to the final design of Ethereum”_ - Drake said.
+
+The proposal aims to upgrade Ethereum’s Beacon Chain by addressing legacy technical issues, introducing advanced cryptographic techniques, strengthening defenses against future threats such as quantum computing—which could compromise current encryption—and improving transaction speed.
+
+As Justin Drake noted, blockchain innovation moves quickly, and the Beacon Chain, built five years ago, is now showing its age. His “Beam Chain” proposal forms part of a broader effort to scale Ethereum, especially as competitors like Solana gain traction with faster and cheaper transactions. A key feature of Beam Chain is the integration of ZK-SNARKs, a cutting-edge cryptographic technology.
+
+### Deep Dive Into Lean Roadmap
+
+Based on the [Lean Ethereum Roadmap](https://blog.ethereum.org/2025/07/31/lean-ethereum), there will be a different upgrades proposed applying to all the sub-layers of the Ethereum Layer1, including:
+
+- **Lean Consensus (Beacon Chain 2.0):** A stronger, more secure, and more decentralized version of the Beacon Chain that delivers transaction finality within seconds. It was previously called “Beam Chain.”
+- **Lean Data (Blobs 2.0):** An upgrade to blobs that makes them resistant to future quantum computers, while also allowing flexible blob sizes so developers can use them more like traditional calldata.
+- **Lean Execution (EVM 2.0):** A streamlined, [SNARK-friendly version of the Ethereum Virtual Machine (possibly based on RISC-V)](https://ethereum-magicians.org/t/long-term-l1-execution-layer-proposal-replace-the-evm-with-risc-v/23617) that improves performance but still keeps compatibility with the existing EVM and its large ecosystem.
+
+The later part of the Lean Roadmap is about Lean Cryptography which aims at solving the looing quantum threat and pushes Ethereum to keep up-to-date with the rise of SNARKs.
+
+If you are interested, you can find all the progress of the Lean Roadmap at https://leanroadmap.org/ - This contains all the resources, calls, meeting notes related to the Lean Consensus implementation.
+
+![[https://leanroadmap.org/](https://leanroadmap.org/)](Lean%20Roadmap%20The%20future%20infrastructure%20of%20Ethereum%20271659b1c81780dda3ffe52cf9c97521/Screenshot_2025-09-22_at_13.16.41.png)
+
+[https://leanroadmap.org/](https://leanroadmap.org/)
+
+# Wrap up
+
+Yes, it can feel overwhelming at times. But this four-year plan reflects Ethereum’s core strength: a community of researchers, developers, and builders committed to long-term innovation rather than short-term hype. As cryptography advances, quantum risks loom, and new blockchains challenge the status quo, Ethereum continues to adapt while preserving the network effects that make it the world’s most trusted smart contract platform.
+
+The coming years will define whether Ethereum can maintain its leadership in an increasingly competitive landscape—but one thing is certain: the protocol is not standing still.
+
+# References
+
+---
+
+https://www.ethkipu.org/en/blog/beamchain
+
+https://leanroadmap.org/
+
+https://medium.com/@organmo/future-of-ethereum-1-beam-chain-52492e39af62
+
+https://coinmarketcap.com/academy/article/vitalik-buterin-proposes-ethereum-validator-threshold-to-be-lowered-from-32-eth-to-1-eth
+
+https://www.youtube.com/watch?v=8mJDt8TGebc
+
+https://www.youtube.com/watch?v=88FDeg5JaUk

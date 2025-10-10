@@ -1,5 +1,32 @@
 @import "tailwindcss";
 
+/* macOS-style San Francisco font stack */
+:root {
+  --font-sf-pro: -apple-system, BlinkMacSystemFont, "SF Pro Display",
+    "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-sf-mono: "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas,
+    "Courier New", monospace;
+}
+
+/* Apply San Francisco font to all elements */
+* {
+  font-family: var(--font-sf-pro);
+}
+
+/* macOS-style text rendering */
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* macOS-style code font */
+code,
+pre {
+  font-family: var(--font-sf-mono);
+  font-feature-settings: "liga" 0;
+}
+
 ::selection {
   background-color: #47a3f3;
   color: #fefefe;
@@ -178,6 +205,81 @@ table {
   max-width: fit-content;
   overflow-x: auto;
   white-space: nowrap;
+}
+
+/* Terminal styling to match ChaseOS design system */
+.terminal {
+  background-color: #0d1117 !important;
+  color: #f0f6fc !important;
+  font-family: var(--font-sf-mono) !important;
+  font-size: 14px !important;
+  line-height: 1.4 !important;
+}
+
+.terminal .terminal-line {
+  color: #f0f6fc !important;
+}
+
+.terminal .terminal-prompt {
+  color: #58a6ff !important;
+  font-weight: 500 !important;
+}
+
+.terminal .terminal-input {
+  background-color: transparent !important;
+  color: #f0f6fc !important;
+  border: none !important;
+  outline: none !important;
+  font-family: var(--font-sf-mono) !important;
+}
+
+.terminal .terminal-output {
+  color: #f0f6fc !important;
+}
+
+.terminal .terminal-header {
+  background-color: #161b22 !important;
+  border-bottom: 1px solid #21262d !important;
+  color: #f0f6fc !important;
+}
+
+.terminal .terminal-body {
+  background-color: #0d1117 !important;
+}
+
+/* Terminal command output styling */
+.terminal .terminal-output .text-green-400 {
+  color: #3fb950 !important;
+}
+
+.terminal .terminal-output .text-blue-400 {
+  color: #58a6ff !important;
+}
+
+.terminal .terminal-output .text-red-400 {
+  color: #f85149 !important;
+}
+
+.terminal .terminal-output .text-yellow-400 {
+  color: #f0c674 !important;
+}
+
+/* Terminal scrollbar styling */
+.terminal ::-webkit-scrollbar {
+  width: 8px;
+}
+
+.terminal ::-webkit-scrollbar-track {
+  background: #0d1117;
+}
+
+.terminal ::-webkit-scrollbar-thumb {
+  background: #21262d;
+  border-radius: 4px;
+}
+
+.terminal ::-webkit-scrollbar-thumb:hover {
+  background: #30363d;
 }
 
 .title {

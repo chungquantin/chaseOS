@@ -1,12 +1,20 @@
 "use client";
 
-import { FileText, Building2, Video, FolderOpen } from "lucide-react";
+import {
+  FileText,
+  Building2,
+  Video,
+  FolderOpen,
+  Monitor,
+  Terminal,
+  Github,
+} from "lucide-react";
 
 export interface App {
   id: string;
   name: string;
   description: string;
-  icon: React.ComponentType<any>;
+  icon: React.ComponentType<any> | string; // Can be either Lucide icon or image path
   color?: string;
   type: "finder" | "action";
   action?: () => void;
@@ -31,12 +39,41 @@ export const apps: App[] = [
     finderType: "companies",
   },
   {
+    id: "task-manager",
+    name: "Activity Monitor",
+    description: "Manage running windows and processes",
+    icon: "/apps/activity-monitor.png",
+    type: "action",
+  },
+  {
+    id: "images",
+    name: "Photos",
+    description: "Browse and view images",
+    icon: "/apps/image-gallery.png",
+    type: "finder",
+    finderType: "images",
+  },
+  {
     id: "videos",
     name: "Videos",
-    description: "Watch video content",
-    icon: Video,
+    description: "Edit and create videos",
+    icon: "/apps/capcut.webp",
     type: "finder",
     finderType: "videos",
+  },
+  {
+    id: "terminal",
+    name: "Terminal",
+    description: "Command line interface",
+    icon: Terminal,
+    type: "action",
+  },
+  {
+    id: "github",
+    name: "GitHub",
+    description: "Browse repositories and contributions",
+    icon: Github,
+    type: "action",
   },
 ];
 

@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { apps, getFinderApps } from "./app-registry";
+import Image from "next/image";
+import { apps, getFinderApps, getActionApps } from "./app-registry";
 
 // Helper function to adjust color brightness
 const adjustColor = (color: string, amount: number): string => {
@@ -27,18 +28,24 @@ interface DesktopProps {
   onBlogPostClick: (post: any) => void;
   onCompanyClick: (companyId: string) => void;
   onFinderClick: (finderType: string) => void;
+  onTaskManagerClick: () => void;
+  onTerminalClick: () => void;
+  onGitHubClick: () => void;
   blogPosts: any[];
 }
 
 export function Desktop({
   onCompanyClick,
   onFinderClick,
+  onTaskManagerClick,
+  onTerminalClick,
+  onGitHubClick,
   blogPosts,
 }: DesktopProps) {
   const [selectedApp, setSelectedApp] = useState<string | null>(null);
 
   // Create desktop apps from registry
-  const desktopApps: DesktopApp[] = getFinderApps().map((app) => ({
+  const finderApps = getFinderApps().map((app) => ({
     id: `${app.id}-finder`,
     name: app.name,
     icon: app.icon,
@@ -46,6 +53,25 @@ export function Desktop({
     color: app.color,
     onClick: () => onFinderClick(app.finderType!),
   }));
+
+  const actionApps = getActionApps().map((app) => ({
+    id: app.id,
+    name: app.name,
+    icon: app.icon,
+    type: "app" as const,
+    color: app.color,
+    onClick: () => {
+      if (app.id === "task-manager") {
+        onTaskManagerClick();
+      } else if (app.id === "terminal") {
+        onTerminalClick();
+      } else if (app.id === "github") {
+        onGitHubClick();
+      }
+    },
+  }));
+
+  const desktopApps: DesktopApp[] = [...finderApps, ...actionApps] as any;
 
   const handleAppClick = (app: DesktopApp) => {
     setSelectedApp(app.id);
@@ -58,7 +84,7 @@ export function Desktop({
       {/* Desktop Grid */}
       <div className="flex flex-row gap-8 h-full">
         {desktopApps.map((app) => {
-          const IconComponent = app.icon;
+          const isImageIcon = typeof app.icon === "string";
           return (
             <div
               key={app.id}
@@ -75,7 +101,9 @@ export function Desktop({
                 style={{
                   width: "50px",
                   height: "50px",
-                  background: app.color
+                  background: isImageIcon
+                    ? "transparent"
+                    : app.color
                     ? `linear-gradient(145deg, ${app.color}, ${adjustColor(
                         app.color,
                         -20
@@ -110,14 +138,27 @@ export function Desktop({
                 />
 
                 {/* Icon with proper styling */}
-                <IconComponent
-                  size={25}
-                  className="relative z-10"
-                  style={{
-                    color: app.color ? "white" : "white",
-                    filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.4))",
-                  }}
-                />
+                {isImageIcon ? (
+                  <Image
+                    src={app.icon as any}
+                    alt={app.name}
+                    width={50}
+                    height={50}
+                    className="relative z-10 rounded"
+                    style={{
+                      filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.4))",
+                    }}
+                  />
+                ) : (
+                  <app.icon
+                    size={25}
+                    className="relative z-10"
+                    style={{
+                      color: app.color ? "white" : "white",
+                      filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.4))",
+                    }}
+                  />
+                )}
 
                 {/* Bottom shadow for depth */}
                 <div
@@ -133,7 +174,7 @@ export function Desktop({
               <div className="text-center">
                 <div
                   className={`
-                    text-sm font-medium px-2 py-1 rounded-md
+                    text-xs font-medium px-2 py-1 rounded-md
                     transition-all duration-300
                     ${
                       selectedApp === app.id

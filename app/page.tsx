@@ -4,11 +4,15 @@ import { useState, useEffect } from "react";
 import { Desktop } from "app/components/desktop-v2";
 import { CompanyWindow, companies } from "app/components/company-window";
 import { FinderWindow } from "app/components/finder-window";
-import { FileText, Building2, Video } from "lucide-react";
+import { FileText, Building2, Video, Folder } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { BaseWindow } from "./components/base-window";
 import { MDXContent } from "./components/mdx-content";
 import { CommandPalette } from "./components/command-palette";
+import { TaskManagerWindow } from "./components/task-manager-window";
+import { TerminalWindow } from "./components/terminal-window";
+import { GitHubWindow } from "./components/github-window";
+import { apps } from "./components/app-registry";
 
 export type BlogPost = {
   metadata: {
@@ -28,6 +32,7 @@ interface WindowState {
   size: { width: number; height: number };
   zIndex: number;
   isMinimized: boolean;
+  startTime: number; // timestamp when window was opened
 }
 
 interface FinderWindowState {
@@ -37,6 +42,7 @@ interface FinderWindowState {
   size: { width: number; height: number };
   zIndex: number;
   isMinimized: boolean;
+  startTime: number; // timestamp when window was opened
 }
 
 interface CompanyWindowState {
@@ -46,6 +52,7 @@ interface CompanyWindowState {
   size: { width: number; height: number };
   zIndex: number;
   isMinimized: boolean;
+  startTime: number; // timestamp when window was opened
 }
 
 export default function Page() {
@@ -56,12 +63,25 @@ export default function Page() {
   const [finderWindows, setFinderWindows] = useState<FinderWindowState[]>([]);
   const [nextZIndex, setNextZIndex] = useState(1000);
   const [posts, setPosts] = useState<BlogPost[]>([]);
+  const [recentPosts, setRecentPosts] = useState<BlogPost[]>([]);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+  const [isTaskManagerOpen, setIsTaskManagerOpen] = useState(false);
+  const [taskManagerZIndex, setTaskManagerZIndex] = useState(1000);
+  const [isTerminalOpen, setIsTerminalOpen] = useState(false);
+  const [terminalZIndex, setTerminalZIndex] = useState(1000);
+  const [isGitHubOpen, setIsGitHubOpen] = useState(false);
+  const [gitHubZIndex, setGitHubZIndex] = useState(1000);
 
   useEffect(() => {
+    // Fetch all posts
     fetch("/api/posts")
       .then((res) => res.json())
       .then((data) => setPosts(data));
+
+    // Fetch recent posts (past 2 months)
+    fetch("/api/posts?recent=true")
+      .then((res) => res.json())
+      .then((data) => setRecentPosts(data));
   }, []);
 
   // Cmd+K keyboard shortcut
@@ -88,16 +108,38 @@ export default function Page() {
       return;
     }
 
+    // Calculate position based on existing windows to avoid overlap
+    const baseX = 100;
+    const baseY = 100;
+    const offset = 30;
+
+    // Find a position that doesn't overlap with existing windows
+    let x = baseX;
+    let y = baseY;
+    let attempts = 0;
+    const maxAttempts = 20;
+
+    while (attempts < maxAttempts) {
+      const overlapping = windows.some(
+        (w) =>
+          Math.abs(w.position.x - x) < 50 && Math.abs(w.position.y - y) < 50
+      );
+
+      if (!overlapping) break;
+
+      x += offset;
+      y += offset;
+      attempts++;
+    }
+
     const newWindow: WindowState = {
       id: windowId,
       post,
-      position: {
-        x: 100 + windows.length * 30,
-        y: 100 + windows.length * 30,
-      },
+      position: { x, y },
       size: { width: 800, height: 600 },
       zIndex: nextZIndex,
       isMinimized: false,
+      startTime: Date.now(),
     };
 
     setWindows((prev) => [...prev, newWindow]);
@@ -116,6 +158,21 @@ export default function Page() {
     setNextZIndex((prev) => prev + 1);
   };
 
+  const bringTaskManagerToFront = () => {
+    setTaskManagerZIndex(nextZIndex);
+    setNextZIndex((prev) => prev + 1);
+  };
+
+  const bringTerminalToFront = () => {
+    setTerminalZIndex(nextZIndex);
+    setNextZIndex((prev) => prev + 1);
+  };
+
+  const bringGitHubToFront = () => {
+    setGitHubZIndex(nextZIndex);
+    setNextZIndex((prev) => prev + 1);
+  };
+
   const minimizeWindow = (windowId: string) => {
     setWindows((prev) =>
       prev.map((w) => (w.id === windowId ? { ...w, isMinimized: true } : w))
@@ -124,6 +181,36 @@ export default function Page() {
 
   const restoreWindow = (windowId: string) => {
     setWindows((prev) =>
+      prev.map((w) =>
+        w.id === windowId ? { ...w, isMinimized: false, zIndex: nextZIndex } : w
+      )
+    );
+    setNextZIndex((prev) => prev + 1);
+  };
+
+  const minimizeCompanyWindow = (windowId: string) => {
+    setCompanyWindows((prev) =>
+      prev.map((w) => (w.id === windowId ? { ...w, isMinimized: true } : w))
+    );
+  };
+
+  const restoreCompanyWindow = (windowId: string) => {
+    setCompanyWindows((prev) =>
+      prev.map((w) =>
+        w.id === windowId ? { ...w, isMinimized: false, zIndex: nextZIndex } : w
+      )
+    );
+    setNextZIndex((prev) => prev + 1);
+  };
+
+  const minimizeFinderWindow = (windowId: string) => {
+    setFinderWindows((prev) =>
+      prev.map((w) => (w.id === windowId ? { ...w, isMinimized: true } : w))
+    );
+  };
+
+  const restoreFinderWindow = (windowId: string) => {
+    setFinderWindows((prev) =>
       prev.map((w) =>
         w.id === windowId ? { ...w, isMinimized: false, zIndex: nextZIndex } : w
       )
@@ -142,16 +229,38 @@ export default function Page() {
       return;
     }
 
+    // Calculate position based on existing windows to avoid overlap
+    const baseX = 200;
+    const baseY = 200;
+    const offset = 30;
+
+    // Find a position that doesn't overlap with existing windows
+    let x = baseX;
+    let y = baseY;
+    let attempts = 0;
+    const maxAttempts = 20;
+
+    while (attempts < maxAttempts) {
+      const overlapping = companyWindows.some(
+        (w) =>
+          Math.abs(w.position.x - x) < 50 && Math.abs(w.position.y - y) < 50
+      );
+
+      if (!overlapping) break;
+
+      x += offset;
+      y += offset;
+      attempts++;
+    }
+
     const newWindow: CompanyWindowState = {
       id: windowId,
       companyId,
-      position: {
-        x: 200 + companyWindows.length * 30,
-        y: 200 + companyWindows.length * 30,
-      },
+      position: { x, y },
       size: { width: 700, height: 500 },
       zIndex: nextZIndex,
       isMinimized: false,
+      startTime: Date.now(),
     };
 
     setCompanyWindows((prev) => [...prev, newWindow]);
@@ -180,16 +289,38 @@ export default function Page() {
       return;
     }
 
+    // Calculate position based on existing windows to avoid overlap
+    const baseX = 150;
+    const baseY = 150;
+    const offset = 30;
+
+    // Find a position that doesn't overlap with existing windows
+    let x = baseX;
+    let y = baseY;
+    let attempts = 0;
+    const maxAttempts = 20;
+
+    while (attempts < maxAttempts) {
+      const overlapping = finderWindows.some(
+        (w) =>
+          Math.abs(w.position.x - x) < 50 && Math.abs(w.position.y - y) < 50
+      );
+
+      if (!overlapping) break;
+
+      x += offset;
+      y += offset;
+      attempts++;
+    }
+
     const newWindow: FinderWindowState = {
       id: windowId,
       finderType,
-      position: {
-        x: 150 + finderWindows.length * 30,
-        y: 150 + finderWindows.length * 30,
-      },
+      position: { x, y },
       size: { width: 800, height: 600 },
       zIndex: nextZIndex,
       isMinimized: false,
+      startTime: Date.now(),
     };
 
     setFinderWindows((prev) => [...prev, newWindow]);
@@ -207,6 +338,30 @@ export default function Page() {
     setNextZIndex((prev) => prev + 1);
   };
 
+  const openTaskManager = () => {
+    setIsTaskManagerOpen(true);
+  };
+
+  const closeTaskManager = () => {
+    setIsTaskManagerOpen(false);
+  };
+
+  const openTerminal = () => {
+    setIsTerminalOpen(true);
+  };
+
+  const closeTerminal = () => {
+    setIsTerminalOpen(false);
+  };
+
+  const openGitHub = () => {
+    setIsGitHubOpen(true);
+  };
+
+  const closeGitHub = () => {
+    setIsGitHubOpen(false);
+  };
+
   return (
     <div className="relative min-h-screen">
       {/* ChaseOS Status Bar */}
@@ -219,10 +374,15 @@ export default function Page() {
       >
         <div className="flex items-center justify-between px-4 py-2 text-sm">
           <div className="flex items-center space-x-4">
-            <div className="font-semibold" style={{ color: "#f0f6fc" }}>
+            <div
+              className="font-semibold font-sf-pro"
+              style={{ color: "#f0f6fc" }}
+            >
               ChaseOS
             </div>
-            <div style={{ color: "#8b949e" }}>chungtin.eth</div>
+            <div className="font-sf-pro" style={{ color: "#8b949e" }}>
+              chungtin.eth
+            </div>
           </div>
           <div
             className="flex items-center space-x-4"
@@ -230,13 +390,13 @@ export default function Page() {
           >
             <div className="flex items-center space-x-2">
               <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              <span>Online</span>
+              <span className="font-sf-pro">Online</span>
             </div>
-            <div>{new Date().toLocaleTimeString()}</div>
-            <div>{new Date().toLocaleDateString()}</div>
+            <div className="font-sf-pro">{new Date().toLocaleTimeString()}</div>
+            <div className="font-sf-pro">{new Date().toLocaleDateString()}</div>
             <div className="flex items-center space-x-1">
-              <span>Search by</span>
-              <kbd className="px-2 py-1 rounded bg-gray-800 text-gray-300 text-xs">
+              <span className="font-sf-pro">Search by</span>
+              <kbd className="px-2 py-1 rounded bg-gray-800 text-gray-300 text-xs font-sf-mono">
                 ⌘K
               </kbd>
             </div>
@@ -257,10 +417,10 @@ export default function Page() {
 
       {/* Main Content */}
       <section className="relative z-10 pt-16">
-        <h1 className="mb-8 text-2xl font-semibold tracking-tighter">
+        <h1 className="mb-8 text-2xl font-semibold tracking-tighter font-sf-pro">
           chungtin.eth
         </h1>
-        <p className="mb-4">
+        <p className="mb-4 font-sf-pro text-base leading-relaxed">
           I am a perpetual student of the digital realm, driven by an insatiable
           thirst for understanding the fundamental architectures that shape our
           technological future.
@@ -280,6 +440,9 @@ export default function Page() {
           onBlogPostClick={openWindow}
           onCompanyClick={openCompanyWindow}
           onFinderClick={openFinderWindow}
+          onTaskManagerClick={openTaskManager}
+          onTerminalClick={openTerminal}
+          onGitHubClick={openGitHub}
           blogPosts={posts}
         />
       </section>
@@ -293,33 +456,154 @@ export default function Page() {
               case "blogs":
                 finderData = {
                   title: "Blogs",
-                  items: posts.map((post) => ({
-                    id: post.slug,
-                    name: post.metadata.title,
-                    type: "file" as const,
-                    icon: FileText,
-                    size: "2.3 KB",
-                    modified: new Date(
-                      post.metadata.publishedAt
-                    ).toLocaleDateString(),
-                    description: post.metadata.summary,
-                    onClick: () => openWindow(post),
-                  })),
+                  items: [
+                    {
+                      id: "recent-posts",
+                      name: "Recent Posts",
+                      type: "folder" as const,
+                      icon: Folder,
+                      size: "12.5 KB",
+                      modified: "2024-01-20",
+                      description: "Latest blog posts",
+                      onClick: () => {},
+                      children: recentPosts.map((post) => ({
+                        id: post.slug,
+                        name: post.metadata.title,
+                        type: "file" as const,
+                        icon: FileText,
+                        size: "2.3 KB",
+                        modified: new Date(
+                          post.metadata.publishedAt
+                        ).toLocaleDateString(),
+                        description: post.metadata.summary,
+                        onClick: () => openWindow(post),
+                      })),
+                    },
+                    {
+                      id: "all-posts",
+                      name: "All Posts",
+                      type: "folder" as const,
+                      icon: Folder,
+                      size: "45.2 KB",
+                      modified: "2024-01-20",
+                      description: "Complete blog archive",
+                      onClick: () => {},
+                      children: posts.map((post) => ({
+                        id: post.slug,
+                        name: post.metadata.title,
+                        type: "file" as const,
+                        icon: FileText,
+                        size: "2.3 KB",
+                        modified: new Date(
+                          post.metadata.publishedAt
+                        ).toLocaleDateString(),
+                        description: post.metadata.summary,
+                        onClick: () => openWindow(post),
+                      })),
+                    },
+                    {
+                      id: "drafts",
+                      name: "Drafts",
+                      type: "folder" as const,
+                      icon: Folder,
+                      size: "8.1 KB",
+                      modified: "2024-01-19",
+                      description: "Work in progress",
+                      onClick: () => {},
+                      children: [
+                        {
+                          id: "draft-1",
+                          name: "Upcoming Post Draft",
+                          type: "file" as const,
+                          icon: FileText,
+                          size: "1.2 KB",
+                          modified: "2024-01-19",
+                          description: "Draft for upcoming blog post",
+                          onClick: () => console.log("Opening draft"),
+                        },
+                      ],
+                    },
+                  ],
                 };
                 break;
               case "companies":
                 finderData = {
                   title: "Companies",
-                  items: Object.entries(companies).map(([id, company]) => ({
-                    id,
-                    name: company.name,
-                    type: "file" as const,
-                    icon: Building2,
-                    size: "1.8 KB",
-                    modified: company.duration.split(" - ")[1] || "Present",
-                    description: company.description,
-                    onClick: () => openCompanyWindow(id),
-                  })),
+                  items: [
+                    {
+                      id: "current-company",
+                      name: "Current Company",
+                      type: "folder" as const,
+                      icon: Folder,
+                      size: "5.2 KB",
+                      modified: "2024-01-20",
+                      description: "Current workplace",
+                      onClick: () => {},
+                      children: Object.entries(companies)
+                        .filter(([_, company]) =>
+                          company.duration.includes("2024")
+                        )
+                        .map(([id, company]) => ({
+                          id,
+                          name: company.name,
+                          type: "file" as const,
+                          icon: Building2,
+                          size: "1.8 KB",
+                          modified:
+                            company.duration.split(" - ")[1] || "Present",
+                          description: company.description,
+                          onClick: () => openCompanyWindow(id),
+                        })),
+                    },
+                    {
+                      id: "past-companies",
+                      name: "Past Companies",
+                      type: "folder" as const,
+                      icon: Folder,
+                      size: "12.8 KB",
+                      modified: "2024-01-20",
+                      description: "Previous work experience",
+                      onClick: () => {},
+                      children: Object.entries(companies)
+                        .filter(
+                          ([_, company]) => !company.duration.includes("2024")
+                        )
+                        .map(([id, company]) => ({
+                          id,
+                          name: company.name,
+                          type: "file" as const,
+                          icon: Building2,
+                          size: "1.8 KB",
+                          modified:
+                            company.duration.split(" - ")[1] || "Present",
+                          description: company.description,
+                          onClick: () => openCompanyWindow(id),
+                        })),
+                    },
+                    {
+                      id: "all-companies",
+                      name: "All Companies",
+                      type: "folder" as const,
+                      icon: Folder,
+                      size: "18.0 KB",
+                      modified: "2024-01-20",
+                      description: "Complete work history",
+                      onClick: () => {},
+                      children: Object.entries(companies).map(
+                        ([id, company]) => ({
+                          id,
+                          name: company.name,
+                          type: "file" as const,
+                          icon: Building2,
+                          size: "1.8 KB",
+                          modified:
+                            company.duration.split(" - ")[1] || "Present",
+                          description: company.description,
+                          onClick: () => openCompanyWindow(id),
+                        })
+                      ),
+                    },
+                  ],
                 };
                 break;
               case "videos":
@@ -327,35 +611,104 @@ export default function Page() {
                   title: "Videos",
                   items: [
                     {
-                      id: "intro-video",
-                      name: "Introduction Video",
-                      type: "file" as const,
-                      icon: Video,
-                      size: "15.2 MB",
-                      modified: "2024-01-15",
-                      description: "Personal introduction and background",
-                      onClick: () => console.log("Opening intro video"),
+                      id: "tutorials",
+                      name: "Tutorials",
+                      type: "folder" as const,
+                      icon: Folder,
+                      size: "174.3 MB",
+                      modified: "2024-01-20",
+                      description: "Educational content",
+                      onClick: () => {},
+                      children: [
+                        {
+                          id: "intro-video",
+                          name: "Introduction Video",
+                          type: "file" as const,
+                          icon: Video,
+                          size: "15.2 MB",
+                          modified: "2024-01-15",
+                          description: "Personal introduction and background",
+                          onClick: () => console.log("Opening intro video"),
+                        },
+                        {
+                          id: "tutorial-series",
+                          name: "Rust Development Tutorial",
+                          type: "file" as const,
+                          icon: Video,
+                          size: "128.5 MB",
+                          modified: "2023-11-22",
+                          description:
+                            "Complete Rust programming tutorial series",
+                          onClick: () => console.log("Opening tutorial series"),
+                        },
+                      ],
                     },
                     {
-                      id: "tech-talk",
-                      name: "Blockchain Technology Talk",
-                      type: "file" as const,
-                      icon: Video,
+                      id: "talks",
+                      name: "Tech Talks",
+                      type: "folder" as const,
+                      icon: Folder,
                       size: "45.8 MB",
-                      modified: "2023-12-10",
-                      description:
-                        "Technical presentation on blockchain development",
-                      onClick: () => console.log("Opening tech talk video"),
+                      modified: "2024-01-20",
+                      description: "Technical presentations",
+                      onClick: () => {},
+                      children: [
+                        {
+                          id: "tech-talk",
+                          name: "Blockchain Technology Talk",
+                          type: "file" as const,
+                          icon: Video,
+                          size: "45.8 MB",
+                          modified: "2023-12-10",
+                          description:
+                            "Technical presentation on blockchain development",
+                          onClick: () => console.log("Opening tech talk video"),
+                        },
+                      ],
                     },
                     {
-                      id: "tutorial-series",
-                      name: "Rust Development Tutorial",
-                      type: "file" as const,
-                      icon: Video,
-                      size: "128.5 MB",
-                      modified: "2023-11-22",
-                      description: "Complete Rust programming tutorial series",
-                      onClick: () => console.log("Opening tutorial series"),
+                      id: "all-videos",
+                      name: "All Videos",
+                      type: "folder" as const,
+                      icon: Folder,
+                      size: "189.5 MB",
+                      modified: "2024-01-20",
+                      description: "Complete video collection",
+                      onClick: () => {},
+                      children: [
+                        {
+                          id: "intro-video-all",
+                          name: "Introduction Video",
+                          type: "file" as const,
+                          icon: Video,
+                          size: "15.2 MB",
+                          modified: "2024-01-15",
+                          description: "Personal introduction and background",
+                          onClick: () => console.log("Opening intro video"),
+                        },
+                        {
+                          id: "tech-talk-all",
+                          name: "Blockchain Technology Talk",
+                          type: "file" as const,
+                          icon: Video,
+                          size: "45.8 MB",
+                          modified: "2023-12-10",
+                          description:
+                            "Technical presentation on blockchain development",
+                          onClick: () => console.log("Opening tech talk video"),
+                        },
+                        {
+                          id: "tutorial-series-all",
+                          name: "Rust Development Tutorial",
+                          type: "file" as const,
+                          icon: Video,
+                          size: "128.5 MB",
+                          modified: "2023-11-22",
+                          description:
+                            "Complete Rust programming tutorial series",
+                          onClick: () => console.log("Opening tutorial series"),
+                        },
+                      ],
                     },
                   ],
                 };
@@ -370,6 +723,8 @@ export default function Page() {
                 title={finderData.title}
                 items={finderData.items}
                 onClose={() => closeFinderWindow(window.id)}
+                onMinimize={() => minimizeFinderWindow(window.id)}
+                onRestore={() => restoreFinderWindow(window.id)}
                 onFocus={() => bringFinderToFront(window.id)}
                 zIndex={window.zIndex}
                 initialPosition={window.position}
@@ -388,6 +743,8 @@ export default function Page() {
               key={window.id}
               company={companies[window.companyId]}
               onClose={() => closeCompanyWindow(window.id)}
+              onMinimize={() => minimizeCompanyWindow(window.id)}
+              onRestore={() => restoreCompanyWindow(window.id)}
               onFocus={() => bringCompanyToFront(window.id)}
               zIndex={window.zIndex}
               initialPosition={window.position}
@@ -435,6 +792,138 @@ export default function Page() {
               </div>
             </BaseWindow>
           ))}
+      </AnimatePresence>
+
+      {/* Task Manager */}
+      <AnimatePresence mode="wait">
+        {isTaskManagerOpen && (
+          <TaskManagerWindow
+            windows={[
+              ...windows.map((w) => ({
+                ...w,
+                post: w.post,
+                startTime: w.startTime,
+              })),
+              ...companyWindows.map((w) => ({
+                ...w,
+                companyId: w.companyId,
+                startTime: w.startTime,
+              })),
+              ...finderWindows.map((w) => ({
+                ...w,
+                finderType: w.finderType,
+                startTime: w.startTime,
+              })),
+            ]}
+            companies={companies}
+            onClose={closeTaskManager}
+            onFocus={() => {
+              bringTaskManagerToFront();
+            }}
+            onCloseWindow={(windowId) => {
+              if (windows.find((w) => w.id === windowId)) {
+                closeWindow(windowId);
+              } else if (companyWindows.find((w) => w.id === windowId)) {
+                closeCompanyWindow(windowId);
+              } else if (finderWindows.find((w) => w.id === windowId)) {
+                closeFinderWindow(windowId);
+              }
+            }}
+            onMinimizeWindow={(windowId) => {
+              if (windows.find((w) => w.id === windowId)) {
+                minimizeWindow(windowId);
+              } else if (companyWindows.find((w) => w.id === windowId)) {
+                minimizeCompanyWindow(windowId);
+              } else if (finderWindows.find((w) => w.id === windowId)) {
+                minimizeFinderWindow(windowId);
+              }
+            }}
+            onRestoreWindow={(windowId) => {
+              if (windows.find((w) => w.id === windowId)) {
+                restoreWindow(windowId);
+              } else if (companyWindows.find((w) => w.id === windowId)) {
+                restoreCompanyWindow(windowId);
+              } else if (finderWindows.find((w) => w.id === windowId)) {
+                restoreFinderWindow(windowId);
+              }
+            }}
+            zIndex={taskManagerZIndex}
+            initialPosition={{ x: 300, y: 200 }}
+            initialSize={{ width: 900, height: 600 }}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Terminal */}
+      <AnimatePresence mode="wait">
+        {isTerminalOpen && (
+          <TerminalWindow
+            onClose={closeTerminal}
+            onFocus={() => {
+              bringTerminalToFront();
+            }}
+            onOpenApp={(appId) => {
+              const app = apps.find((a) => a.id === appId);
+              if (app?.type === "finder") {
+                openFinderWindow(app.finderType!);
+              } else if (appId === "task-manager") {
+                openTaskManager();
+              }
+            }}
+            onOpenFinder={openFinderWindow}
+            onOpenTaskManager={openTaskManager}
+            onCloseWindow={(windowId) => {
+              if (windows.find((w) => w.id === windowId)) {
+                closeWindow(windowId);
+              } else if (companyWindows.find((w) => w.id === windowId)) {
+                closeCompanyWindow(windowId);
+              } else if (finderWindows.find((w) => w.id === windowId)) {
+                closeFinderWindow(windowId);
+              }
+            }}
+            onMinimizeWindow={(windowId) => {
+              if (windows.find((w) => w.id === windowId)) {
+                minimizeWindow(windowId);
+              } else if (companyWindows.find((w) => w.id === windowId)) {
+                minimizeCompanyWindow(windowId);
+              } else if (finderWindows.find((w) => w.id === windowId)) {
+                minimizeFinderWindow(windowId);
+              }
+            }}
+            onRestoreWindow={(windowId) => {
+              if (windows.find((w) => w.id === windowId)) {
+                restoreWindow(windowId);
+              } else if (companyWindows.find((w) => w.id === windowId)) {
+                restoreCompanyWindow(windowId);
+              } else if (finderWindows.find((w) => w.id === windowId)) {
+                restoreFinderWindow(windowId);
+              }
+            }}
+            windows={[
+              ...windows.map((w) => ({ ...w, startTime: w.startTime })),
+              ...companyWindows.map((w) => ({ ...w, startTime: w.startTime })),
+              ...finderWindows.map((w) => ({ ...w, startTime: w.startTime })),
+            ]}
+            zIndex={terminalZIndex}
+            initialPosition={{ x: 250, y: 150 }}
+            initialSize={{ width: 800, height: 600 }}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* GitHub */}
+      <AnimatePresence mode="wait">
+        {isGitHubOpen && (
+          <GitHubWindow
+            onClose={closeGitHub}
+            onFocus={() => {
+              bringGitHubToFront();
+            }}
+            zIndex={gitHubZIndex}
+            initialPosition={{ x: 300, y: 150 }}
+            initialSize={{ width: 1000, height: 700 }}
+          />
+        )}
       </AnimatePresence>
 
       {/* Taskbar */}
@@ -506,6 +995,9 @@ export default function Page() {
         onBlogPostClick={openWindow}
         onCompanyClick={openCompanyWindow}
         onFinderClick={openFinderWindow}
+        onTaskManagerClick={openTaskManager}
+        onTerminalClick={openTerminal}
+        onGitHubClick={openGitHub}
         blogPosts={posts}
       />
     </div>

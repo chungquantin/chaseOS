@@ -18,6 +18,8 @@ interface CompanyInfo {
 interface CompanyWindowProps {
   company: CompanyInfo;
   onClose: () => void;
+  onMinimize?: () => void;
+  onRestore?: () => void;
   onFocus?: () => void;
   zIndex?: number;
   initialPosition?: { x: number; y: number };
@@ -116,6 +118,8 @@ const companies: Record<string, CompanyInfo> = {
 export function CompanyWindow({
   company,
   onClose,
+  onMinimize,
+  onRestore,
   onFocus,
   zIndex,
   initialPosition = { x: 200, y: 200 },
@@ -125,6 +129,8 @@ export function CompanyWindow({
     <BaseWindow
       title={`${company.name} - Company Info`}
       onClose={onClose}
+      onMinimize={onMinimize}
+      onRestore={onRestore}
       onFocus={onFocus}
       zIndex={zIndex}
       initialPosition={initialPosition}

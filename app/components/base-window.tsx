@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { X, Minimize2, Maximize2 } from "lucide-react";
 
 interface BaseWindowProps {
   title: string;
@@ -57,13 +58,6 @@ export function BaseWindow({
 
   // Drag functionality
   const handleMouseDown = (e: React.MouseEvent) => {
-    if (
-      e.target !== headerRef.current &&
-      !headerRef.current?.contains(e.target as Node)
-    ) {
-      return;
-    }
-
     // Don't start dragging if clicking on window control buttons
     const target = e.target as HTMLElement;
     if (
@@ -73,15 +67,17 @@ export function BaseWindow({
       return;
     }
 
-    setIsDragging(true);
-    const rect = windowRef.current?.getBoundingClientRect();
-    if (rect) {
-      setDragOffset({
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top,
-      });
+    // Only start dragging if clicking on the header area
+    if (!headerRef.current?.contains(e.target as Node)) {
+      return;
     }
+
     e.preventDefault();
+    setIsDragging(true);
+    setDragOffset({
+      x: e.clientX - position.x,
+      y: e.clientY - position.y,
+    });
   };
 
   const handleMouseMove = (e: MouseEvent) => {
@@ -275,19 +271,16 @@ export function BaseWindow({
       }}
       initial={{
         opacity: 0,
-        scale: 0.8,
         y: 50,
         rotateX: -15,
       }}
       animate={{
         opacity: 1,
-        scale: 1,
         y: 0,
         rotateX: 0,
       }}
       exit={{
         opacity: 0,
-        scale: 0.9,
         y: 20,
         rotateX: 10,
       }}
@@ -299,11 +292,9 @@ export function BaseWindow({
         duration: 0.4,
       }}
       whileHover={{
-        scale: 1.02,
         transition: { duration: 0.2 },
       }}
       whileTap={{
-        scale: 0.98,
         transition: { duration: 0.1 },
       }}
       onClick={() => onFocus?.()}
@@ -320,7 +311,7 @@ export function BaseWindow({
       >
         <div className="flex items-center space-x-2">
           <div
-            className="w-3 h-3 bg-red-500 rounded-full cursor-pointer transition-all duration-150 hover:bg-red-600 hover:scale-110"
+            className="w-3 h-3 bg-red-500 rounded-full cursor-pointer transition-all duration-150 hover:bg-red-600 hover:scale-110 flex items-center justify-center"
             onClick={(e) => {
               console.log("Close button clicked");
               e.stopPropagation();
@@ -329,9 +320,14 @@ export function BaseWindow({
             style={{
               boxShadow: "0 1px 2px rgba(0,0,0,0.3)",
             }}
-          />
+          >
+            <X
+              size={8}
+              className="text-red-900 opacity-0 hover:opacity-100 transition-opacity"
+            />
+          </div>
           <div
-            className="w-3 h-3 bg-yellow-500 rounded-full cursor-pointer transition-all duration-150 hover:bg-yellow-600 hover:scale-110"
+            className="w-3 h-3 bg-yellow-500 rounded-full cursor-pointer transition-all duration-150 hover:bg-yellow-600 hover:scale-110 flex items-center justify-center"
             onClick={(e) => {
               console.log("Minimize button clicked");
               e.stopPropagation();
@@ -340,9 +336,14 @@ export function BaseWindow({
             style={{
               boxShadow: "0 1px 2px rgba(0,0,0,0.3)",
             }}
-          />
+          >
+            <Minimize2
+              size={8}
+              className="text-yellow-900 opacity-0 hover:opacity-100 transition-opacity"
+            />
+          </div>
           <div
-            className="w-3 h-3 bg-green-500 rounded-full cursor-pointer transition-all duration-150 hover:bg-green-600 hover:scale-110"
+            className="w-3 h-3 bg-green-500 rounded-full cursor-pointer transition-all duration-150 hover:bg-green-600 hover:scale-110 flex items-center justify-center"
             onClick={(e) => {
               console.log("Maximize button clicked");
               e.stopPropagation();
@@ -351,10 +352,15 @@ export function BaseWindow({
             style={{
               boxShadow: "0 1px 2px rgba(0,0,0,0.3)",
             }}
-          />
+          >
+            <Maximize2
+              size={8}
+              className="text-green-900 opacity-0 hover:opacity-100 transition-opacity"
+            />
+          </div>
         </div>
         <div
-          className="text-sm font-medium truncate max-w-xs"
+          className="text-sm font-medium font-sf-pro truncate max-w-xs"
           style={{ color: "#f0f6fc" }}
         >
           {title}

@@ -65,6 +65,9 @@ dependencies:
   react-resizable-panels:
     specifier: ^3.0.6
     version: 3.0.6(react-dom@18.2.0)(react@18.2.0)
+  react-terminal-ui:
+    specifier: ^1.4.0
+    version: 1.4.0(react-dom@18.2.0)(react@18.2.0)
   rehype-highlight:
     specifier: ^7.0.2
     version: 7.0.2
@@ -2567,6 +2570,16 @@ packages:
       get-nonce: 1.0.1
       react: 18.2.0
       tslib: 2.6.2
+    dev: false
+
+  /react-terminal-ui@1.4.0(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-3eMdxCDiW3eBwsp0QBz6i8va0XTO8d91nBgnL5p9f3kAwIrHBu23oH+RbXGp4as/p05srMBFiDMRzRubT1VEsQ==}
+    peerDependencies:
+      react: '>=18.0.0'
+      react-dom: '>=18.0.0'
+    dependencies:
+      react: 18.2.0
+      react-dom: 18.2.0(react@18.2.0)
     dev: false
 
   /react@18.2.0:

@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { Command } from "cmdk";
-import { Search, FileText, Building2, Video } from "lucide-react";
+import { Search, FileText, Building2, Video, Monitor } from "lucide-react";
+import Image from "next/image";
 import { BlogPost } from "../page";
 import { companies } from "./company-window";
-import { getFinderApps } from "./app-registry";
+import { getFinderApps, getActionApps } from "./app-registry";
 
 interface CommandPaletteProps {
   isOpen: boolean;
@@ -13,6 +14,9 @@ interface CommandPaletteProps {
   onBlogPostClick: (post: BlogPost) => void;
   onCompanyClick: (companyId: string) => void;
   onFinderClick: (finderType: string) => void;
+  onTaskManagerClick: () => void;
+  onTerminalClick: () => void;
+  onGitHubClick: () => void;
   blogPosts: BlogPost[];
 }
 
@@ -22,6 +26,9 @@ export function CommandPalette({
   onBlogPostClick,
   onCompanyClick,
   onFinderClick,
+  onTaskManagerClick,
+  onTerminalClick,
+  onGitHubClick,
   blogPosts,
 }: CommandPaletteProps) {
   const [search, setSearch] = useState("");
@@ -85,11 +92,11 @@ export function CommandPalette({
               value={search}
               onValueChange={setSearch}
               placeholder="Search blogs, companies, videos..."
-              className="flex-1 bg-transparent text-white border-none placeholder-gray-400 focus:outline-none text-lg"
+              className="flex-1 bg-transparent text-white border-none placeholder-gray-400 focus:outline-none text-lg font-sf-pro"
               autoFocus
             />
             <div className="ml-4 flex items-center space-x-2">
-              <kbd className="px-3 py-1 rounded-md bg-gray-800 text-gray-300 text-sm font-mono border border-gray-700">
+              <kbd className="px-3 py-1 rounded-md bg-gray-800 text-gray-300 text-sm font-sf-mono border border-gray-700">
                 ESC
               </kbd>
             </div>
@@ -116,7 +123,7 @@ export function CommandPalette({
             {/* Quick Actions */}
             <Command.Group heading="Quick Actions">
               {getFinderApps().map((app) => {
-                const IconComponent = app.icon;
+                const isImageIcon = typeof app.icon === "string";
                 return (
                   <Command.Item
                     key={app.id}
@@ -130,18 +137,76 @@ export function CommandPalette({
                       className="flex items-center justify-center w-10 h-10 rounded-xl mr-4 group-hover:scale-110 transition-transform duration-200"
                       style={{ backgroundColor: app.color }}
                     >
-                      <IconComponent size={18} className="text-white" />
+                      {isImageIcon ? (
+                        <Image
+                          src={app.icon as string}
+                          alt={app.name}
+                          width={18}
+                          height={18}
+                          className="rounded"
+                        />
+                      ) : (
+                        <app.icon size={18} className="text-white" />
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-white font-semibold text-lg font-sf-pro">
+                        Open {app.name}
+                      </div>
+                      <div className="text-sm text-gray-400 mt-1 font-sf-pro">
+                        {app.description}
+                      </div>
+                    </div>
+                    <div className="text-xs text-gray-500 px-2 py-1 rounded bg-gray-800">
+                      Finder
+                    </div>
+                  </Command.Item>
+                );
+              })}
+
+              {getActionApps().map((app) => {
+                const isImageIcon = typeof app.icon === "string";
+                return (
+                  <Command.Item
+                    key={app.id}
+                    onSelect={() => {
+                      if (app.id === "task-manager") {
+                        onTaskManagerClick();
+                      } else if (app.id === "terminal") {
+                        onTerminalClick();
+                      } else if (app.id === "github") {
+                        onGitHubClick();
+                      }
+                      onClose();
+                    }}
+                    className="flex items-center px-6 py-4 cursor-pointer hover:bg-gray-800/50 transition-all duration-200 group"
+                  >
+                    <div
+                      className="flex items-center justify-center w-10 h-10 rounded-xl mr-4 group-hover:scale-110 transition-transform duration-200"
+                      style={{ backgroundColor: app.color }}
+                    >
+                      {isImageIcon ? (
+                        <Image
+                          src={app.icon as string}
+                          alt={app.name}
+                          width={18}
+                          height={18}
+                          className="rounded"
+                        />
+                      ) : (
+                        <app.icon size={18} className="text-white" />
+                      )}
                     </div>
                     <div className="flex-1">
                       <div className="text-white font-semibold text-lg">
-                        Open {app.name}
+                        {app.name}
                       </div>
                       <div className="text-sm text-gray-400 mt-1">
                         {app.description}
                       </div>
                     </div>
                     <div className="text-xs text-gray-500 px-2 py-1 rounded bg-gray-800">
-                      Finder
+                      App
                     </div>
                   </Command.Item>
                 );
