@@ -62,13 +62,6 @@ export const apps: App[] = [
     finderType: "videos",
   },
   {
-    id: "terminal",
-    name: "Terminal",
-    description: "Command line interface",
-    icon: Terminal,
-    type: "action",
-  },
-  {
     id: "github",
     name: "GitHub",
     description: "Browse repositories and contributions",
