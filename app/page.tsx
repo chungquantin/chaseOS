@@ -10,7 +10,6 @@ import { BaseWindow } from "./components/base-window";
 import { MDXContent } from "./components/mdx-content";
 import { CommandPalette } from "./components/command-palette";
 import { TaskManagerWindow } from "./components/task-manager-window";
-import { TerminalWindow } from "./components/terminal-window";
 import { GitHubWindow } from "./components/github-window";
 import { apps } from "./components/app-registry";
 
@@ -850,63 +849,6 @@ export default function Page() {
             zIndex={taskManagerZIndex}
             initialPosition={{ x: 300, y: 200 }}
             initialSize={{ width: 900, height: 600 }}
-          />
-        )}
-      </AnimatePresence>
-
-      {/* Terminal */}
-      <AnimatePresence mode="wait">
-        {isTerminalOpen && (
-          <TerminalWindow
-            onClose={closeTerminal}
-            onFocus={() => {
-              bringTerminalToFront();
-            }}
-            onOpenApp={(appId) => {
-              const app = apps.find((a) => a.id === appId);
-              if (app?.type === "finder") {
-                openFinderWindow(app.finderType!);
-              } else if (appId === "task-manager") {
-                openTaskManager();
-              }
-            }}
-            onOpenFinder={openFinderWindow}
-            onOpenTaskManager={openTaskManager}
-            onCloseWindow={(windowId) => {
-              if (windows.find((w) => w.id === windowId)) {
-                closeWindow(windowId);
-              } else if (companyWindows.find((w) => w.id === windowId)) {
-                closeCompanyWindow(windowId);
-              } else if (finderWindows.find((w) => w.id === windowId)) {
-                closeFinderWindow(windowId);
-              }
-            }}
-            onMinimizeWindow={(windowId) => {
-              if (windows.find((w) => w.id === windowId)) {
-                minimizeWindow(windowId);
-              } else if (companyWindows.find((w) => w.id === windowId)) {
-                minimizeCompanyWindow(windowId);
-              } else if (finderWindows.find((w) => w.id === windowId)) {
-                minimizeFinderWindow(windowId);
-              }
-            }}
-            onRestoreWindow={(windowId) => {
-              if (windows.find((w) => w.id === windowId)) {
-                restoreWindow(windowId);
-              } else if (companyWindows.find((w) => w.id === windowId)) {
-                restoreCompanyWindow(windowId);
-              } else if (finderWindows.find((w) => w.id === windowId)) {
-                restoreFinderWindow(windowId);
-              }
-            }}
-            windows={[
-              ...windows.map((w) => ({ ...w, startTime: w.startTime })),
-              ...companyWindows.map((w) => ({ ...w, startTime: w.startTime })),
-              ...finderWindows.map((w) => ({ ...w, startTime: w.startTime })),
-            ]}
-            zIndex={terminalZIndex}
-            initialPosition={{ x: 250, y: 150 }}
-            initialSize={{ width: 800, height: 600 }}
           />
         )}
       </AnimatePresence>
