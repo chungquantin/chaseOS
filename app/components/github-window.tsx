@@ -37,6 +37,8 @@ interface Repository {
 interface GitHubWindowProps {
   onClose: () => void;
   onFocus?: () => void;
+  onPositionChange?: (position: { x: number; y: number }) => void;
+  onSizeChange?: (size: { width: number; height: number }) => void;
   zIndex?: number;
   initialPosition?: { x: number; y: number };
   initialSize?: { width: number; height: number };
@@ -45,6 +47,8 @@ interface GitHubWindowProps {
 export function GitHubWindow({
   onClose,
   onFocus,
+  onPositionChange,
+  onSizeChange,
   zIndex,
   initialPosition = { x: 200, y: 200 },
   initialSize = { width: 1000, height: 700 },
@@ -159,6 +163,8 @@ export function GitHubWindow({
       title="GitHub"
       onClose={onClose}
       onFocus={onFocus}
+      onPositionChange={onPositionChange}
+      onSizeChange={onSizeChange}
       zIndex={zIndex}
       initialPosition={initialPosition}
       initialSize={initialSize}

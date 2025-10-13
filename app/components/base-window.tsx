@@ -11,6 +11,8 @@ interface BaseWindowProps {
   onMinimize?: () => void;
   onRestore?: () => void;
   onFocus?: () => void;
+  onPositionChange?: (position: { x: number; y: number }) => void;
+  onSizeChange?: (size: { width: number; height: number }) => void;
   zIndex?: number;
   initialPosition?: { x: number; y: number };
   initialSize?: { width: number; height: number };
@@ -23,6 +25,8 @@ export function BaseWindow({
   onMinimize,
   onRestore,
   onFocus,
+  onPositionChange,
+  onSizeChange,
   zIndex = 50,
   initialPosition = { x: 200, y: 200 },
   initialSize = { width: 800, height: 600 },
@@ -35,6 +39,20 @@ export function BaseWindow({
       height: Math.max(300, defaultSize.height),
     };
   });
+
+  // Notify parent when position changes
+  useEffect(() => {
+    if (onPositionChange) {
+      onPositionChange(position);
+    }
+  }, [position]);
+
+  // Notify parent when size changes
+  useEffect(() => {
+    if (onSizeChange) {
+      onSizeChange(size);
+    }
+  }, [size]);
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
   const [isMaximized, setIsMaximized] = useState(false);

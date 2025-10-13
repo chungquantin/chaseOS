@@ -21,6 +21,8 @@ interface CompanyWindowProps {
   onMinimize?: () => void;
   onRestore?: () => void;
   onFocus?: () => void;
+  onPositionChange?: (position: { x: number; y: number }) => void;
+  onSizeChange?: (size: { width: number; height: number }) => void;
   zIndex?: number;
   initialPosition?: { x: number; y: number };
   initialSize?: { width: number; height: number };
@@ -121,6 +123,8 @@ export function CompanyWindow({
   onMinimize,
   onRestore,
   onFocus,
+  onPositionChange,
+  onSizeChange,
   zIndex,
   initialPosition = { x: 200, y: 200 },
   initialSize = { width: 700, height: 500 },
@@ -132,6 +136,8 @@ export function CompanyWindow({
       onMinimize={onMinimize}
       onRestore={onRestore}
       onFocus={onFocus}
+      onPositionChange={onPositionChange}
+      onSizeChange={onSizeChange}
       zIndex={zIndex}
       initialPosition={initialPosition}
       initialSize={initialSize}

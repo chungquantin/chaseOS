@@ -8,6 +8,8 @@ import {
   Monitor,
   Terminal,
   Github,
+  ImageIcon,
+  VideoIcon,
 } from "lucide-react";
 
 export interface App {
@@ -49,7 +51,7 @@ export const apps: App[] = [
     id: "images",
     name: "Photos",
     description: "Browse and view images",
-    icon: "/apps/image-gallery.png",
+    icon: ImageIcon,
     type: "finder",
     finderType: "images",
   },
@@ -57,7 +59,7 @@ export const apps: App[] = [
     id: "videos",
     name: "Videos",
     description: "Edit and create videos",
-    icon: "/apps/capcut.webp",
+    icon: VideoIcon,
     type: "finder",
     finderType: "videos",
   },

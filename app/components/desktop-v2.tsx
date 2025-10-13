@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { apps, getFinderApps, getActionApps } from "./app-registry";
+import { getFinderApps, getActionApps } from "./app-registry";
 
 // Helper function to adjust color brightness
 const adjustColor = (color: string, amount: number): string => {
@@ -29,18 +29,13 @@ interface DesktopProps {
   onCompanyClick: (companyId: string) => void;
   onFinderClick: (finderType: string) => void;
   onTaskManagerClick: () => void;
-  onTerminalClick: () => void;
   onGitHubClick: () => void;
-  blogPosts: any[];
 }
 
 export function Desktop({
-  onCompanyClick,
   onFinderClick,
   onTaskManagerClick,
-  onTerminalClick,
   onGitHubClick,
-  blogPosts,
 }: DesktopProps) {
   const [selectedApp, setSelectedApp] = useState<string | null>(null);
 
@@ -63,8 +58,6 @@ export function Desktop({
     onClick: () => {
       if (app.id === "task-manager") {
         onTaskManagerClick();
-      } else if (app.id === "terminal") {
-        onTerminalClick();
       } else if (app.id === "github") {
         onGitHubClick();
       }

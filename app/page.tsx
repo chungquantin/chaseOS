@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Desktop } from "app/components/desktop-v2";
 import { CompanyWindow, companies } from "app/components/company-window";
 import { FinderWindow } from "app/components/finder-window";
@@ -24,52 +24,385 @@ export type BlogPost = {
   content: string;
 };
 
+// Unified window content types
+type WindowContent =
+  | { type: "blog"; post: BlogPost }
+  | { type: "company"; companyId: string }
+  | { type: "finder"; finderType: string };
+
+// Single unified window state
 interface WindowState {
   id: string;
-  post: BlogPost;
+  content: WindowContent;
   position: { x: number; y: number };
   size: { width: number; height: number };
   zIndex: number;
   isMinimized: boolean;
-  startTime: number; // timestamp when window was opened
+  startTime: number;
 }
 
-interface FinderWindowState {
-  id: string;
-  finderType: string;
-  position: { x: number; y: number };
-  size: { width: number; height: number };
-  zIndex: number;
-  isMinimized: boolean;
-  startTime: number; // timestamp when window was opened
+// Finder data factory functions
+const getBlogsFinderData = (
+  recentPosts: BlogPost[],
+  posts: BlogPost[],
+  openBlogWindow: (post: BlogPost) => void
+) => ({
+  title: "Blogs",
+  items: [
+    {
+      id: "recent-posts",
+      name: "Recent Posts",
+      type: "folder" as const,
+      icon: Folder,
+      size: "12.5 KB",
+      modified: "2024-01-20",
+      description: "Latest blog posts",
+      onClick: () => {},
+      children: recentPosts.map((post) => ({
+        id: post.slug,
+        name: post.metadata.title,
+        type: "file" as const,
+        icon: FileText,
+        size: "2.3 KB",
+        modified: new Date(post.metadata.publishedAt).toLocaleDateString(),
+        description: post.metadata.summary,
+        onClick: () => openBlogWindow(post),
+      })),
+    },
+    {
+      id: "all-posts",
+      name: "All Posts",
+      type: "folder" as const,
+      icon: Folder,
+      size: "45.2 KB",
+      modified: "2024-01-20",
+      description: "Complete blog archive",
+      onClick: () => {},
+      children: posts.map((post) => ({
+        id: post.slug,
+        name: post.metadata.title,
+        type: "file" as const,
+        icon: FileText,
+        size: "2.3 KB",
+        modified: new Date(post.metadata.publishedAt).toLocaleDateString(),
+        description: post.metadata.summary,
+        onClick: () => openBlogWindow(post),
+      })),
+    },
+    {
+      id: "drafts",
+      name: "Drafts",
+      type: "folder" as const,
+      icon: Folder,
+      size: "8.1 KB",
+      modified: "2024-01-19",
+      description: "Work in progress",
+      onClick: () => {},
+      children: [
+        {
+          id: "draft-1",
+          name: "Upcoming Post Draft",
+          type: "file" as const,
+          icon: FileText,
+          size: "1.2 KB",
+          modified: "2024-01-19",
+          description: "Draft for upcoming blog post",
+          onClick: () => console.log("Opening draft"),
+        },
+      ],
+    },
+  ],
+});
+
+const getCompaniesFinderData = (
+  companies: Record<
+    string,
+    { name: string; duration: string; description: string }
+  >,
+  openCompanyWindow: (id: string) => void
+) => ({
+  title: "Companies",
+  items: [
+    {
+      id: "current-company",
+      name: "Current Company",
+      type: "folder" as const,
+      icon: Folder,
+      size: "5.2 KB",
+      modified: "2024-01-20",
+      description: "Current workplace",
+      onClick: () => {},
+      children: Object.entries(companies)
+        .filter(([_, company]) => company.duration.includes("2024"))
+        .map(([id, company]) => ({
+          id,
+          name: company.name,
+          type: "file" as const,
+          icon: Building2,
+          size: "1.8 KB",
+          modified: company.duration.split(" - ")[1] || "Present",
+          description: company.description,
+          onClick: () => openCompanyWindow(id),
+        })),
+    },
+    {
+      id: "past-companies",
+      name: "Past Companies",
+      type: "folder" as const,
+      icon: Folder,
+      size: "12.8 KB",
+      modified: "2024-01-20",
+      description: "Previous work experience",
+      onClick: () => {},
+      children: Object.entries(companies)
+        .filter(([_, company]) => !company.duration.includes("2024"))
+        .map(([id, company]) => ({
+          id,
+          name: company.name,
+          type: "file" as const,
+          icon: Building2,
+          size: "1.8 KB",
+          modified: company.duration.split(" - ")[1] || "Present",
+          description: company.description,
+          onClick: () => openCompanyWindow(id),
+        })),
+    },
+    {
+      id: "all-companies",
+      name: "All Companies",
+      type: "folder" as const,
+      icon: Folder,
+      size: "18.0 KB",
+      modified: "2024-01-20",
+      description: "Complete work history",
+      onClick: () => {},
+      children: Object.entries(companies).map(([id, company]) => ({
+        id,
+        name: company.name,
+        type: "file" as const,
+        icon: Building2,
+        size: "1.8 KB",
+        modified: company.duration.split(" - ")[1] || "Present",
+        description: company.description,
+        onClick: () => openCompanyWindow(id),
+      })),
+    },
+  ],
+});
+
+const getVideosFinderData = () => ({
+  title: "Videos",
+  items: [
+    {
+      id: "tutorials",
+      name: "Tutorials",
+      type: "folder" as const,
+      icon: Folder,
+      size: "174.3 MB",
+      modified: "2024-01-20",
+      description: "Educational content",
+      onClick: () => {},
+      children: [
+        {
+          id: "intro-video",
+          name: "Introduction Video",
+          type: "file" as const,
+          icon: Video,
+          size: "15.2 MB",
+          modified: "2024-01-15",
+          description: "Personal introduction and background",
+          onClick: () => console.log("Opening intro video"),
+        },
+        {
+          id: "tutorial-series",
+          name: "Rust Development Tutorial",
+          type: "file" as const,
+          icon: Video,
+          size: "128.5 MB",
+          modified: "2023-11-22",
+          description: "Complete Rust programming tutorial series",
+          onClick: () => console.log("Opening tutorial series"),
+        },
+      ],
+    },
+    {
+      id: "talks",
+      name: "Tech Talks",
+      type: "folder" as const,
+      icon: Folder,
+      size: "45.8 MB",
+      modified: "2024-01-20",
+      description: "Technical presentations",
+      onClick: () => {},
+      children: [
+        {
+          id: "tech-talk",
+          name: "Blockchain Technology Talk",
+          type: "file" as const,
+          icon: Video,
+          size: "45.8 MB",
+          modified: "2023-12-10",
+          description: "Technical presentation on blockchain development",
+          onClick: () => console.log("Opening tech talk video"),
+        },
+      ],
+    },
+    {
+      id: "all-videos",
+      name: "All Videos",
+      type: "folder" as const,
+      icon: Folder,
+      size: "189.5 MB",
+      modified: "2024-01-20",
+      description: "Complete video collection",
+      onClick: () => {},
+      children: [
+        {
+          id: "intro-video-all",
+          name: "Introduction Video",
+          type: "file" as const,
+          icon: Video,
+          size: "15.2 MB",
+          modified: "2024-01-15",
+          description: "Personal introduction and background",
+          onClick: () => console.log("Opening intro video"),
+        },
+        {
+          id: "tech-talk-all",
+          name: "Blockchain Technology Talk",
+          type: "file" as const,
+          icon: Video,
+          size: "45.8 MB",
+          modified: "2023-12-10",
+          description: "Technical presentation on blockchain development",
+          onClick: () => console.log("Opening tech talk video"),
+        },
+        {
+          id: "tutorial-series-all",
+          name: "Rust Development Tutorial",
+          type: "file" as const,
+          icon: Video,
+          size: "128.5 MB",
+          modified: "2023-11-22",
+          description: "Complete Rust programming tutorial series",
+          onClick: () => console.log("Opening tutorial series"),
+        },
+      ],
+    },
+  ],
+});
+
+// Custom hook for persisted state
+function usePersistedState<T>(
+  key: string,
+  defaultValue: T
+): [T, React.Dispatch<React.SetStateAction<T>>] {
+  const [state, setState] = useState<T>(() => {
+    if (typeof window === "undefined") return defaultValue;
+
+    try {
+      const item = window.localStorage.getItem(key);
+      return item ? JSON.parse(item) : defaultValue;
+    } catch (error) {
+      console.warn(`Error loading persisted state for key "${key}":`, error);
+      return defaultValue;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(key, JSON.stringify(state));
+    } catch (error) {
+      console.warn(`Error saving persisted state for key "${key}":`, error);
+    }
+  }, [key, state]);
+
+  return [state, setState];
 }
 
-interface CompanyWindowState {
-  id: string;
-  companyId: string;
-  position: { x: number; y: number };
-  size: { width: number; height: number };
-  zIndex: number;
-  isMinimized: boolean;
-  startTime: number; // timestamp when window was opened
-}
+// Validate and fix window positions to ensure they're on screen
+const validateWindowPosition = (
+  position: { x: number; y: number },
+  size: { width: number; height: number }
+): { x: number; y: number } => {
+  const maxX = window.innerWidth - 100; // Keep at least 100px visible
+  const maxY = window.innerHeight - 100;
+
+  return {
+    x: Math.max(0, Math.min(position.x, maxX)),
+    y: Math.max(0, Math.min(position.y, maxY)),
+  };
+};
 
 export default function Page() {
-  const [windows, setWindows] = useState<WindowState[]>([]);
-  const [companyWindows, setCompanyWindows] = useState<CompanyWindowState[]>(
+  const [windows, setWindows] = usePersistedState<WindowState[]>(
+    "chaseOS_windows",
     []
   );
-  const [finderWindows, setFinderWindows] = useState<FinderWindowState[]>([]);
-  const [nextZIndex, setNextZIndex] = useState(1000);
+  const [nextZIndex, setNextZIndex] = usePersistedState<number>(
+    "chaseOS_nextZIndex",
+    1000
+  );
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [recentPosts, setRecentPosts] = useState<BlogPost[]>([]);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
-  const [isTaskManagerOpen, setIsTaskManagerOpen] = useState(false);
-  const [taskManagerZIndex, setTaskManagerZIndex] = useState(1000);
-  const [isTerminalOpen, setIsTerminalOpen] = useState(false);
-  const [terminalZIndex, setTerminalZIndex] = useState(1000);
-  const [isGitHubOpen, setIsGitHubOpen] = useState(false);
-  const [gitHubZIndex, setGitHubZIndex] = useState(1000);
+  const [isTaskManagerOpen, setIsTaskManagerOpen] = usePersistedState<boolean>(
+    "chaseOS_taskManager",
+    false
+  );
+  const [taskManagerZIndex, setTaskManagerZIndex] = usePersistedState<number>(
+    "chaseOS_taskManagerZIndex",
+    1000
+  );
+  const [isGitHubOpen, setIsGitHubOpen] = usePersistedState<boolean>(
+    "chaseOS_github",
+    false
+  );
+  const [gitHubZIndex, setGitHubZIndex] = usePersistedState<number>(
+    "chaseOS_githubZIndex",
+    1000
+  );
+  const [gitHubStartTime, setGitHubStartTime] = usePersistedState<number>(
+    "chaseOS_githubStartTime",
+    Date.now()
+  );
+
+  // Validate window positions on mount and screen resize
+  useEffect(() => {
+    const validatePositions = () => {
+      setWindows((prev) =>
+        prev.map((w) => ({
+          ...w,
+          position: validateWindowPosition(w.position, w.size),
+        }))
+      );
+    };
+
+    // Validate on mount
+    if (windows.length > 0) {
+      validatePositions();
+    }
+
+    // Validate on window resize
+    window.addEventListener("resize", validatePositions);
+    return () => window.removeEventListener("resize", validatePositions);
+  }, []);
+
+  // Log restored windows for debugging
+  useEffect(() => {
+    if (windows.length > 0) {
+      console.log(
+        "Restored windows from localStorage:",
+        windows.map((w) => ({
+          id: w.id,
+          type: w.content.type,
+          position: w.position,
+          size: w.size,
+          zIndex: w.zIndex,
+        }))
+      );
+    }
+  }, []);
 
   useEffect(() => {
     // Fetch all posts
@@ -96,25 +429,26 @@ export default function Page() {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  const openWindow = (post: BlogPost) => {
-    const windowId = `window-${post.slug}`;
-
+  // Unified window management
+  const openWindow = (
+    id: string,
+    content: WindowContent,
+    defaultSize = { width: 800, height: 600 },
+    basePosition = { x: 100, y: 100 }
+  ) => {
     // Check if window is already open
-    const existingWindow = windows.find((w) => w.id === windowId);
+    const existingWindow = windows.find((w) => w.id === id);
     if (existingWindow) {
-      // Bring to front
-      bringToFront(windowId);
+      bringToFront(id);
       return;
     }
 
-    // Calculate position based on existing windows to avoid overlap
-    const baseX = 100;
-    const baseY = 100;
-    const offset = 30;
+    console.log("openWindow called, id:", id, windows);
 
-    // Find a position that doesn't overlap with existing windows
-    let x = baseX;
-    let y = baseY;
+    // Calculate position based on existing windows to avoid overlap
+    const offset = 30;
+    let x = basePosition.x;
+    let y = basePosition.y;
     let attempts = 0;
     const maxAttempts = 20;
 
@@ -132,10 +466,10 @@ export default function Page() {
     }
 
     const newWindow: WindowState = {
-      id: windowId,
-      post,
+      id,
+      content,
       position: { x, y },
-      size: { width: 800, height: 600 },
+      size: defaultSize,
       zIndex: nextZIndex,
       isMinimized: false,
       startTime: Date.now(),
@@ -146,7 +480,6 @@ export default function Page() {
   };
 
   const closeWindow = (windowId: string) => {
-    console.log("Closing window", windowId);
     setWindows((prev) => prev.filter((w) => w.id !== windowId));
   };
 
@@ -154,21 +487,6 @@ export default function Page() {
     setWindows((prev) =>
       prev.map((w) => (w.id === windowId ? { ...w, zIndex: nextZIndex } : w))
     );
-    setNextZIndex((prev) => prev + 1);
-  };
-
-  const bringTaskManagerToFront = () => {
-    setTaskManagerZIndex(nextZIndex);
-    setNextZIndex((prev) => prev + 1);
-  };
-
-  const bringTerminalToFront = () => {
-    setTerminalZIndex(nextZIndex);
-    setNextZIndex((prev) => prev + 1);
-  };
-
-  const bringGitHubToFront = () => {
-    setGitHubZIndex(nextZIndex);
     setNextZIndex((prev) => prev + 1);
   };
 
@@ -187,179 +505,148 @@ export default function Page() {
     setNextZIndex((prev) => prev + 1);
   };
 
-  const minimizeCompanyWindow = (windowId: string) => {
-    setCompanyWindows((prev) =>
-      prev.map((w) => (w.id === windowId ? { ...w, isMinimized: true } : w))
-    );
+  // Debounce timers for position and size updates
+  const positionTimersRef = useRef<Record<string, NodeJS.Timeout>>({});
+  const sizeTimersRef = useRef<Record<string, NodeJS.Timeout>>({});
+
+  // Update window position with debouncing (called when user drags window)
+  const updateWindowPosition = (
+    windowId: string,
+    position: { x: number; y: number }
+  ) => {
+    // Clear existing timer for this window
+    if (positionTimersRef.current[windowId]) {
+      clearTimeout(positionTimersRef.current[windowId]);
+    }
+
+    // Set new timer to update state after 500ms of no changes
+    positionTimersRef.current[windowId] = setTimeout(() => {
+      setWindows((prev) =>
+        prev.map((w) => (w.id === windowId ? { ...w, position } : w))
+      );
+      delete positionTimersRef.current[windowId];
+    }, 500);
   };
 
-  const restoreCompanyWindow = (windowId: string) => {
-    setCompanyWindows((prev) =>
-      prev.map((w) =>
-        w.id === windowId ? { ...w, isMinimized: false, zIndex: nextZIndex } : w
-      )
-    );
-    setNextZIndex((prev) => prev + 1);
+  // Update window size with debouncing (called when user resizes window)
+  const updateWindowSize = (
+    windowId: string,
+    size: { width: number; height: number }
+  ) => {
+    // Clear existing timer for this window
+    if (sizeTimersRef.current[windowId]) {
+      clearTimeout(sizeTimersRef.current[windowId]);
+    }
+
+    // Set new timer to update state after 500ms of no changes
+    sizeTimersRef.current[windowId] = setTimeout(() => {
+      setWindows((prev) =>
+        prev.map((w) => (w.id === windowId ? { ...w, size } : w))
+      );
+      delete sizeTimersRef.current[windowId];
+    }, 500);
   };
 
-  const minimizeFinderWindow = (windowId: string) => {
-    setFinderWindows((prev) =>
-      prev.map((w) => (w.id === windowId ? { ...w, isMinimized: true } : w))
-    );
-  };
+  // Cleanup timers on unmount
+  useEffect(() => {
+    return () => {
+      Object.values(positionTimersRef.current).forEach(clearTimeout);
+      Object.values(sizeTimersRef.current).forEach(clearTimeout);
+    };
+  }, []);
 
-  const restoreFinderWindow = (windowId: string) => {
-    setFinderWindows((prev) =>
-      prev.map((w) =>
-        w.id === windowId ? { ...w, isMinimized: false, zIndex: nextZIndex } : w
-      )
-    );
-    setNextZIndex((prev) => prev + 1);
+  // Helper functions for opening specific window types
+  const openBlogWindow = (post: BlogPost) => {
+    openWindow(`blog-${post.slug}`, { type: "blog", post });
   };
 
   const openCompanyWindow = (companyId: string) => {
-    const windowId = `company-${companyId}`;
-
-    // Check if window is already open
-    const existingWindow = companyWindows.find((w) => w.id === windowId);
-    if (existingWindow) {
-      // Bring to front
-      bringCompanyToFront(windowId);
-      return;
-    }
-
-    // Calculate position based on existing windows to avoid overlap
-    const baseX = 200;
-    const baseY = 200;
-    const offset = 30;
-
-    // Find a position that doesn't overlap with existing windows
-    let x = baseX;
-    let y = baseY;
-    let attempts = 0;
-    const maxAttempts = 20;
-
-    while (attempts < maxAttempts) {
-      const overlapping = companyWindows.some(
-        (w) =>
-          Math.abs(w.position.x - x) < 50 && Math.abs(w.position.y - y) < 50
-      );
-
-      if (!overlapping) break;
-
-      x += offset;
-      y += offset;
-      attempts++;
-    }
-
-    const newWindow: CompanyWindowState = {
-      id: windowId,
-      companyId,
-      position: { x, y },
-      size: { width: 700, height: 500 },
-      zIndex: nextZIndex,
-      isMinimized: false,
-      startTime: Date.now(),
-    };
-
-    setCompanyWindows((prev) => [...prev, newWindow]);
-    setNextZIndex((prev) => prev + 1);
-  };
-
-  const closeCompanyWindow = (windowId: string) => {
-    setCompanyWindows((prev) => prev.filter((w) => w.id !== windowId));
-  };
-
-  const bringCompanyToFront = (windowId: string) => {
-    setCompanyWindows((prev) =>
-      prev.map((w) => (w.id === windowId ? { ...w, zIndex: nextZIndex } : w))
+    openWindow(
+      `company-${companyId}`,
+      { type: "company", companyId },
+      { width: 700, height: 500 },
+      { x: 200, y: 200 }
     );
-    setNextZIndex((prev) => prev + 1);
   };
 
   const openFinderWindow = (finderType: string) => {
-    const windowId = `finder-${finderType}`;
+    openWindow(
+      `finder-${finderType}`,
+      { type: "finder", finderType },
+      { width: 800, height: 600 },
+      { x: 150, y: 150 }
+    );
+  };
 
-    // Check if window is already open
-    const existingWindow = finderWindows.find((w) => w.id === windowId);
-    if (existingWindow) {
-      // Bring to front
-      bringFinderToFront(windowId);
-      return;
-    }
-
-    // Calculate position based on existing windows to avoid overlap
-    const baseX = 150;
-    const baseY = 150;
-    const offset = 30;
-
-    // Find a position that doesn't overlap with existing windows
-    let x = baseX;
-    let y = baseY;
-    let attempts = 0;
-    const maxAttempts = 20;
-
-    while (attempts < maxAttempts) {
-      const overlapping = finderWindows.some(
-        (w) =>
-          Math.abs(w.position.x - x) < 50 && Math.abs(w.position.y - y) < 50
-      );
-
-      if (!overlapping) break;
-
-      x += offset;
-      y += offset;
-      attempts++;
-    }
-
-    const newWindow: FinderWindowState = {
-      id: windowId,
-      finderType,
-      position: { x, y },
-      size: { width: 800, height: 600 },
-      zIndex: nextZIndex,
-      isMinimized: false,
-      startTime: Date.now(),
-    };
-
-    setFinderWindows((prev) => [...prev, newWindow]);
+  const bringTaskManagerToFront = () => {
+    setTaskManagerZIndex(nextZIndex);
     setNextZIndex((prev) => prev + 1);
   };
 
-  const closeFinderWindow = (windowId: string) => {
-    setFinderWindows((prev) => prev.filter((w) => w.id !== windowId));
-  };
-
-  const bringFinderToFront = (windowId: string) => {
-    setFinderWindows((prev) =>
-      prev.map((w) => (w.id === windowId ? { ...w, zIndex: nextZIndex } : w))
-    );
+  const bringGitHubToFront = () => {
+    setGitHubZIndex(nextZIndex);
     setNextZIndex((prev) => prev + 1);
   };
 
   const openTaskManager = () => {
-    setIsTaskManagerOpen(true);
+    if (isTaskManagerOpen) {
+      bringTaskManagerToFront();
+    } else {
+      setIsTaskManagerOpen(true);
+    }
   };
 
   const closeTaskManager = () => {
     setIsTaskManagerOpen(false);
   };
 
-  const openTerminal = () => {
-    setIsTerminalOpen(true);
-  };
-
-  const closeTerminal = () => {
-    setIsTerminalOpen(false);
-  };
-
   const openGitHub = () => {
-    setIsGitHubOpen(true);
+    if (isGitHubOpen) {
+      bringGitHubToFront();
+    } else {
+      setGitHubStartTime(Date.now());
+      setIsGitHubOpen(true);
+    }
   };
 
   const closeGitHub = () => {
     setIsGitHubOpen(false);
   };
+
+  // Clear all persisted state (useful for debugging)
+  const clearPersistedState = () => {
+    localStorage.removeItem("chaseOS_windows");
+    localStorage.removeItem("chaseOS_nextZIndex");
+    localStorage.removeItem("chaseOS_taskManager");
+    localStorage.removeItem("chaseOS_taskManagerZIndex");
+    localStorage.removeItem("chaseOS_github");
+    localStorage.removeItem("chaseOS_githubZIndex");
+    localStorage.removeItem("chaseOS_githubStartTime");
+    window.location.reload();
+  };
+
+  // Add keyboard shortcut to clear state (Cmd+Shift+K)
+  useEffect(() => {
+    const handleClearState = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === "K") {
+        e.preventDefault();
+        if (confirm("Clear all persisted state and reload?")) {
+          clearPersistedState();
+        }
+      }
+    };
+
+    document.addEventListener("keydown", handleClearState);
+    return () => document.removeEventListener("keydown", handleClearState);
+  }, []);
+
+  // Expose clear function to console for debugging
+  useEffect(() => {
+    (window as any).clearChaseOSState = clearPersistedState;
+    console.log(
+      "ChaseOS Debug: Call window.clearChaseOSState() to reset all persisted state"
+    );
+  }, []);
 
   return (
     <div className="relative min-h-screen">
@@ -391,6 +678,13 @@ export default function Page() {
               <div className="w-2 h-2 bg-green-500 rounded-full"></div>
               <span className="font-sf-pro">Online</span>
             </div>
+            {windows.length > 0 && (
+              <div className="flex items-center space-x-1 text-xs">
+                <span className="font-sf-pro">
+                  {windows.length} window{windows.length !== 1 ? "s" : ""}
+                </span>
+              </div>
+            )}
             <div className="font-sf-pro">{new Date().toLocaleTimeString()}</div>
             <div className="font-sf-pro">{new Date().toLocaleDateString()}</div>
             <div className="flex items-center space-x-1">
@@ -399,6 +693,13 @@ export default function Page() {
                 ⌘K
               </kbd>
             </div>
+            <button
+              onClick={clearPersistedState}
+              className="flex items-center space-x-1 text-xs hover:text-red-400 transition-colors"
+              title="Clear persisted state (⌘⇧K)"
+            >
+              <span className="font-sf-pro">Reset</span>
+            </button>
           </div>
         </div>
       </div>
@@ -416,7 +717,12 @@ export default function Page() {
 
       {/* Main Content */}
       <section className="relative z-10 pt-16">
-        <h1 className="mb-8 text-2xl font-semibold tracking-tighter font-sf-pro">
+        <img
+          src="/brand/profile-avatar.png"
+          alt="chungtin.eth"
+          className="w-20 h-20 rounded-lg"
+        />
+        <h1 className="mt-6 mb-8 text-2xl font-semibold tracking-tighter font-sf-pro">
           chungtin.eth
         </h1>
         <p className="mb-4 font-sf-pro text-base leading-relaxed">
@@ -436,383 +742,157 @@ export default function Page() {
         </p>
         {/* Desktop */}
         <Desktop
-          onBlogPostClick={openWindow}
+          onBlogPostClick={openBlogWindow}
           onCompanyClick={openCompanyWindow}
           onFinderClick={openFinderWindow}
           onTaskManagerClick={openTaskManager}
-          onTerminalClick={openTerminal}
           onGitHubClick={openGitHub}
-          blogPosts={posts}
         />
       </section>
-      {/* Finder Windows */}
-      <AnimatePresence mode="wait">
-        {finderWindows
+      {/* Unified Windows */}
+      <AnimatePresence>
+        {windows
           .filter((window) => !window.isMinimized)
           .map((window) => {
-            let finderData;
-            switch (window.finderType) {
-              case "blogs":
-                finderData = {
-                  title: "Blogs",
-                  items: [
-                    {
-                      id: "recent-posts",
-                      name: "Recent Posts",
-                      type: "folder" as const,
-                      icon: Folder,
-                      size: "12.5 KB",
-                      modified: "2024-01-20",
-                      description: "Latest blog posts",
-                      onClick: () => {},
-                      children: recentPosts.map((post) => ({
-                        id: post.slug,
-                        name: post.metadata.title,
-                        type: "file" as const,
-                        icon: FileText,
-                        size: "2.3 KB",
-                        modified: new Date(
-                          post.metadata.publishedAt
-                        ).toLocaleDateString(),
-                        description: post.metadata.summary,
-                        onClick: () => openWindow(post),
-                      })),
-                    },
-                    {
-                      id: "all-posts",
-                      name: "All Posts",
-                      type: "folder" as const,
-                      icon: Folder,
-                      size: "45.2 KB",
-                      modified: "2024-01-20",
-                      description: "Complete blog archive",
-                      onClick: () => {},
-                      children: posts.map((post) => ({
-                        id: post.slug,
-                        name: post.metadata.title,
-                        type: "file" as const,
-                        icon: FileText,
-                        size: "2.3 KB",
-                        modified: new Date(
-                          post.metadata.publishedAt
-                        ).toLocaleDateString(),
-                        description: post.metadata.summary,
-                        onClick: () => openWindow(post),
-                      })),
-                    },
-                    {
-                      id: "drafts",
-                      name: "Drafts",
-                      type: "folder" as const,
-                      icon: Folder,
-                      size: "8.1 KB",
-                      modified: "2024-01-19",
-                      description: "Work in progress",
-                      onClick: () => {},
-                      children: [
-                        {
-                          id: "draft-1",
-                          name: "Upcoming Post Draft",
-                          type: "file" as const,
-                          icon: FileText,
-                          size: "1.2 KB",
-                          modified: "2024-01-19",
-                          description: "Draft for upcoming blog post",
-                          onClick: () => console.log("Opening draft"),
-                        },
-                      ],
-                    },
-                  ],
-                };
-                break;
-              case "companies":
-                finderData = {
-                  title: "Companies",
-                  items: [
-                    {
-                      id: "current-company",
-                      name: "Current Company",
-                      type: "folder" as const,
-                      icon: Folder,
-                      size: "5.2 KB",
-                      modified: "2024-01-20",
-                      description: "Current workplace",
-                      onClick: () => {},
-                      children: Object.entries(companies)
-                        .filter(([_, company]) =>
-                          company.duration.includes("2024")
-                        )
-                        .map(([id, company]) => ({
-                          id,
-                          name: company.name,
-                          type: "file" as const,
-                          icon: Building2,
-                          size: "1.8 KB",
-                          modified:
-                            company.duration.split(" - ")[1] || "Present",
-                          description: company.description,
-                          onClick: () => openCompanyWindow(id),
-                        })),
-                    },
-                    {
-                      id: "past-companies",
-                      name: "Past Companies",
-                      type: "folder" as const,
-                      icon: Folder,
-                      size: "12.8 KB",
-                      modified: "2024-01-20",
-                      description: "Previous work experience",
-                      onClick: () => {},
-                      children: Object.entries(companies)
-                        .filter(
-                          ([_, company]) => !company.duration.includes("2024")
-                        )
-                        .map(([id, company]) => ({
-                          id,
-                          name: company.name,
-                          type: "file" as const,
-                          icon: Building2,
-                          size: "1.8 KB",
-                          modified:
-                            company.duration.split(" - ")[1] || "Present",
-                          description: company.description,
-                          onClick: () => openCompanyWindow(id),
-                        })),
-                    },
-                    {
-                      id: "all-companies",
-                      name: "All Companies",
-                      type: "folder" as const,
-                      icon: Folder,
-                      size: "18.0 KB",
-                      modified: "2024-01-20",
-                      description: "Complete work history",
-                      onClick: () => {},
-                      children: Object.entries(companies).map(
-                        ([id, company]) => ({
-                          id,
-                          name: company.name,
-                          type: "file" as const,
-                          icon: Building2,
-                          size: "1.8 KB",
-                          modified:
-                            company.duration.split(" - ")[1] || "Present",
-                          description: company.description,
-                          onClick: () => openCompanyWindow(id),
-                        })
-                      ),
-                    },
-                  ],
-                };
-                break;
-              case "videos":
-                finderData = {
-                  title: "Videos",
-                  items: [
-                    {
-                      id: "tutorials",
-                      name: "Tutorials",
-                      type: "folder" as const,
-                      icon: Folder,
-                      size: "174.3 MB",
-                      modified: "2024-01-20",
-                      description: "Educational content",
-                      onClick: () => {},
-                      children: [
-                        {
-                          id: "intro-video",
-                          name: "Introduction Video",
-                          type: "file" as const,
-                          icon: Video,
-                          size: "15.2 MB",
-                          modified: "2024-01-15",
-                          description: "Personal introduction and background",
-                          onClick: () => console.log("Opening intro video"),
-                        },
-                        {
-                          id: "tutorial-series",
-                          name: "Rust Development Tutorial",
-                          type: "file" as const,
-                          icon: Video,
-                          size: "128.5 MB",
-                          modified: "2023-11-22",
-                          description:
-                            "Complete Rust programming tutorial series",
-                          onClick: () => console.log("Opening tutorial series"),
-                        },
-                      ],
-                    },
-                    {
-                      id: "talks",
-                      name: "Tech Talks",
-                      type: "folder" as const,
-                      icon: Folder,
-                      size: "45.8 MB",
-                      modified: "2024-01-20",
-                      description: "Technical presentations",
-                      onClick: () => {},
-                      children: [
-                        {
-                          id: "tech-talk",
-                          name: "Blockchain Technology Talk",
-                          type: "file" as const,
-                          icon: Video,
-                          size: "45.8 MB",
-                          modified: "2023-12-10",
-                          description:
-                            "Technical presentation on blockchain development",
-                          onClick: () => console.log("Opening tech talk video"),
-                        },
-                      ],
-                    },
-                    {
-                      id: "all-videos",
-                      name: "All Videos",
-                      type: "folder" as const,
-                      icon: Folder,
-                      size: "189.5 MB",
-                      modified: "2024-01-20",
-                      description: "Complete video collection",
-                      onClick: () => {},
-                      children: [
-                        {
-                          id: "intro-video-all",
-                          name: "Introduction Video",
-                          type: "file" as const,
-                          icon: Video,
-                          size: "15.2 MB",
-                          modified: "2024-01-15",
-                          description: "Personal introduction and background",
-                          onClick: () => console.log("Opening intro video"),
-                        },
-                        {
-                          id: "tech-talk-all",
-                          name: "Blockchain Technology Talk",
-                          type: "file" as const,
-                          icon: Video,
-                          size: "45.8 MB",
-                          modified: "2023-12-10",
-                          description:
-                            "Technical presentation on blockchain development",
-                          onClick: () => console.log("Opening tech talk video"),
-                        },
-                        {
-                          id: "tutorial-series-all",
-                          name: "Rust Development Tutorial",
-                          type: "file" as const,
-                          icon: Video,
-                          size: "128.5 MB",
-                          modified: "2023-11-22",
-                          description:
-                            "Complete Rust programming tutorial series",
-                          onClick: () => console.log("Opening tutorial series"),
-                        },
-                      ],
-                    },
-                  ],
-                };
-                break;
-              default:
-                finderData = { title: "Unknown", items: [] };
+            // Render based on content type
+            if (window.content.type === "finder") {
+              let finderData;
+              switch (window.content.finderType) {
+                case "blogs":
+                  finderData = getBlogsFinderData(
+                    recentPosts,
+                    posts,
+                    openBlogWindow
+                  );
+                  break;
+                case "companies":
+                  finderData = getCompaniesFinderData(
+                    companies,
+                    openCompanyWindow
+                  );
+                  break;
+                case "videos":
+                  finderData = getVideosFinderData();
+                  break;
+                default:
+                  finderData = { title: "Unknown", items: [] };
+              }
+
+              return (
+                <FinderWindow
+                  key={window.id}
+                  title={finderData.title}
+                  items={finderData.items}
+                  onClose={() => closeWindow(window.id)}
+                  onMinimize={() => minimizeWindow(window.id)}
+                  onRestore={() => restoreWindow(window.id)}
+                  onFocus={() => bringToFront(window.id)}
+                  onPositionChange={(pos) =>
+                    updateWindowPosition(window.id, pos)
+                  }
+                  onSizeChange={(size) => updateWindowSize(window.id, size)}
+                  zIndex={window.zIndex}
+                  initialPosition={window.position}
+                  initialSize={window.size}
+                />
+              );
             }
 
-            return (
-              <FinderWindow
-                key={window.id}
-                title={finderData.title}
-                items={finderData.items}
-                onClose={() => closeFinderWindow(window.id)}
-                onMinimize={() => minimizeFinderWindow(window.id)}
-                onRestore={() => restoreFinderWindow(window.id)}
-                onFocus={() => bringFinderToFront(window.id)}
-                zIndex={window.zIndex}
-                initialPosition={window.position}
-                initialSize={window.size}
-              />
-            );
+            if (window.content.type === "company") {
+              return (
+                <CompanyWindow
+                  key={window.id}
+                  company={companies[window.content.companyId]}
+                  onClose={() => closeWindow(window.id)}
+                  onMinimize={() => minimizeWindow(window.id)}
+                  onRestore={() => restoreWindow(window.id)}
+                  onFocus={() => bringToFront(window.id)}
+                  onPositionChange={(pos) =>
+                    updateWindowPosition(window.id, pos)
+                  }
+                  onSizeChange={(size) => updateWindowSize(window.id, size)}
+                  zIndex={window.zIndex}
+                  initialPosition={window.position}
+                  initialSize={window.size}
+                />
+              );
+            }
+
+            if (window.content.type === "blog") {
+              return (
+                <BaseWindow
+                  key={window.id}
+                  title={window.content.post.metadata.title}
+                  onClose={() => closeWindow(window.id)}
+                  onMinimize={() => minimizeWindow(window.id)}
+                  onRestore={() => restoreWindow(window.id)}
+                  onFocus={() => bringToFront(window.id)}
+                  onPositionChange={(pos) =>
+                    updateWindowPosition(window.id, pos)
+                  }
+                  onSizeChange={(size) => updateWindowSize(window.id, size)}
+                  zIndex={window.zIndex}
+                  initialPosition={window.position}
+                  initialSize={window.size}
+                >
+                  <div
+                    className="h-full overflow-auto p-6"
+                    style={{ backgroundColor: "#0d1117" }}
+                  >
+                    <div className="prose dark:prose-invert max-w-none overflow-hidden break-words">
+                      <h1
+                        className="text-2xl font-bold mb-4"
+                        style={{ color: "#f0f6fc" }}
+                      >
+                        {window.content.post.metadata.title}
+                      </h1>
+                      <div
+                        className="text-sm mb-6"
+                        style={{ color: "#8b949e" }}
+                      >
+                        {new Date(
+                          window.content.post.metadata.publishedAt
+                        ).toLocaleDateString()}
+                      </div>
+                      <div className="overflow-hidden break-words">
+                        <MDXContent content={window.content.post.content} />
+                      </div>
+                    </div>
+                  </div>
+                </BaseWindow>
+              );
+            }
+
+            return null;
           })}
       </AnimatePresence>
 
-      {/* Company Windows */}
-      <AnimatePresence mode="wait">
-        {companyWindows
-          .filter((window) => !window.isMinimized)
-          .map((window) => (
-            <CompanyWindow
-              key={window.id}
-              company={companies[window.companyId]}
-              onClose={() => closeCompanyWindow(window.id)}
-              onMinimize={() => minimizeCompanyWindow(window.id)}
-              onRestore={() => restoreCompanyWindow(window.id)}
-              onFocus={() => bringCompanyToFront(window.id)}
-              zIndex={window.zIndex}
-              initialPosition={window.position}
-              initialSize={window.size}
-            />
-          ))}
-      </AnimatePresence>
-
-      {/* Windows */}
-      <AnimatePresence mode="wait">
-        {windows
-          .filter((window) => !window.isMinimized)
-          .map((window) => (
-            <BaseWindow
-              key={window.id}
-              title={window.post.metadata.title}
-              onClose={() => closeWindow(window.id)}
-              onMinimize={() => minimizeWindow(window.id)}
-              onRestore={() => restoreWindow(window.id)}
-              onFocus={() => bringToFront(window.id)}
-              zIndex={window.zIndex}
-              initialPosition={window.position}
-              initialSize={window.size}
-            >
-              <div
-                className="h-full overflow-auto p-6"
-                style={{ backgroundColor: "#0d1117" }}
-              >
-                <div className="prose dark:prose-invert max-w-none overflow-hidden break-words">
-                  <h1
-                    className="text-2xl font-bold mb-4"
-                    style={{ color: "#f0f6fc" }}
-                  >
-                    {window.post.metadata.title}
-                  </h1>
-                  <div className="text-sm mb-6" style={{ color: "#8b949e" }}>
-                    {new Date(
-                      window.post.metadata.publishedAt
-                    ).toLocaleDateString()}
-                  </div>
-                  <div className="overflow-hidden break-words">
-                    <MDXContent content={window.post.content} />
-                  </div>
-                </div>
-              </div>
-            </BaseWindow>
-          ))}
-      </AnimatePresence>
-
       {/* Task Manager */}
-      <AnimatePresence mode="wait">
+      <AnimatePresence>
         {isTaskManagerOpen && (
           <TaskManagerWindow
             windows={[
               ...windows.map((w) => ({
                 ...w,
-                post: w.post,
+                ...(w.content.type === "blog" && { post: w.content.post }),
+                ...(w.content.type === "company" && {
+                  companyId: w.content.companyId,
+                }),
+                ...(w.content.type === "finder" && {
+                  finderType: w.content.finderType,
+                }),
                 startTime: w.startTime,
               })),
-              ...companyWindows.map((w) => ({
-                ...w,
-                companyId: w.companyId,
-                startTime: w.startTime,
-              })),
-              ...finderWindows.map((w) => ({
-                ...w,
-                finderType: w.finderType,
-                startTime: w.startTime,
-              })),
+              ...(isGitHubOpen
+                ? [
+                    {
+                      id: "system-github",
+                      finderType: "GitHub",
+                      isMinimized: false,
+                      startTime: gitHubStartTime,
+                    },
+                  ]
+                : []),
             ]}
             companies={companies}
             onClose={closeTaskManager}
@@ -820,32 +900,14 @@ export default function Page() {
               bringTaskManagerToFront();
             }}
             onCloseWindow={(windowId) => {
-              if (windows.find((w) => w.id === windowId)) {
+              if (windowId === "system-github") {
+                closeGitHub();
+              } else {
                 closeWindow(windowId);
-              } else if (companyWindows.find((w) => w.id === windowId)) {
-                closeCompanyWindow(windowId);
-              } else if (finderWindows.find((w) => w.id === windowId)) {
-                closeFinderWindow(windowId);
               }
             }}
-            onMinimizeWindow={(windowId) => {
-              if (windows.find((w) => w.id === windowId)) {
-                minimizeWindow(windowId);
-              } else if (companyWindows.find((w) => w.id === windowId)) {
-                minimizeCompanyWindow(windowId);
-              } else if (finderWindows.find((w) => w.id === windowId)) {
-                minimizeFinderWindow(windowId);
-              }
-            }}
-            onRestoreWindow={(windowId) => {
-              if (windows.find((w) => w.id === windowId)) {
-                restoreWindow(windowId);
-              } else if (companyWindows.find((w) => w.id === windowId)) {
-                restoreCompanyWindow(windowId);
-              } else if (finderWindows.find((w) => w.id === windowId)) {
-                restoreFinderWindow(windowId);
-              }
-            }}
+            onMinimizeWindow={minimizeWindow}
+            onRestoreWindow={restoreWindow}
             zIndex={taskManagerZIndex}
             initialPosition={{ x: 300, y: 200 }}
             initialSize={{ width: 900, height: 600 }}
@@ -854,7 +916,7 @@ export default function Page() {
       </AnimatePresence>
 
       {/* GitHub */}
-      <AnimatePresence mode="wait">
+      <AnimatePresence>
         {isGitHubOpen && (
           <GitHubWindow
             onClose={closeGitHub}
@@ -869,63 +931,48 @@ export default function Page() {
       </AnimatePresence>
 
       {/* Taskbar */}
-      {(windows.length > 0 ||
-        companyWindows.length > 0 ||
-        finderWindows.length > 0) && (
+      {windows.length > 0 && (
         <div
           className="fixed bottom-0 left-0 right-0 p-2 z-40"
           style={{ backgroundColor: "#0d1117", borderTop: "1px solid #21262d" }}
         >
           <div className="flex space-x-2">
-            {finderWindows.map((window) => (
-              <button
-                key={window.id}
-                onClick={() => bringFinderToFront(window.id)}
-                className="px-3 py-1 text-xs rounded border transition-colors"
-                style={{
-                  backgroundColor: "#21262d",
-                  color: "#f0f6fc",
-                  borderColor: "#30363d",
-                }}
-              >
-                {window.finderType.charAt(0).toUpperCase() +
-                  window.finderType.slice(1)}
-              </button>
-            ))}
-            {windows.map((window) => (
-              <button
-                key={window.id}
-                onClick={() =>
-                  window.isMinimized
-                    ? restoreWindow(window.id)
-                    : bringToFront(window.id)
-                }
-                className="px-3 py-1 text-xs rounded border transition-colors"
-                style={{
-                  backgroundColor: window.isMinimized ? "#161b22" : "#21262d",
-                  color: window.isMinimized ? "#8b949e" : "#f0f6fc",
-                  borderColor: window.isMinimized ? "#21262d" : "#30363d",
-                }}
-              >
-                {window.post.metadata.title.length > 20
-                  ? `${window.post.metadata.title.substring(0, 20)}...`
-                  : window.post.metadata.title}
-              </button>
-            ))}
-            {companyWindows.map((window) => (
-              <button
-                key={window.id}
-                onClick={() => bringCompanyToFront(window.id)}
-                className="px-3 py-1 text-xs rounded border transition-colors"
-                style={{
-                  backgroundColor: "#21262d",
-                  color: "#f0f6fc",
-                  borderColor: "#30363d",
-                }}
-              >
-                {companies[window.companyId].name}
-              </button>
-            ))}
+            {windows.map((window) => {
+              let title = "";
+
+              if (window.content.type === "finder") {
+                title =
+                  window.content.finderType.charAt(0).toUpperCase() +
+                  window.content.finderType.slice(1);
+              } else if (window.content.type === "company") {
+                title = companies[window.content.companyId].name;
+              } else if (window.content.type === "blog") {
+                const fullTitle = window.content.post.metadata.title;
+                title =
+                  fullTitle.length > 20
+                    ? `${fullTitle.substring(0, 20)}...`
+                    : fullTitle;
+              }
+
+              return (
+                <button
+                  key={window.id}
+                  onClick={() =>
+                    window.isMinimized
+                      ? restoreWindow(window.id)
+                      : bringToFront(window.id)
+                  }
+                  className="px-3 py-1 text-xs rounded border transition-colors"
+                  style={{
+                    backgroundColor: window.isMinimized ? "#161b22" : "#21262d",
+                    color: window.isMinimized ? "#8b949e" : "#f0f6fc",
+                    borderColor: window.isMinimized ? "#21262d" : "#30363d",
+                  }}
+                >
+                  {title}
+                </button>
+              );
+            })}
           </div>
         </div>
       )}
@@ -934,11 +981,10 @@ export default function Page() {
       <CommandPalette
         isOpen={isCommandPaletteOpen}
         onClose={() => setIsCommandPaletteOpen(false)}
-        onBlogPostClick={openWindow}
+        onBlogPostClick={openBlogWindow}
         onCompanyClick={openCompanyWindow}
         onFinderClick={openFinderWindow}
         onTaskManagerClick={openTaskManager}
-        onTerminalClick={openTerminal}
         onGitHubClick={openGitHub}
         blogPosts={posts}
       />

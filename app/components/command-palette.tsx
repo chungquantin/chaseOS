@@ -15,7 +15,6 @@ interface CommandPaletteProps {
   onCompanyClick: (companyId: string) => void;
   onFinderClick: (finderType: string) => void;
   onTaskManagerClick: () => void;
-  onTerminalClick: () => void;
   onGitHubClick: () => void;
   blogPosts: BlogPost[];
 }
@@ -27,7 +26,6 @@ export function CommandPalette({
   onCompanyClick,
   onFinderClick,
   onTaskManagerClick,
-  onTerminalClick,
   onGitHubClick,
   blogPosts,
 }: CommandPaletteProps) {
@@ -172,8 +170,6 @@ export function CommandPalette({
                     onSelect={() => {
                       if (app.id === "task-manager") {
                         onTaskManagerClick();
-                      } else if (app.id === "terminal") {
-                        onTerminalClick();
                       } else if (app.id === "github") {
                         onGitHubClick();
                       }

@@ -19,6 +19,7 @@ import {
   Square,
   Settings,
   Grid3X3,
+  Github,
 } from "lucide-react";
 import { BaseWindow } from "./base-window";
 
@@ -44,6 +45,8 @@ interface TaskManagerWindowProps {
   companies: Record<string, { name: string }>;
   onClose: () => void;
   onFocus?: () => void;
+  onPositionChange?: (position: { x: number; y: number }) => void;
+  onSizeChange?: (size: { width: number; height: number }) => void;
   onCloseWindow: (windowId: string) => void;
   onMinimizeWindow: (windowId: string) => void;
   onRestoreWindow: (windowId: string) => void;
@@ -57,6 +60,8 @@ export function TaskManagerWindow({
   companies,
   onClose,
   onFocus,
+  onPositionChange,
+  onSizeChange,
   onCloseWindow,
   onMinimizeWindow,
   onRestoreWindow,
@@ -90,11 +95,19 @@ export function TaskManagerWindow({
         type = "company";
         icon = Building2;
       } else if (window.finderType) {
-        name = `${
-          window.finderType.charAt(0).toUpperCase() + window.finderType.slice(1)
-        } Finder`;
-        type = "finder";
-        icon = FolderOpen;
+        // Special handling for GitHub window
+        if (window.finderType === "GitHub") {
+          name = "GitHub";
+          type = "finder";
+          icon = Github;
+        } else {
+          name = `${
+            window.finderType.charAt(0).toUpperCase() +
+            window.finderType.slice(1)
+          } Finder`;
+          type = "finder";
+          icon = FolderOpen;
+        }
       }
 
       // Simulate memory usage based on window type and content
@@ -188,11 +201,16 @@ export function TaskManagerWindow({
       title="Activity Monitor"
       onClose={onClose}
       onFocus={onFocus}
+      onPositionChange={onPositionChange}
+      onSizeChange={onSizeChange}
       zIndex={zIndex}
       initialPosition={initialPosition}
       initialSize={initialSize}
     >
-      <div className="h-full flex flex-col bg-gray-900">
+      <div
+        className="h-full flex flex-col"
+        style={{ backgroundColor: "#0d1117" }}
+      >
         {/* macOS-style Toolbar */}
         <div
           className="flex items-center justify-between px-4 py-3 border-b"
@@ -200,61 +218,13 @@ export function TaskManagerWindow({
         >
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2">
-              <Info
-                size={16}
-                className="cursor-pointer transition-colors"
-                style={{ color: "#8b949e" }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.color = "#f0f6fc";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.color = "#8b949e";
-                }}
-              />
-              <Square
-                size={16}
-                className="cursor-pointer transition-colors"
-                style={{ color: "#8b949e" }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.color = "#f0f6fc";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.color = "#8b949e";
-                }}
-              />
-              <Search
-                size={16}
-                className="cursor-pointer transition-colors"
-                style={{ color: "#8b949e" }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.color = "#f0f6fc";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.color = "#8b949e";
-                }}
-              />
-              <Settings
-                size={16}
-                className="cursor-pointer transition-colors"
-                style={{ color: "#8b949e" }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.color = "#f0f6fc";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.color = "#8b949e";
-                }}
-              />
-              <Grid3X3
-                size={16}
-                className="cursor-pointer transition-colors"
-                style={{ color: "#8b949e" }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.color = "#f0f6fc";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.color = "#8b949e";
-                }}
-              />
+              <Activity size={20} style={{ color: "#f0f6fc" }} />
+              <span
+                className="text-lg font-semibold font-sf-pro"
+                style={{ color: "#f0f6fc" }}
+              >
+                Activity Monitor
+              </span>
             </div>
           </div>
           <div className="flex items-center space-x-2">
@@ -276,121 +246,44 @@ export function TaskManagerWindow({
           style={{ backgroundColor: "#161b22", borderColor: "#21262d" }}
         >
           <div className="flex space-x-1">
-            <button
-              className="px-3 py-1 rounded text-sm font-sf-pro font-medium transition-colors"
-              style={{
-                backgroundColor:
-                  activeTab === "cpu" ? "#3fb950" : "transparent",
-                color: activeTab === "cpu" ? "#ffffff" : "#8b949e",
-              }}
-              onClick={() => setActiveTab("cpu")}
-              onMouseEnter={(e) => {
-                if (activeTab !== "cpu") {
-                  e.currentTarget.style.backgroundColor = "#21262d";
-                  e.currentTarget.style.color = "#f0f6fc";
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (activeTab !== "cpu") {
-                  e.currentTarget.style.backgroundColor = "transparent";
-                  e.currentTarget.style.color = "#8b949e";
-                }
-              }}
-            >
-              CPU
-            </button>
-            <button
-              className="px-3 py-1 rounded text-sm font-sf-pro transition-colors"
-              style={{
-                backgroundColor:
-                  activeTab === "memory" ? "#3fb950" : "transparent",
-                color: activeTab === "memory" ? "#ffffff" : "#8b949e",
-              }}
-              onClick={() => setActiveTab("memory")}
-              onMouseEnter={(e) => {
-                if (activeTab !== "memory") {
-                  e.currentTarget.style.backgroundColor = "#21262d";
-                  e.currentTarget.style.color = "#f0f6fc";
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (activeTab !== "memory") {
-                  e.currentTarget.style.backgroundColor = "transparent";
-                  e.currentTarget.style.color = "#8b949e";
-                }
-              }}
-            >
-              Memory
-            </button>
-            <button
-              className="px-3 py-1 rounded text-sm font-sf-pro transition-colors"
-              style={{
-                backgroundColor:
-                  activeTab === "energy" ? "#3fb950" : "transparent",
-                color: activeTab === "energy" ? "#ffffff" : "#8b949e",
-              }}
-              onClick={() => setActiveTab("energy")}
-              onMouseEnter={(e) => {
-                if (activeTab !== "energy") {
-                  e.currentTarget.style.backgroundColor = "#21262d";
-                  e.currentTarget.style.color = "#f0f6fc";
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (activeTab !== "energy") {
-                  e.currentTarget.style.backgroundColor = "transparent";
-                  e.currentTarget.style.color = "#8b949e";
-                }
-              }}
-            >
-              Energy
-            </button>
-            <button
-              className="px-3 py-1 rounded text-sm font-sf-pro transition-colors"
-              style={{
-                backgroundColor:
-                  activeTab === "disk" ? "#3fb950" : "transparent",
-                color: activeTab === "disk" ? "#ffffff" : "#8b949e",
-              }}
-              onClick={() => setActiveTab("disk")}
-              onMouseEnter={(e) => {
-                if (activeTab !== "disk") {
-                  e.currentTarget.style.backgroundColor = "#21262d";
-                  e.currentTarget.style.color = "#f0f6fc";
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (activeTab !== "disk") {
-                  e.currentTarget.style.backgroundColor = "transparent";
-                  e.currentTarget.style.color = "#8b949e";
-                }
-              }}
-            >
-              Disk
-            </button>
-            <button
-              className="px-3 py-1 rounded text-sm font-sf-pro transition-colors"
-              style={{
-                backgroundColor:
-                  activeTab === "network" ? "#3fb950" : "transparent",
-                color: activeTab === "network" ? "#ffffff" : "#8b949e",
-              }}
-              onClick={() => setActiveTab("network")}
-              onMouseEnter={(e) => {
-                if (activeTab !== "network") {
-                  e.currentTarget.style.backgroundColor = "#21262d";
-                  e.currentTarget.style.color = "#f0f6fc";
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (activeTab !== "network") {
-                  e.currentTarget.style.backgroundColor = "transparent";
-                  e.currentTarget.style.color = "#8b949e";
-                }
-              }}
-            >
-              Network
-            </button>
+            {[
+              { id: "cpu", label: "CPU" },
+              { id: "memory", label: "Memory" },
+              { id: "energy", label: "Energy" },
+              { id: "disk", label: "Disk" },
+              { id: "network", label: "Network" },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                className="px-3 py-1 rounded text-sm font-sf-pro font-medium transition-colors"
+                style={{
+                  backgroundColor:
+                    activeTab === tab.id ? "#21262d" : "transparent",
+                  color: activeTab === tab.id ? "#f0f6fc" : "#8b949e",
+                  border:
+                    activeTab === tab.id
+                      ? "1px solid #30363d"
+                      : "1px solid transparent",
+                }}
+                onClick={() => setActiveTab(tab.id as typeof activeTab)}
+                onMouseEnter={(e) => {
+                  if (activeTab !== tab.id) {
+                    e.currentTarget.style.backgroundColor = "#21262d";
+                    e.currentTarget.style.color = "#f0f6fc";
+                    e.currentTarget.style.borderColor = "#30363d";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (activeTab !== tab.id) {
+                    e.currentTarget.style.backgroundColor = "transparent";
+                    e.currentTarget.style.color = "#8b949e";
+                    e.currentTarget.style.borderColor = "transparent";
+                  }
+                }}
+              >
+                {tab.label}
+              </button>
+            ))}
           </div>
         </div>
 
@@ -403,74 +296,14 @@ export function TaskManagerWindow({
             className="flex items-center text-xs font-semibold font-sf-pro"
             style={{ color: "#8b949e" }}
           >
-            <div
-              className="w-1/3 flex items-center cursor-pointer"
-              style={{ color: "#8b949e" }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.color = "#f0f6fc";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.color = "#8b949e";
-              }}
-              onClick={() => {
-                if (sortBy === "name") {
-                  setSortOrder(sortOrder === "asc" ? "desc" : "asc");
-                } else {
-                  setSortBy("name");
-                  setSortOrder("asc");
-                }
-              }}
-            >
+            <div className="w-1/3 flex items-center">
               <span>Process...</span>
-              <span className="ml-1" style={{ color: "#6e7681" }}>
-                {sortBy === "name" ? (sortOrder === "asc" ? "↑" : "↓") : "↓"}
-              </span>
             </div>
-            <div
-              className="w-16 text-center cursor-pointer"
-              style={{ color: "#8b949e" }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.color = "#f0f6fc";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.color = "#8b949e";
-              }}
-              onClick={() => {
-                if (sortBy === "cpu") {
-                  setSortOrder(sortOrder === "asc" ? "desc" : "asc");
-                } else {
-                  setSortBy("cpu");
-                  setSortOrder("asc");
-                }
-              }}
-            >
+            <div className="w-16 text-center">
               <span>% CPU</span>
-              <span className="ml-1" style={{ color: "#6e7681" }}>
-                {sortBy === "cpu" ? (sortOrder === "asc" ? "↑" : "↓") : "↓"}
-              </span>
             </div>
-            <div
-              className="w-20 text-center cursor-pointer"
-              style={{ color: "#8b949e" }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.color = "#f0f6fc";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.color = "#8b949e";
-              }}
-              onClick={() => {
-                if (sortBy === "runtime") {
-                  setSortOrder(sortOrder === "asc" ? "desc" : "asc");
-                } else {
-                  setSortBy("runtime");
-                  setSortOrder("asc");
-                }
-              }}
-            >
+            <div className="w-20 text-center">
               <span>CPU Time</span>
-              <span className="ml-1" style={{ color: "#6e7681" }}>
-                {sortBy === "runtime" ? (sortOrder === "asc" ? "↑" : "↓") : "↓"}
-              </span>
             </div>
             <div className="w-16 text-center">Threads</div>
             <div className="w-20 text-center">Idle Wake Ups</div>
@@ -488,15 +321,27 @@ export function TaskManagerWindow({
           style={{ backgroundColor: "#0d1117" }}
         >
           {filteredProcesses.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-[calc(100vh-10rem)] text-gray-400 font-sf-pro">
-              <Monitor size={48} className="mb-4 opacity-50" />
-              <div className="text-lg font-medium">
-                {searchQuery ? "No processes found" : "No processes running"}
-              </div>
-              <div className="text-sm">
-                {searchQuery
-                  ? "Try a different search term"
-                  : "Open some windows to see them here"}
+            <div className="flex items-center justify-center h-full">
+              <div className="text-center">
+                <Activity
+                  size={48}
+                  className="mx-auto mb-4 opacity-50"
+                  style={{ color: "#8b949e" }}
+                />
+                <div
+                  className="text-lg font-medium font-sf-pro"
+                  style={{ color: "#f0f6fc" }}
+                >
+                  {searchQuery ? "No processes found" : "No processes running"}
+                </div>
+                <div
+                  className="text-sm font-sf-pro"
+                  style={{ color: "#8b949e" }}
+                >
+                  {searchQuery
+                    ? "Try a different search term"
+                    : "Open some windows to see them here"}
+                </div>
               </div>
             </div>
           ) : (
@@ -638,6 +483,27 @@ export function TaskManagerWindow({
               })}
             </div>
           )}
+        </div>
+
+        {/* Footer */}
+        <div
+          className="px-4 py-3 border-t"
+          style={{ backgroundColor: "#161b22", borderColor: "#21262d" }}
+        >
+          <div className="flex items-center justify-between text-sm font-sf-pro">
+            <div className="flex items-center space-x-4">
+              <span style={{ color: "#8b949e" }}>
+                {filteredProcesses.length} of {totalProcesses} processes
+              </span>
+              <span style={{ color: "#8b949e" }}>•</span>
+              <span style={{ color: "#8b949e" }}>
+                {totalMemory.toFixed(1)} MB total memory
+              </span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <span style={{ color: "#8b949e" }}>ChaseOS Activity Monitor</span>
+            </div>
+          </div>
         </div>
       </div>
     </BaseWindow>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   FileText,
   Folder,
@@ -35,6 +35,8 @@ interface FinderWindowProps {
   onMinimize?: () => void;
   onRestore?: () => void;
   onFocus?: () => void;
+  onPositionChange?: (position: { x: number; y: number }) => void;
+  onSizeChange?: (size: { width: number; height: number }) => void;
   zIndex?: number;
   initialPosition?: { x: number; y: number };
   initialSize?: { width: number; height: number };
@@ -47,6 +49,8 @@ export function FinderWindow({
   onMinimize,
   onRestore,
   onFocus,
+  onPositionChange,
+  onSizeChange,
   zIndex,
   initialPosition = { x: 200, y: 200 },
   initialSize = { width: 800, height: 600 },
@@ -55,6 +59,32 @@ export function FinderWindow({
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPath, setCurrentPath] = useState<string[]>(["ChaseOS"]);
   const [currentItems, setCurrentItems] = useState<FileItem[]>(items);
+
+  // Update currentItems when items prop changes (e.g., when blog posts are fetched)
+  useEffect(() => {
+    if (currentPath.length === 1) {
+      // At root level, just update with new items
+      setCurrentItems(items);
+    } else {
+      // Inside a folder, re-navigate to current path with new items
+      let newItems = items;
+      for (let i = 1; i < currentPath.length; i++) {
+        const folder = newItems.find(
+          (item) => item.name === currentPath[i] && item.type === "folder"
+        );
+        if (folder && folder.children) {
+          newItems = folder.children;
+        } else {
+          // If path is invalid, reset to root
+          setCurrentPath(["ChaseOS"]);
+          setCurrentItems(items);
+          return;
+        }
+      }
+      setCurrentItems(newItems);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [items]);
 
   const filteredItems = currentItems.filter((item) =>
     item.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -101,6 +131,8 @@ export function FinderWindow({
       onMinimize={onMinimize}
       onRestore={onRestore}
       onFocus={onFocus}
+      onPositionChange={onPositionChange}
+      onSizeChange={onSizeChange}
       zIndex={zIndex}
       initialPosition={initialPosition}
       initialSize={initialSize}
@@ -294,7 +326,8 @@ export function FinderWindow({
                   <div
                     key={item.id}
                     className="flex items-center px-3 py-2 rounded-md cursor-pointer group transition-all duration-150 ease-out"
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation();
                       if (item.type === "folder") {
                         navigateToFolder(item.name);
                       } else {

@@ -1,0 +1,128 @@
+---
+title: "Should all rollup get based?"
+publishedAt: "2025-10-12"
+tags: ["ethereum", "evm"]
+draft: false
+blogIndexInclude: true
+summary: "Rollups enhance Ethereum's scalability but often rely on centralized sequencers, creating trust issues. Based rollups aim to integrate L2 operations with L1 for improved security and decentralization, eliminating the need for centralized sequencers. However, this approach presents challenges, such as reduced MEV revenue for rollup operators and potential latency in transaction confirmations. Despite these trade-offs, based rollups are seen as a promising direction for Ethereum's future."
+authors: ["default"]
+---
+
+# Why Rollups?
+
+When I first started following rollup research, one recurring tension struck me: we build all this off-chain complexity to make Ethereum scalable, yet we often recreate central points of trust—namely, the sequencer. It felt like a paradox: **“let Ethereum be trustless,”** we say, but then hand over ordering to a trusted operator.
+
+Rollups have been successfully solved the bottleneck problem of the Ethereum mainnet, bringing billion of transactions to the Ethereum ecosystem with a low gas fee, fast execution time model. But the _“old but gold”_ blockchain trillemma is always right in this chain development context.
+
+When the scalability (each rollup shard executes transactions on their base layer and send them to Ethereum for settlement in batch) and security (off-loading security to the Ethereum mainnet), decentralization is definitely overseen.
+
+![Basic architecture of the centralized sequencer rollup.](Should%20all%20rollup%20get%20based%20287659b1c81780898a03ed8e1f99b808/Screenshot_2025-10-12_at_17.19.21.png)
+
+Basic architecture of the centralized sequencer rollup.
+
+## What’s the current deal with Rollups?
+
+Also mentioned in the article https://elastichub.org/p/lean-roadmap-the-future-infrastructure written by me on Elastic Hub about the Lean Roadmap, Ethereum is losing its value proposition to rollups running on top of the L1. Leading to several issues in multi-layer fragmentation on liquidity and UX/DX.
+
+![[https://www.youtube.com/watch?v=WiKPlNGrUzU](https://www.youtube.com/watch?v=WiKPlNGrUzU)](Should%20all%20rollup%20get%20based%20287659b1c81780898a03ed8e1f99b808/Screenshot_2025-10-12_at_22.04.37.png)
+
+[https://www.youtube.com/watch?v=WiKPlNGrUzU](https://www.youtube.com/watch?v=WiKPlNGrUzU)
+
+And how to fix all the problem above? Simple solution is, to entrust one single entity to sequence all L2 rollups. And yes, that is when we mean **_“get based”_** in the title of the article. But first, let’s dive into why centralized sequencer should be replaced.
+
+### Centralized Sequencer Incidents
+
+Let’s take a look at one of the most active rollup nowadays, [\*\*Base from Coinbase](https://l2beat.com/scaling/projects/base#liveness).\*\* It is undeniable that Base draws a huge traffic and consumer adoption to the Ethereum ecosystem. But the current rollup infrastructure Base is following is not perfect.
+
+![Screenshot 2025-10-12 at 15.48.47.png](Should%20all%20rollup%20get%20based%20287659b1c81780898a03ed8e1f99b808/Screenshot_2025-10-12_at_15.48.47.png)
+
+If you go to L2 Beat and go to **Liveness** section, you can find that in the past 10 months, Base had faced several incidents including 2 critical block production halt on mainnet.
+
+![Screenshot 2025-10-12 at 15.56.41.png](Should%20all%20rollup%20get%20based%20287659b1c81780898a03ed8e1f99b808/Screenshot_2025-10-12_at_15.56.41.png)
+
+All of these incidents share a single point of failure — the sequencer.
+
+In the most recent case, the outage stemmed from a **handoff between a healthy sequencer and a backup that wasn’t**. When control shifted, the secondary sequencer failed to produce blocks correctly, causing the entire network to stall.
+
+This highlights a structural fragility in today’s rollup architectures: even with redundancy, sequencing remains a centralized dependency, and a misconfigured or degraded node can halt an otherwise healthy system.
+
+That tension is what gives urgency to **based rollups.** We’re not just chasing higher throughput. We’re chasing _trust coherence_ — making sure that every piece of the stack lives under Ethereum’s security umbrella, not beside it.
+
+# What is Based Rollup?
+
+The based rollup we are talking about is what introduced by [Justin Drake in the discussion posted on the Ethereum forum around late 2022](https://ethresear.ch/t/based-rollups-superpowers-from-l1-sequencing/15016) - To be clear, prior the the forum post of Justin Drake, there was several variants of the mentioned concept had been researched and pushed in the market, but here we only talk about the standard term “Based rollup” introduced by [**Justin Drake**](https://x.com/drakefjustin).
+
+![Screenshot 2025-10-12 at 22.23.16.png](Should%20all%20rollup%20get%20based%20287659b1c81780898a03ed8e1f99b808/Screenshot_2025-10-12_at_22.23.16.png)
+
+To keep it simple, [Based rollups](https://ethresear.ch/t/based-rollups-superpowers-from-l1-sequencing/15016) aim to enhance Ethereum scalability by integrating L2 operations with L1 for improved data availability and security. They leverage L1 for sequencing and settlement, avoiding the need for centralized sequencers, which promotes decentralization.
+
+> _“A rollup is said to be based, or L1-sequenced, when its sequencing is driven by the base L1. More concretely, a based rollup is one where the next L1 proposer may, in collaboration with L1 searchers and builders, permissionlessly include the next rollup block as part of the next L1 block.” - Justin Drake,_ [**Based rollups—superpowers from L1 sequencing**](https://ethresear.ch/t/based-rollups-superpowers-from-l1-sequencing/15016)
+
+## How does Based Rollup work?
+
+So how based rollup can solve the issue of centralized sequencer rollup infrastructure? As mentioned in the definion, as the sequencing process now happens directly on the L1, the requirement for a third-party controlled sequencer setup is no longer needed. Hence, improving the security, handling maximum decentralization of the rollup and _economic alignment with the L1._
+
+![Rollup Model Comparison - [https://docs.taiko.xyz/taiko-alethia-protocol/protocol-design/based-rollups/](https://docs.taiko.xyz/taiko-alethia-protocol/protocol-design/based-rollups/)](Should%20all%20rollup%20get%20based%20287659b1c81780898a03ed8e1f99b808/Screenshot_2025-10-12_at_17.13.34.png)
+
+Rollup Model Comparison - [https://docs.taiko.xyz/taiko-alethia-protocol/protocol-design/based-rollups/](https://docs.taiko.xyz/taiko-alethia-protocol/protocol-design/based-rollups/)
+
+## Limitations and Potential Solutions
+
+However, there are also significant concerns in the design. When we say “_economic alignment with the L1”,_ rollups now are no longer able to extract MEV economic value and reorder transactions before sending them to the L1. Even though this is a boost in security model, there is a huge trade-off for the rollup’s revenue model.
+
+![Advantages and disadvantages comparison of Based Rollup and Centralized Sequencer Rollups](Should%20all%20rollup%20get%20based%20287659b1c81780898a03ed8e1f99b808/Screenshot_2025-10-09_at_17.56.34.png)
+
+Advantages and disadvantages comparison of Based Rollup and Centralized Sequencer Rollups
+
+### **MEV / Ordering Revenue**
+
+As stated in an [article of Alchemy about the revenue model of rollups](https://www.alchemy.com/blog/the-business-model-of-rollups):
+
+> _“With the right sequencing and ordering policy, a rollup can capture [MEV](https://www.alchemy.com/overviews/what-is-mev) as transparent chain revenue. MEV capture is a design choice & isn’t guaranteed income.
+> Example: Arbitrum Orbit recently launched [Timeboost](https://docs.arbitrum.io/how-arbitrum-works/timeboost/gentle-introduction) which replaces naive FCFS with an express-lane auction each round. Traders bid off-chain, proceeds go on-chain. The auction fees go to the Arbitrum sequencer, and are then distributed to the Arbitrum DAO and Developer Guild.
+> Timeboost crossed $3M+ in fees collected post-launch and has continued to ramp. If you run an Arbitrum chain, you can enable Timeboost and keep your chain’s auction revenue.”_
+
+In **traditional rollups**, the sequencer sits at the center of MEV capture, deciding transaction ordering and directly profiting from auction mechanisms like Timeboost.
+
+However, in a **based rollup**, sequencing is delegated to **Ethereum’s own block proposers**, not an independent sequencer. This alignment means that MEV revenue — instead of flowing to a centralized rollup operator — is **recaptured by Ethereum’s validator set** through the L1 PBS market.
+
+In short, while systems like Arbitrum’s Timeboost allow rollups to monetize MEV locally, **based sequencing routes that same value back to Ethereum itself**, strengthening the network’s economic security but removing MEV as a direct revenue stream for rollup operators.
+
+![[https://dune.com/entropy_advisors/arbitrum-timeboost](https://dune.com/entropy_advisors/arbitrum-timeboost)](Should%20all%20rollup%20get%20based%20287659b1c81780898a03ed8e1f99b808/Screenshot_2025-10-12_at_17.10.20.png)
+
+[https://dune.com/entropy_advisors/arbitrum-timeboost](https://dune.com/entropy_advisors/arbitrum-timeboost)
+
+But these critial issues with MEV are also covered by Justin Drake and Vitalik ([Reference “MEV for Based Rollups”](https://ethresear.ch/t/mev-for-based-rollup/15636)). Vitalik proposed a method called “Total Anarchy”
+
+### **Precomfirmations**
+
+![image.png](Should%20all%20rollup%20get%20based%20287659b1c81780898a03ed8e1f99b808/image.png)
+
+Preconfirmation can be explained in a form as [_“a reliable preview of the final confirmation”._](https://www.gate.com/learn/articles/why-do-based-rollups-require-preconfirmation-preconfs-technology/4660) In a traditional rollup with a centralized sequencer, users can receive instant feedback. The sequencer can preconfirm transactions almost immediately — even milliseconds after submission — giving users and applications (especially traders and dapps) a strong inclusion guarantee and smoother UX.
+
+But in a **based rollup**, **sequencing is performed by Ethereum L1 proposers**, whose timing is tied to Ethereum’s 12-second slot cadence and probabilistic proposer selection. That means:
+
+- The next L1 proposer may not yet be known (until the slot begins).
+- The rollup itself cannot give strong inclusion guarantees before the next proposer is active.
+- The latency for preconfirmation could stretch to multiple seconds or more — too slow for DeFi users who expect sub-second response times.
+
+As **based rollups inherit Ethereum’s timing constraints**, making near-instant preconfirmation more complex than in centralized sequencer models. Below are some references related to precomfirmation in based rollups if you want to research more, or short **_“based preconfirmations”_**:
+
+- Taiko - based preconfirmations: [https://docs.taiko.xyz/taiko-alethia-protocol/protocol-design/based-preconfirmation/](https://docs.taiko.xyz/taiko-alethia-protocol/protocol-design/based-preconfirmation/)
+- Based preconfs FAQ: [https://hackmd.io/@samlaf/based-preconfs-faq](https://hackmd.io/@samlaf/based-preconfs-faq)
+
+Plus, a few other issues of based rollups are also discussed in this forum post:
+
+https://ethresear.ch/t/understanding-based-rollups-pga-challenges-total-anarchy-and-potential-solutions/21320
+
+---
+
+To conclude this article, there are trade-offs in each design of the rollup, based and non-based. But as can be seen, this direction of based rollup will be likely the reasonable approach for the sake of Ethereum mainnet and its rollup ecosystem. Even though there are challenges but as always, Ethereum is “the longest chain” so it always faces with the problems that only the _frontier_ chain faces.
+
+We will cover more about preconfirmation and based rollup ecosystem in another article and hope that you already get the idea why we need based rollup and the exciting things coming ahead!
+
+## References
+
+- https://ethresear.ch/tag/based-sequencing
+- https://www.espressosys.com/
+- https://l2beat.com/scaling/projects/taiko
