@@ -11,17 +11,52 @@ import { baseUrl } from "./sitemap";
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
   title: {
-    default: "chungtin.eth",
+    default: "Chung Quan Tin | Blockchain Developer & Researcher",
     template: "%s | chungtin.eth",
   },
-  description: "This is my portfolio.",
+  description:
+    "Personal portfolio and blog of Chung Quan Tin (chungtin.eth) - researching and building on the decentralized digital realm. Exploring blockchain technology, Web3, and the future of decentralized systems.",
+  keywords: [
+    "Chung Quan Tin",
+    "chungtin.eth",
+    "blockchain developer",
+    "Web3",
+    "Ethereum",
+    "Polkadot",
+    "decentralized systems",
+    "cryptocurrency",
+    "smart contracts",
+    "DeFi",
+    "blockchain research",
+    "software engineer",
+  ],
+  authors: [{ name: "Chung Quan Tin", url: baseUrl }],
+  creator: "Chung Quan Tin",
+  publisher: "Chung Quan Tin",
   openGraph: {
-    title: "chungtin.eth",
-    description: "researching and building on the decentralized digital realm",
+    title: "Chung Quan Tin | Blockchain Developer & Researcher",
+    description:
+      "Researching and building on the decentralized digital realm. Exploring blockchain technology, Web3, and the future of decentralized systems.",
     url: baseUrl,
     siteName: "chungtin.eth",
     locale: "en_US",
     type: "website",
+    images: [
+      {
+        url: `${baseUrl}/og`,
+        width: 1200,
+        height: 630,
+        alt: "Chung Quan Tin - Blockchain Developer & Researcher",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Chung Quan Tin | Blockchain Developer & Researcher",
+    description:
+      "Researching and building on the decentralized digital realm. Exploring blockchain technology, Web3, and the future of decentralized systems.",
+    creator: "@chungquantin",
+    images: [`${baseUrl}/og`],
   },
   robots: {
     index: true,
@@ -33,6 +68,25 @@ export const metadata: Metadata = {
       "max-image-preview": "large",
       "max-snippet": -1,
     },
+  },
+  alternates: {
+    canonical: baseUrl,
+    types: {
+      "application/rss+xml": `${baseUrl}/rss`,
+    },
+  },
+  category: "technology",
+  verification: {
+    google: "your-google-verification-code", // Add your actual verification code
+  },
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 5,
+  },
+  icons: {
+    icon: "/favicon.ico",
+    apple: "/apple-touch-icon.png",
   },
 };
 

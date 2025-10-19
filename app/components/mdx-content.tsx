@@ -3,6 +3,7 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
+import rehypeRaw from "rehype-raw";
 import "highlight.js/styles/github.css";
 import "highlight.js/styles/github-dark.css";
 
@@ -16,7 +17,7 @@ export function MDXContent({ content }: MDXContentProps) {
       <div className="break-words">
         <ReactMarkdown
           remarkPlugins={[remarkGfm]}
-          rehypePlugins={[rehypeHighlight]}
+          rehypePlugins={[rehypeHighlight, rehypeRaw]}
           components={{
             // Custom components for better styling
             h1: ({ children }) => (
@@ -152,6 +153,22 @@ export function MDXContent({ content }: MDXContentProps) {
               <td className="border border-gray-800 px-4 py-2 text-gray-200">
                 {children}
               </td>
+            ),
+            iframe: ({ src, title, width, height, ...props }) => (
+              <div className="my-6">
+                <iframe
+                  src={src}
+                  title={title || "Embedded content"}
+                  width={width || "100%"}
+                  height={height || "450"}
+                  className="w-full rounded-lg border border-gray-700"
+                  style={{ maxWidth: "100%" }}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                  loading="lazy"
+                  {...props}
+                />
+              </div>
             ),
           }}
         >
