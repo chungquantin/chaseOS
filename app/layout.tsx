@@ -1,25 +1,26 @@
 import "./global.css";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
-import { Navbar } from "./components/nav";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-import Footer from "./components/footer";
 import { baseUrl } from "./sitemap";
 
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
   title: {
-    default: "Chung Quan Tin | Blockchain Developer & Researcher",
-    template: "%s | chungtin.eth",
+    default: "Tin Chung | chungquantin",
+    template: "%s | chungquantin",
   },
   description:
-    "Personal portfolio and blog of Chung Quan Tin (chungtin.eth) - researching and building on the decentralized digital realm. Exploring blockchain technology, Web3, and the future of decentralized systems.",
+    "Portfolio and writing from Tin Chung, the software engineer behind chungquantin. Currently building a perpetual exchange at Architect, with prior work across Rover, Polkadot, OpenGuild, ROGUE, blockchain infrastructure, Rust, and AI.",
   keywords: [
-    "Chung Quan Tin",
-    "chungtin.eth",
-    "blockchain developer",
+    "Tin Chung",
+    "chungquantin",
+    "builder",
+    "researcher",
+    "writer",
+    "blockchain infrastructure",
     "Web3",
     "Ethereum",
     "Polkadot",
@@ -29,16 +30,22 @@ export const metadata: Metadata = {
     "DeFi",
     "blockchain research",
     "software engineer",
+    "Architect",
+    "Rover",
+    "Polkadot",
+    "OpenGuild",
+    "ROGUE",
+    "Rust",
   ],
-  authors: [{ name: "Chung Quan Tin", url: baseUrl }],
-  creator: "Chung Quan Tin",
-  publisher: "Chung Quan Tin",
+  authors: [{ name: "Tin Chung", url: baseUrl }],
+  creator: "Tin Chung",
+  publisher: "Tin Chung",
   openGraph: {
-    title: "Chung Quan Tin | Blockchain Developer & Researcher",
+    title: "Tin Chung | chungquantin",
     description:
-      "Researching and building on the decentralized digital realm. Exploring blockchain technology, Web3, and the future of decentralized systems.",
+      "Software engineer at Architect, previously at Rover, Polkadot, OpenGuild, and ROGUE. Working across blockchain infrastructure, Rust, DevRel, and AI-adjacent systems.",
     url: baseUrl,
-    siteName: "chungtin.eth",
+    siteName: "chungquantin",
     locale: "en_US",
     type: "website",
     images: [
@@ -46,15 +53,15 @@ export const metadata: Metadata = {
         url: `${baseUrl}/og`,
         width: 1200,
         height: 630,
-        alt: "Chung Quan Tin - Blockchain Developer & Researcher",
+        alt: "Tin Chung - chungquantin",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Chung Quan Tin | Blockchain Developer & Researcher",
+    title: "Tin Chung | chungquantin",
     description:
-      "Researching and building on the decentralized digital realm. Exploring blockchain technology, Web3, and the future of decentralized systems.",
+      "Software engineer at Architect, previously at Rover, Polkadot, OpenGuild, and ROGUE. Working across blockchain infrastructure, Rust, DevRel, and AI-adjacent systems.",
     creator: "@chungquantin",
     images: [`${baseUrl}/og`],
   },
@@ -79,15 +86,16 @@ export const metadata: Metadata = {
   verification: {
     google: "your-google-verification-code", // Add your actual verification code
   },
-  viewport: {
-    width: "device-width",
-    initialScale: 1,
-    maximumScale: 5,
-  },
   icons: {
     icon: "/favicon.ico",
     apple: "/apple-touch-icon.png",
   },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
 };
 
 const cx = (...classes) => classes.filter(Boolean).join(" ");
@@ -106,8 +114,8 @@ export default function RootLayout({
         GeistMono.variable
       )}
     >
-      <body className="antialiased max-w-xl mx-4 mt-8 lg:mx-auto">
-        <main className="flex-auto min-w-0 mt-6 flex flex-col px-2 md:px-0">
+      <body className="min-h-screen antialiased">
+        <main className="min-w-0">
           {children}
           <Analytics />
           <SpeedInsights />

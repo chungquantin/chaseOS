@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Command } from "cmdk";
 import { Search, FileText, Building2, Video, Monitor } from "lucide-react";
 import Image from "next/image";
-import { BlogPost } from "../page";
+import type { BlogPost } from "app/blog/utils";
 import { companies } from "./company-window";
 import { getFinderApps, getActionApps } from "./app-registry";
 
