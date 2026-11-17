@@ -8,6 +8,9 @@
   "dependencies": {
     "@mdx-js/loader": "^3.1.1",
     "@mdx-js/react": "^3.1.1",
+    "@react-three/drei": "9.114.0",
+    "@react-three/fiber": "8.17.10",
+    "@react-three/postprocessing": "2.16.3",
     "@tailwindcss/postcss": "4.0.0-alpha.13",
     "@types/mdx": "^2.0.13",
     "@types/node": "20.11.17",
@@ -18,10 +21,12 @@
     "cmdk": "^1.1.1",
     "framer-motion": "^12.23.22",
     "geist": "1.2.2",
+    "lightweight-charts": "4.2.0",
     "lucide-react": "^0.545.0",
     "next": "canary",
     "next-mdx-remote": "^6.0.0",
     "postcss": "^8.4.35",
+    "postprocessing": "6.36.4",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "react-markdown": "^10.1.0",
@@ -32,7 +37,11 @@
     "remark-gfm": "^4.0.1",
     "sugar-high": "^0.6.0",
     "tailwindcss": "4.0.0-alpha.13",
+    "three": "0.169.0",
     "typescript": "5.3.3"
   },
-  "packageManager": "pnpm@8.15.5+sha1.a58c038faac410c947dbdb93eb30994037d0fce2"
+  "packageManager": "pnpm@8.15.5+sha1.a58c038faac410c947dbdb93eb30994037d0fce2",
+  "devDependencies": {
+    "@types/three": "0.169.0"
+  }
 }
