@@ -1,19 +1,19 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type ComponentType } from "react";
+import { useEffect, useRef, useState, type ComponentType } from "react";
 import Link from "next/link";
 import {
   AppWindow,
   BookOpen,
   CandlestickChart,
+  Compass,
   FileText,
   Music2,
   Newspaper,
-  Pause,
-  Play,
   RefreshCw,
   SquareTerminal,
   UserRound,
+  Youtube,
   type LucideIcon,
 } from "lucide-react";
 import { BUILT_APPS } from "app/data/apps";
@@ -21,11 +21,13 @@ import { chapters } from "app/data/career";
 import { idCard, profile } from "app/data/profile";
 import { MarketsTerminal } from "../panels/markets-panel";
 import type { PostSummary } from "../panels/writing-panel";
-import { music } from "../music";
+import { media } from "../media";
+import { PLAYLIST } from "app/data/playlist";
+import { BrowserApp, MusicApp, YouTubeApp } from "./media-apps";
 import { room } from "../store";
 import { MyApps } from "./my-apps";
 
-export type AppId = "readme" | "about" | "apps" | "stories" | "news" | "markets" | "terminal" | "music";
+export type AppId = "readme" | "about" | "apps" | "stories" | "browser" | "youtube" | "news" | "markets" | "terminal" | "music";
 
 export type AppProps = {
   posts: PostSummary[];
@@ -258,9 +260,10 @@ function Terminal({ posts, open }: AppProps) {
           "jobs        every role, newest first",
           "posts       what I’ve written",
           "apps        things I’ve built",
-          "open <app>  about, apps, stories, news, markets, music, readme",
+          "open <app>  about, apps, stories, browser, youtube, news, markets, music",
           "neofetch    system info",
           "music       play or pause the room music",
+          "next        skip to the next song",
           "date        today",
           "clear       clean the screen"
         );
@@ -290,14 +293,15 @@ function Terminal({ posts, open }: AppProps) {
       case "neofetch":
         out.push(...NEOFETCH(posts.length));
         break;
-      case "music":
-        if (music.playing) {
-          music.stop();
-          out.push("music paused");
-        } else {
-          music.start();
-          out.push("music playing: Lamplight (generative lo-fi)");
-        }
+      case "music": {
+        const was = media.get().playing;
+        media.toggle();
+        out.push(was ? "music paused" : `playing: ${PLAYLIST[media.get().index].title}, ${PLAYLIST[media.get().index].artist}`);
+        break;
+      }
+      case "next":
+        media.next();
+        out.push(`playing: ${PLAYLIST[media.get().index].title}, ${PLAYLIST[media.get().index].artist}`);
         break;
       case "date":
         out.push(new Date().toString());
@@ -372,48 +376,6 @@ function Terminal({ posts, open }: AppProps) {
   );
 }
 
-/* --------------------------------------------------------------- Music */
-
-function MusicApp(_: AppProps) {
-  const [on, setOn] = useState(music.playing);
-  const bars = useMemo(() => Array.from({ length: 24 }, (_, i) => 0.35 + ((i * 37) % 11) / 16), []);
-  return (
-    <div className="flex h-full flex-col items-center justify-center gap-5 bg-[radial-gradient(120%_100%_at_50%_0%,#2a2350,#0c0f1c)] p-6 text-[#e7e2ff]">
-      <div className="grid size-28 place-items-center rounded-[28px] bg-[linear-gradient(145deg,#ffc27d,#e6007a_60%,#3b2a7a)] shadow-[0_20px_50px_-15px_rgba(230,0,122,0.6)]">
-        <Music2 size={44} className="text-white" />
-      </div>
-      <div className="text-center">
-        <p className="font-display text-[24px]">Lamplight</p>
-        <p className="text-[13px] opacity-65">Generative lo-fi, composed live in your browser</p>
-      </div>
-      <div className="flex h-10 items-end gap-[3px]" aria-hidden>
-        {bars.map((h, i) => (
-          <span
-            key={i}
-            className="w-1.5 rounded-full bg-[#ffc27d]"
-            style={{
-              height: `${h * 100}%`,
-              opacity: on ? 0.9 : 0.25,
-              animation: on ? `eq ${0.7 + (i % 5) * 0.13}s ease-in-out ${i * 0.04}s infinite alternate` : "none",
-              transformOrigin: "bottom",
-            }}
-          />
-        ))}
-      </div>
-      <button
-        onClick={() => {
-          if (music.playing) music.stop();
-          else music.start();
-          setOn(music.playing);
-        }}
-        className="lamp-btn px-6 py-2.5 text-[14px]"
-      >
-        {on ? <Pause size={16} /> : <Play size={16} />} {on ? "Pause" : "Play"}
-      </button>
-    </div>
-  );
-}
-
 /* ------------------------------------------------------------ registry */
 
 function MyAppsWindow({ arg }: AppProps) {
@@ -425,10 +387,12 @@ export const APPS: AppDef[] = [
   { id: "about", name: "About me", Icon: UserRound, tint: ["#ffc27d", "#e6007a"], size: [720, 600], Component: About },
   { id: "apps", name: "My apps", Icon: AppWindow, tint: ["#a5b4fc", "#4f46e5"], size: [860, 660], Component: MyAppsWindow },
   { id: "stories", name: "Stories", Icon: BookOpen, tint: ["#fcd34d", "#b45309"], size: [560, 600], Component: Stories },
+  { id: "browser", name: "Browser", Icon: Compass, tint: ["#7dd3fc", "#0369a1"], size: [980, 680], Component: () => <BrowserApp /> },
+  { id: "youtube", name: "YouTube", Icon: Youtube, tint: ["#ff6b81", "#cc0022"], size: [940, 680], dark: true, Component: () => <YouTubeApp /> },
   { id: "news", name: "News", Icon: Newspaper, tint: ["#fdba74", "#ea580c"], size: [620, 600], Component: News },
   { id: "markets", name: "Markets", Icon: CandlestickChart, tint: ["#6ee7b7", "#047857"], size: [860, 560], dark: true, Component: Markets },
   { id: "terminal", name: "Terminal", Icon: SquareTerminal, tint: ["#475569", "#0f172a"], size: [620, 400], dark: true, Component: Terminal },
-  { id: "music", name: "Music", Icon: Music2, tint: ["#f9a8d4", "#9d174d"], size: [380, 460], dark: true, Component: MusicApp },
+  { id: "music", name: "Music", Icon: Music2, tint: ["#f9a8d4", "#9d174d"], size: [720, 520], dark: true, Component: () => <MusicApp /> },
 ];
 
 export const appById = Object.fromEntries(APPS.map((a) => [a.id, a])) as Record<AppId, AppDef>;

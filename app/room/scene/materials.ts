@@ -34,8 +34,8 @@ export const C = {
   beige: "#e4d7bd",
   skin: "#f2c9a0",
   hair: "#2a1d16",
-  hoodie: "#ff7a45",
-  pants: "#33415c",
+  hoodie: "#1d1d22",
+  pants: "#34435e",
   shoe: "#f4f1ea",
 };
 

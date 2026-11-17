@@ -5,7 +5,8 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { BookOpen, Briefcase, Maximize, Monitor, Minus, Moon, Music2, Package, Plus, Sun, VolumeX } from "lucide-react";
-import { music } from "./music";
+import { media, useMedia } from "./media";
+import { MiniPlayer } from "./mini-player";
 import { interests } from "app/data/interests";
 import { INTERACTABLES, type PanelId } from "./layout";
 import { room, useRoom } from "./store";
@@ -129,23 +130,14 @@ export function RoomExperience({ posts, children }: { posts: PostSummary[]; chil
   }, [deepLink]);
 
   const afterLoading = () => room.setStage(hasSeenIntro() ? "room" : "intro");
-  const [musicOn, setMusicOn] = useState(false);
-  const startMusic = () => {
-    if (!music.playing) music.start();
-    setMusicOn(true);
-  };
-  const toggleMusic = () => {
-    if (music.playing) {
-      music.stop();
-      setMusicOn(false);
-    } else startMusic();
-  };
+  const musicOn = useMedia((s) => s.playing);
+  const toggleMusic = () => media.toggle();
   // returning visitors skip the card, so start on their first gesture
   useEffect(() => {
     if (stage !== "room") return;
     const kick = (e: Event) => {
       if ((e.target as HTMLElement | null)?.closest?.("[data-music-toggle]")) return;
-      if (music.wanted() && !music.playing) startMusic();
+      if (media.wanted() && !media.get().playing) media.play();
       window.removeEventListener("pointerdown", kick);
       window.removeEventListener("keydown", kick);
     };
@@ -159,7 +151,7 @@ export function RoomExperience({ posts, children }: { posts: PostSummary[]; chil
   }, [stage]);
 
   const enterRoom = () => {
-    if (music.wanted()) startMusic(); // this click is the gesture browsers require
+    if (media.wanted()) media.play(); // this click is the gesture browsers require
     const first = !hasSeenIntro();
     markIntroSeen();
     room.setStage("room");
@@ -218,7 +210,7 @@ export function RoomExperience({ posts, children }: { posts: PostSummary[]; chil
       </nav>
 
       {/* right edge: zoom */}
-      <div className={`glass absolute bottom-24 right-4 flex flex-col rounded-full p-1 transition-opacity sm:bottom-6 sm:right-6 ${hud}`}>
+      <div className={`glass absolute bottom-24 right-4 flex flex-col rounded-full p-1 transition-opacity sm:bottom-auto sm:right-6 sm:top-1/2 sm:-translate-y-1/2 ${hud}`}>
         <button onClick={() => room.zoomBy(1.25)} aria-label="Zoom in" className="glass-btn size-8 justify-center">
           <Plus size={16} />
         </button>
@@ -296,6 +288,9 @@ export function RoomExperience({ posts, children }: { posts: PostSummary[]; chil
       </div>
 
       <AnimatePresence>{active && renderPanel(active, posts)}</AnimatePresence>
+
+      {/* the music player: stays up over panels so a playing video is always visible */}
+      <MiniPlayer hidden={stage !== "room"} />
 
       {/* route content: the open book on /blog/[slug], crawlable copy elsewhere */}
       {children}

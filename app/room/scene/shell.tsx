@@ -1,10 +1,12 @@
 "use client";
 
-import { useLayoutEffect, useMemo, useRef } from "react";
-import { Color, DoubleSide, Object3D, PlaneGeometry, type InstancedMesh } from "three";
+import { useMemo } from "react";
+import { MeshReflectorMaterial } from "@react-three/drei";
+import { DoubleSide, PlaneGeometry, Vector2 } from "three";
 import { HALF, INNER, WALL_HEIGHT as H, WALL_THICKNESS as T, WINDOW } from "../layout";
 import { room, type Mood } from "../store";
 import { C, makeSkyTexture } from "./materials";
+import { usePBR } from "./pbr";
 import { Box, Instanced, RBox } from "./primitives";
 
 const SLAB_TOP = -0.04;
@@ -13,76 +15,65 @@ const OUTER = -HALF - T / 2; // outer face of the walls
 
 /* ------------------------------------------------------------- floor */
 
-/** Individual planks (instanced) with gaps and tint variation. */
-function Planks() {
-  const ref = useRef<InstancedMesh>(null);
-  const planks = useMemo(() => {
-    const out: { x: number; z: number; len: number; w: number; tint: number }[] = [];
-    const span = HALF - INNER;
-    const rows = 22;
-    const w = span / rows;
-    let seed = 9;
-    const rand = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
-    for (let r = 0; r < rows; r++) {
-      let x = INNER - rand() * 1.2;
-      while (x < HALF) {
-        const len = 1.1 + rand() * 1.5;
-        const x0 = Math.max(x, INNER);
-        const x1 = Math.min(x + len, HALF);
-        if (x1 - x0 > 0.08) {
-          out.push({
-            x: (x0 + x1) / 2,
-            z: INNER + w * (r + 0.5),
-            len: x1 - x0 - 0.014,
-            w: w - 0.014,
-            tint: rand(),
-          });
-        }
-        x += len;
+/**
+ * Oak flooring: real PBR texture (colour, normal, roughness). On capable
+ * devices it also carries a soft, blurred reflection of the room, like a
+ * waxed floor under lamplight.
+ */
+function OakFloor({ quality }: { quality: "high" | "low" }) {
+  const pbr = usePBR();
+  const span = HALF - INNER;
+  const mid = (HALF + INNER) / 2;
+  // the texture spans ~1.6 m of real planks
+  const rep = span / 1.6;
+  const maps = pbr
+    ? {
+        map: pbr.tiled("oakMap", rep),
+        normalMap: pbr.tiled("oakNormal", rep),
+        roughnessMap: pbr.tiled("oakRough", rep),
       }
-    }
-    return out;
-  }, []);
-
-  useLayoutEffect(() => {
-    const mesh = ref.current!;
-    const o = new Object3D();
-    const base = new Color(C.woodLight);
-    const col = new Color();
-    planks.forEach((p, i) => {
-      o.position.set(p.x, -0.02, p.z);
-      o.scale.set(p.len, 0.04, p.w);
-      o.updateMatrix();
-      mesh.setMatrixAt(i, o.matrix);
-      col.copy(base).offsetHSL((p.tint - 0.5) * 0.02, (p.tint - 0.5) * 0.08, (p.tint - 0.5) * 0.09);
-      mesh.setColorAt(i, col);
-    });
-    mesh.instanceMatrix.needsUpdate = true;
-    if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
-  }, [planks]);
-
+    : {};
   return (
-    <instancedMesh
-      ref={ref}
-      args={[undefined, undefined, planks.length]}
+    <mesh
+      rotation={[-Math.PI / 2, 0, 0]}
+      position={[mid, 0, mid]}
       receiveShadow
       onClick={(e) => {
         e.stopPropagation();
         room.walkTo(e.point.x, e.point.z);
       }}
     >
-      <boxGeometry />
-      <meshStandardMaterial roughness={0.55} />
-    </instancedMesh>
+      <planeGeometry args={[span, span]} />
+      {quality === "high" && pbr ? (
+        <MeshReflectorMaterial
+          {...maps}
+          color="#fff4e8"
+          normalScale={new Vector2(0.6, 0.6)}
+          roughness={0.85}
+          metalness={0}
+          resolution={512}
+          blur={[420, 140]}
+          mixBlur={1}
+          mixStrength={0.6}
+          mixContrast={1}
+          depthScale={0.8}
+          minDepthThreshold={0.35}
+          maxDepthThreshold={1.3}
+          mirror={0}
+        />
+      ) : (
+        <meshStandardMaterial {...maps} color={pbr ? "#fff4e8" : C.woodLight} roughness={0.8} normalScale={new Vector2(0.6, 0.6)} />
+      )}
+    </mesh>
   );
 }
 
-export function Floor() {
+export function Floor({ quality }: { quality: "high" | "low" }) {
   const size = HALF - OUTER;
   const mid = (HALF + OUTER) / 2;
   return (
     <group>
-      {/* diorama slab with light cut edges; dark top shows through plank gaps */}
+      {/* diorama slab with light cut edges */}
       <mesh position={[mid, SLAB_TOP - SLAB_H / 2, mid]} receiveShadow castShadow>
         <boxGeometry args={[size, SLAB_H, size]} />
         <meshStandardMaterial attach="material-0" color={C.slab} />
@@ -92,7 +83,7 @@ export function Floor() {
         <meshStandardMaterial attach="material-4" color={C.slab} />
         <meshStandardMaterial attach="material-5" color={C.slab} />
       </mesh>
-      <Planks />
+      <OakFloor quality={quality} />
     </group>
   );
 }
@@ -236,7 +227,7 @@ export function Window({ mood }: { mood: Mood }) {
           rotation={[0, Math.PI / 2, 0]}
           castShadow
         >
-          <meshStandardMaterial color={C.curtain} side={DoubleSide} transparent opacity={0.88} roughness={0.9} />
+          <meshPhysicalMaterial color={C.curtain} side={DoubleSide} transparent opacity={0.9} roughness={0.9} sheen={1} sheenRoughness={0.5} sheenColor="#e6f2e0" />
         </mesh>
       ))}
     </group>
