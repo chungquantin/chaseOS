@@ -1,3 +1,4 @@
+import { chapters } from "./career";
 export type WorkItem = {
   index: string;
   title: string;
@@ -80,13 +81,6 @@ export const work: WorkItem[] = [
     href: "https://www.linkedin.com/in/chungquantin/",
     note: "React.js, Rust, and engineering infrastructure.",
   },
-  {
-    index: "7",
-    title: "Ninety Eight",
-    meta: "2021-2022 | Blockchain Developer",
-    href: "https://www.linkedin.com/in/chungquantin/",
-    note: "Early blockchain engineering work.",
-  },
 ];
 
 export const beliefs: Belief[] = [
@@ -134,7 +128,7 @@ export const idCard = {
   ],
   stats: [
     { value: "5+", label: "years shipping" },
-    { value: "8", label: "roles" },
+    { value: String(chapters.length), label: "roles" },
     { value: "3", label: "founding teams" },
     { value: "60TB", label: "largest migration" },
   ],

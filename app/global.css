@@ -759,9 +759,11 @@ table {
   backdrop-filter: blur(16px) saturate(140%);
   border: 1px solid rgba(255, 255, 255, 0.07);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    inset 0 1px 0 rgba(255, 255, 255, 0.09),
     inset 0 -14px 26px -22px rgba(255, 194, 125, 0.55),
-    0 18px 40px -22px rgba(0, 0, 0, 0.85);
+    0 4px 0 rgba(5, 7, 18, 0.94),
+    0 5px 0 rgba(255, 194, 125, 0.08),
+    0 22px 40px -18px rgba(0, 0, 0, 0.9);
 }
 [data-mood="day"] .glass {
   color: #2d1c14;
@@ -770,7 +772,8 @@ table {
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.8),
     inset 0 -14px 26px -22px rgba(240, 140, 80, 0.45),
-    0 18px 40px -24px rgba(90, 40, 20, 0.55);
+    0 4px 0 #d8b590,
+    0 22px 40px -20px rgba(90, 40, 20, 0.6);
 }
 
 /* glass controls */
@@ -801,7 +804,7 @@ table {
   box-shadow: inset 0 0 0 1px rgba(180, 82, 28, 0.25);
 }
 
-/* the primary action: a little lamp you can press */
+/* the primary action: an amber keycap that presses into its own edge */
 .lamp-btn {
   display: inline-flex;
   align-items: center;
@@ -809,21 +812,30 @@ table {
   border-radius: 999px;
   color: #2a1606;
   font-weight: 600;
-  background: linear-gradient(180deg, #ffd59e, var(--lamp) 55%, var(--lamp-deep));
+  background: linear-gradient(180deg, #ffd9a6, var(--lamp) 55%, var(--lamp-deep));
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.65),
     0 0 0 1px rgba(160, 90, 20, 0.35),
-    0 10px 30px -8px rgba(255, 170, 80, 0.75);
-  transition: transform 140ms ease, box-shadow 160ms ease;
+    0 4px 0 #b4621a,
+    0 14px 30px -8px rgba(255, 170, 80, 0.7);
+  transform: translateY(0);
+  transition: transform 110ms ease, box-shadow 140ms ease;
 }
 .lamp-btn:hover {
+  transform: translateY(-1px);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.7),
+    inset 0 1px 0 rgba(255, 255, 255, 0.75),
     0 0 0 1px rgba(160, 90, 20, 0.4),
-    0 12px 36px -6px rgba(255, 170, 80, 0.95);
+    0 5px 0 #b4621a,
+    0 16px 36px -6px rgba(255, 170, 80, 0.9);
 }
 .lamp-btn:active {
-  transform: translateY(1px) scale(0.98);
+  transform: translateY(3px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    0 0 0 1px rgba(160, 90, 20, 0.4),
+    0 1px 0 #b4621a,
+    0 6px 16px -6px rgba(255, 170, 80, 0.7);
 }
 
 /* physical keycap */
@@ -851,6 +863,10 @@ table {
   outline: 2px solid var(--lamp);
   outline-offset: 2px;
 }
+/* text fields draw their own focus state (address bars, search, terminal) */
+.room-ui input:focus-visible {
+  outline: none;
+}
 
 @keyframes eq {
   from { transform: scaleY(0.35); }
@@ -863,4 +879,93 @@ table {
     radial-gradient(45% 40% at 15% 100%, rgba(230, 0, 122, 0.35), transparent 70%),
     radial-gradient(80% 60% at 50% -10%, rgba(99, 102, 241, 0.35), transparent 70%),
     linear-gradient(180deg, #0f1533 0%, #1b1840 55%, #2b1838 100%);
+}
+
+/* RoomOS browser: indeterminate loading bar */
+@keyframes browser-load {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(300%); }
+}
+
+/* ======================================== room materials for the GUI */
+/*
+ * Overlays are built from the room's own stuff: a walnut board, painted
+ * wooden blocks, brass plates and a stack of paper. Everything thick has a
+ * solid bottom edge, like the room's walls seen from the iso camera.
+ */
+.wood-board {
+  color: #fbeedd;
+  background:
+    linear-gradient(180deg, rgba(255, 214, 160, 0.14), rgba(20, 8, 2, 0.32)),
+    url("/textures/board-walnut.jpg") center / 560px auto;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 224, 186, 0.28),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.4),
+    0 8px 0 #2b1409,
+    0 9px 0 #170a04,
+    0 34px 60px -20px rgba(0, 0, 0, 0.85);
+}
+/* a groove routed into the board */
+.groove {
+  box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.45), 0 1px 0 rgba(255, 220, 180, 0.12);
+}
+.engraved {
+  color: rgba(255, 233, 206, 0.82);
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.65), 0 -1px 0 rgba(255, 220, 180, 0.06);
+}
+.brass-plate {
+  color: #3b2507;
+  background: linear-gradient(180deg, #f3d79c, #c9a35b 60%, #a8813c);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 2px 0 #6f4f1d, 0 4px 8px -3px rgba(0, 0, 0, 0.6);
+}
+/* a painted wooden block: --block is its paint */
+.wood-block {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--block) 88%, white), var(--block));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.45),
+    0 4px 0 color-mix(in srgb, var(--block) 52%, black),
+    0 8px 14px -6px rgba(0, 0, 0, 0.7);
+  transition: transform 140ms ease, box-shadow 140ms ease;
+}
+.wood-block[aria-pressed="false"] {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--block) 55%, #3a2414), color-mix(in srgb, var(--block) 42%, #24140a));
+}
+.wood-block[aria-pressed="true"] {
+  transform: translateY(-3px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.6),
+    0 7px 0 color-mix(in srgb, var(--block) 50%, black),
+    0 16px 26px -8px color-mix(in srgb, var(--block) 70%, transparent);
+}
+/* a stack of paper: each sheet peeks out under the one above */
+.paper-stack {
+  background-color: #fbf8f1;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.35 0 0 0 0 0.27 0 0 0 0 0.17 0 0 0 0.07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  box-shadow:
+    0 2px 0 #e8dfcb,
+    0 3px 0 #faf6ec,
+    0 5px 0 #e2d7c0,
+    0 6px 0 #f6f0e3,
+    0 8px 0 #d6c9ae,
+    0 40px 80px -30px rgba(0, 0, 0, 0.85);
+}
+.folder-tab {
+  border-radius: 8px 8px 0 0;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+/* a sheet of paper you can press, sitting on the board */
+.paper-chip {
+  color: #3b2a1c;
+  background: #fbf6ea;
+  box-shadow: inset 0 1px 0 #fff, 0 3px 0 #cdbb98, 0 6px 12px -4px rgba(0, 0, 0, 0.6);
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+.paper-chip:hover {
+  transform: translateY(-1px);
+}
+.paper-chip[aria-pressed="true"] {
+  transform: translateY(2px);
+  background: var(--lamp);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 1px 0 #b4621a;
 }

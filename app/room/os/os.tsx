@@ -255,8 +255,8 @@ function DockIcon({
         aria-label={`Open ${app.name}`}
         className="group relative grid place-items-center rounded-[23%] text-white shadow-[0_6px_14px_-6px_rgba(0,0,0,0.6),inset_0_1px_0_rgba(255,255,255,0.35)]"
         style={{
-          width: compact ? 36 : size,
-          height: compact ? 36 : size,
+          width: compact ? 32 : size,
+          height: compact ? 32 : size,
           background: `linear-gradient(160deg, ${app.tint[0]}, ${app.tint[1]})`,
         }}
         whileTap={{ scale: 0.9 }}
@@ -278,15 +278,15 @@ function Dock({ wins, compact, onOpen }: { wins: Win[]; compact: boolean; onOpen
   return (
     <div className={`absolute inset-x-0 bottom-1.5 z-[400] flex justify-center ${compact ? "px-2" : ""}`}>
       <div
-        className={`flex items-end ${compact ? "gap-1.5" : "gap-2"} rounded-[20px] border border-white/15 bg-[rgba(255,255,255,0.14)] px-2 pb-[3px] pt-2 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.5)] backdrop-blur-2xl ${
+        className={`flex items-end ${compact ? "gap-1" : "gap-2"} rounded-[20px] border border-white/15 bg-[rgba(255,255,255,0.14)] px-2 pb-[3px] pt-2 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.5)] backdrop-blur-2xl ${
           compact ? "max-w-full overflow-x-auto [scrollbar-width:none]" : ""
         }`}
-        style={{ height: compact ? 56 : DOCK_BASE + 18 }}
+        style={{ height: compact ? 52 : DOCK_BASE + 18 }}
         onMouseMove={compact ? undefined : (e) => mouseX.set(e.clientX)}
         onMouseLeave={() => mouseX.set(Infinity)}
       >
         {APPS.map((a, i) => (
-          <div key={a.id} className={`flex items-end ${compact ? "gap-1.5" : "gap-2"}`}>
+          <div key={a.id} className={`flex items-end ${compact ? "gap-1" : "gap-2"}`}>
             {/* a hairline between the "about me" apps and the utilities, like a real dock */}
             {i === 4 && <span className="mb-2 h-9 w-px shrink-0 self-end bg-white/25" aria-hidden />}
             <DockIcon app={a} mouseX={mouseX} compact={compact} running={wins.some((w) => w.id === a.id)} onOpen={() => onOpen(a.id)} />
