@@ -2,9 +2,18 @@ import "./global.css";
 import type { Metadata, Viewport } from "next";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
+import { Fraunces } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { baseUrl } from "./sitemap";
+
+// Display serif for names and titles in the room UI
+const display = Fraunces({
+  subsets: ["latin"],
+  axes: ["opsz", "SOFT"],
+  variable: "--font-display",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
@@ -111,7 +120,8 @@ export default function RootLayout({
       className={cx(
         "text-black bg-white dark:text-white dark:bg-black",
         GeistSans.variable,
-        GeistMono.variable
+        GeistMono.variable,
+        display.variable
       )}
     >
       <body className="min-h-screen antialiased">
