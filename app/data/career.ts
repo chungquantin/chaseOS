@@ -2,11 +2,10 @@
  * Career chapters, in chronological order. Each one is rendered as a symbolic
  * object in the room (see app/room/scene/chapters.tsx) and opens a chapter
  * panel. Source: CV page 1 (Rover, R0GUE, Amazely, Snowflake) and the
- * homepage work index (Architect, Polkadot, OpenGuild, Ninety Eight).
+ * homepage work index (Architect, Polkadot, OpenGuild).
  */
 
 export type ChapterId =
-  | "ninetyeight"
   | "snowflake"
   | "amazely"
   | "openguild"
@@ -48,28 +47,6 @@ export type Chapter = {
 };
 
 export const chapters: Chapter[] = [
-  {
-    id: "ninetyeight",
-    company: "Ninety Eight",
-    role: "Blockchain Developer",
-    period: "2021 – 2022",
-    year: "2021",
-    href: "https://www.linkedin.com/in/chungquantin/",
-    summary: "Early blockchain engineering work. Where it started.",
-    bullets: [],
-    metrics: [],
-    stack: [],
-    org: {
-      monogram: "98",
-      brand: "#334155",
-      oneLiner: "Early-stage blockchain work.",
-      facts: [],
-    },
-    symbol: {
-      name: "The beige CRT",
-      why: "A terminal, a blinking cursor and the first blocks. Every room needs the machine where it all began.",
-    },
-  },
   {
     id: "snowflake",
     company: "Snowflake Network",

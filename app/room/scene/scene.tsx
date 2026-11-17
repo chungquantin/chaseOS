@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { PerformanceMonitor } from "@react-three/drei";
 import { Vector3, type Mesh } from "three";
 import { INTERACTABLES } from "../layout";
 import { live, room, useRoom } from "../store";
@@ -10,10 +9,14 @@ import { C } from "./materials";
 import { Bookshelf, Chair, CoffeeTable, Desk, FloorLamp, Plant, Sideboard, Sofa } from "./furniture";
 import { ClimbingWall, GameCorner } from "./interests";
 import { ProjectCase } from "./project-case";
-import { Floor, Ground, Walls, Window } from "./shell";
+import { Floor, Walls, Window } from "./shell";
+import { Street } from "./street";
 import { Effects, Lighting } from "./lighting";
 import { Interactable } from "./interactable";
 import { Player } from "./player";
+import { PBRProvider, preloadPBR } from "./pbr";
+
+preloadPBR();
 
 const ISO_OFFSET = new Vector3(12, 11, 12);
 const UP = new Vector3(0, 1, 0);
@@ -44,8 +47,8 @@ function CameraRig() {
     // portrait screens, crop the sides and lean on the follow cam instead.
     const portrait = size.width < size.height;
     baseZoom.current = portrait
-      ? Math.min(size.width / 10, size.height / 13)
-      : Math.min(size.width / 15.5, size.height / 12);
+      ? Math.min(size.width / 15, size.height / 20)
+      : Math.min(size.width / 26, size.height / 19);
   }, [size]);
 
   const angle = useRef(0.55);
@@ -160,7 +163,11 @@ function TargetMarker() {
 
 type Quality = "high" | "low";
 
-/** Start low on phones/touch; the PerformanceMonitor can lower it further. */
+/**
+ * Quality is decided once, from the device, and never changes mid-visit:
+ * switching paths at runtime made the room visibly drop in quality when a
+ * zoom-out briefly lowered the frame rate.
+ */
 function useInitialQuality(): Quality {
   const [q, setQ] = useState<Quality>("high");
   useEffect(() => {
@@ -203,8 +210,7 @@ function ShadowCache({ mood }: { mood: string }) {
 export default function Scene() {
   const mood = useRoom((s) => s.mood);
   const initial = useInitialQuality();
-  const [degraded, setDegraded] = useState(false);
-  const quality: Quality = degraded ? "low" : initial;
+  const quality: Quality = initial;
   return (
     <Canvas
       orthographic
@@ -219,16 +225,18 @@ export default function Scene() {
         </p>
       }
     >
-      {/* drop to the cheap path if the frame rate can't keep up */}
-      <PerformanceMonitor onDecline={() => setDegraded(true)} flipflops={2} onFallback={() => setDegraded(true)} />
       <ShadowCache mood={mood} />
-      <ReadySignal />
       <CameraRig />
       <ZoomInput />
       <Lighting mood={mood} />
+      <fog attach="fog" args={[mood === "night" ? "#0a0f22" : "#c99579", 30, 62]} />
 
-      <Ground mood={mood} />
-      <Floor />
+      {/* everything textured waits for the PBR maps; the loading screen covers it */}
+      <Suspense fallback={null}>
+      <PBRProvider>
+      <ReadySignal />
+      <Street mood={mood} />
+      <Floor quality={quality} />
       <Walls />
       <Window mood={mood} />
 
@@ -259,6 +267,8 @@ export default function Scene() {
 
       <TargetMarker />
       <Player />
+      </PBRProvider>
+      </Suspense>
 
       <Effects mood={mood} quality={quality} />
     </Canvas>
