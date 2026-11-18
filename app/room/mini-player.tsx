@@ -74,7 +74,7 @@ function Eq({ on }: { on: boolean }) {
  * video here (it has to stay visible while it plays); the generative track
  * shows a little equaliser instead.
  */
-export function MiniPlayer({ hidden }: { hidden: boolean }) {
+export function MiniPlayer({ hidden, armed }: { hidden: boolean; armed: boolean }) {
   const host = useRef<HTMLDivElement>(null);
   const index = useMedia((s) => s.index);
   const playing = useMedia((s) => s.playing);
@@ -84,8 +84,10 @@ export function MiniPlayer({ hidden }: { hidden: boolean }) {
   const track = PLAYLIST[index];
   const isYT = track.kind === "youtube";
 
-  // one YouTube player for the whole visit
+  // one YouTube player for the whole visit, created once the room has
+  // loaded so YouTube's scripts don't compete with the scene for bandwidth
   useEffect(() => {
+    if (!armed) return;
     let player: { destroy(): void } | null = null;
     let cancelled = false;
     const mount = document.createElement("div");
@@ -113,7 +115,7 @@ export function MiniPlayer({ hidden }: { hidden: boolean }) {
       media.detach();
       player?.destroy();
     };
-  }, []);
+  }, [armed]);
 
   const show = engaged && !hidden;
 

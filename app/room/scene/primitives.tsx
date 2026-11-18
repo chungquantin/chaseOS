@@ -1,14 +1,25 @@
 "use client";
 
-import { RoundedBox } from "@react-three/drei";
 import { useLayoutEffect, useRef, type ReactNode } from "react";
-import { Color, Object3D, Vector2, type InstancedMesh } from "three";
+import {
+  BoxGeometry,
+  Color,
+  CylinderGeometry,
+  MeshStandardMaterial,
+  Object3D,
+  SphereGeometry,
+  Vector2,
+  type BufferGeometry,
+  type InstancedMesh,
+  type Material as ThreeMaterial,
+} from "three";
+import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
+import { C, hdr } from "./materials";
+import { usePBR } from "./pbr";
 
 const NS_WOOD = new Vector2(0.55, 0.55);
 const NS_FABRIC = new Vector2(0.6, 0.6);
 const NS_PLASTER = new Vector2(0.35, 0.35);
-import { C, hdr } from "./materials";
-import { usePBR } from "./pbr";
 
 export type V3 = [number, number, number];
 
@@ -49,89 +60,97 @@ const SURFACE: Record<string, Surface> = {
   [C.wall]: "plaster",
 };
 
-const sheenOf = (c: string) => new Color(c).lerp(new Color("#ffffff"), 0.35);
+/*
+ * Shared geometry and materials. The room and street are built from a few
+ * hundred boxes, most of them identical (every chibi and scooter repeats the
+ * same parts), so each distinct shape and look is created once. That keeps
+ * load time and GPU memory down. Meshes using these pass dispose={null} so
+ * unmounting one never disposes what others still use.
+ */
+const geometries = new Map<string, BufferGeometry>();
+const materials = new Map<string, ThreeMaterial>();
+const r3 = (n: number) => Math.round(n * 1000) / 1000;
 
-function Material({ c, rough, metal = 0, glow, mat }: Pick<BoxProps, "c" | "rough" | "metal" | "glow" | "mat">) {
-  const pbr = usePBR();
+function geometry(key: string, make: () => BufferGeometry) {
+  let g = geometries.get(key);
+  if (!g) geometries.set(key, (g = make()));
+  return g;
+}
+
+type PBR = NonNullable<ReturnType<typeof usePBR>>;
+
+function surfaceMaterial(pbr: PBR | null, c: string, rough: number | undefined, metal: number, glow: [string, number] | undefined, mat: Surface | undefined) {
   const kind = mat ?? SURFACE[c.toLowerCase()] ?? "plain";
-  if (!pbr || glow || kind === "plain") {
-    return (
-      <meshStandardMaterial
-        color={c}
-        roughness={rough ?? 0.75}
-        metalness={metal}
-        emissive={glow ? glow[0] : "#000000"}
-        emissiveIntensity={glow ? glow[1] : 0}
-      />
-    );
+  const plain = !pbr || glow || kind === "plain";
+  const key = `${plain ? "plain" : kind}|${c}|${rough}|${metal}|${glow?.join(",")}|${pbr ? 1 : 0}`;
+  let m = materials.get(key);
+  if (m) return m;
+  if (plain) {
+    m = new MeshStandardMaterial({
+      color: c,
+      roughness: rough ?? 0.75,
+      metalness: metal,
+      emissive: new Color(glow ? glow[0] : "#000000"),
+      emissiveIntensity: glow ? glow[1] : 0,
+    });
+  } else {
+    switch (kind) {
+      case "wood":
+        m = new MeshStandardMaterial({
+          color: c,
+          roughness: rough ?? 0.62,
+          roughnessMap: pbr!.tiled("walnutRough", 1.5),
+          normalMap: pbr!.tiled("walnutNormal", 1.5),
+          normalScale: NS_WOOD,
+          envMapIntensity: 1.3,
+        });
+        break;
+      case "fabric":
+        m = new MeshStandardMaterial({ color: c, roughness: rough ?? 0.92, normalMap: pbr!.tiled("velvetNormal", 3), normalScale: NS_FABRIC });
+        break;
+      case "metal":
+        m = new MeshStandardMaterial({ color: c, metalness: 1, roughness: rough ?? 0.3, envMapIntensity: 2.2 });
+        break;
+      case "plastic":
+        m = new MeshStandardMaterial({ color: c, roughness: rough ?? 0.38, envMapIntensity: 1.3 });
+        break;
+      default:
+        m = new MeshStandardMaterial({
+          color: c,
+          roughness: rough ?? 0.95,
+          roughnessMap: pbr!.tiled("plasterRough", 2),
+          normalMap: pbr!.tiled("plasterNormal", 2),
+          normalScale: NS_PLASTER,
+        });
+    }
   }
-  switch (kind) {
-    case "wood":
-      return (
-        <meshStandardMaterial
-          color={c}
-          roughness={rough ?? 0.62}
-          roughnessMap={pbr.tiled("walnutRough", 1.5)}
-          normalMap={pbr.tiled("walnutNormal", 1.5)}
-          normalScale={NS_WOOD}
-          envMapIntensity={1.3}
-        />
-      );
-    case "fabric":
-      return (
-        <meshPhysicalMaterial
-          color={c}
-          roughness={rough ?? 0.92}
-          normalMap={pbr.tiled("velvetNormal", 3)}
-          normalScale={NS_FABRIC}
-          sheen={1}
-          sheenRoughness={0.55}
-          sheenColor={sheenOf(c)}
-        />
-      );
-    case "metal":
-      return <meshStandardMaterial color={c} metalness={1} roughness={rough ?? 0.3} envMapIntensity={2.2} />;
-    case "plastic":
-      return <meshPhysicalMaterial color={c} roughness={rough ?? 0.4} clearcoat={0.45} clearcoatRoughness={0.35} />;
-    case "plaster":
-      return (
-        <meshStandardMaterial
-          color={c}
-          roughness={rough ?? 0.95}
-          roughnessMap={pbr.tiled("plasterRough", 2)}
-          normalMap={pbr.tiled("plasterNormal", 2)}
-          normalScale={NS_PLASTER}
-        />
-      );
-  }
+  materials.set(key, m);
+  return m;
+}
+
+function useSurface(c: string, rough: number | undefined, metal = 0, glow?: [string, number], mat?: Surface) {
+  return surfaceMaterial(usePBR(), c, rough, metal, glow, mat);
+}
+
+/** A surface material as a JSX child (for custom geometry). */
+function Material({ c, rough, metal = 0, glow, mat }: Pick<BoxProps, "c" | "rough" | "metal" | "glow" | "mat">) {
+  const m = useSurface(c, rough, metal, glow, mat);
+  return <primitive object={m} attach="material" dispose={null} />;
 }
 
 /** Rounded box: the default building block — soft edges catch light like the references. */
 export function RBox({ p, s, c, rot, r = 0.035, rough, metal, glow, mat, shadow = true }: BoxProps) {
   const radius = Math.max(0.002, Math.min(r, Math.min(...s) / 2 - 0.002));
-  return (
-    <RoundedBox
-      args={s}
-      radius={radius}
-      smoothness={3}
-      position={p}
-      rotation={rot}
-      castShadow={shadow}
-      receiveShadow
-    >
-      <Material c={c} rough={rough} metal={metal} glow={glow} mat={mat} />
-    </RoundedBox>
-  );
+  const g = geometry(`rb|${s.map(r3)}|${r3(radius)}`, () => new RoundedBoxGeometry(s[0], s[1], s[2], 3, radius));
+  const m = useSurface(c, rough, metal, glow, mat);
+  return <mesh geometry={g} material={m} position={p} rotation={rot} castShadow={shadow} receiveShadow dispose={null} />;
 }
 
 /** Sharp box for tiny or flush details. */
 export function Box({ p, s, c, rot, rough, metal, glow, mat, shadow = true }: BoxProps) {
-  return (
-    <mesh position={p} rotation={rot} castShadow={shadow} receiveShadow>
-      <boxGeometry args={s} />
-      <Material c={c} rough={rough} metal={metal} glow={glow} mat={mat} />
-    </mesh>
-  );
+  const g = geometry(`box|${s.map(r3)}`, () => new BoxGeometry(s[0], s[1], s[2]));
+  const m = useSurface(c, rough, metal, glow, mat);
+  return <mesh geometry={g} material={m} position={p} rotation={rot} castShadow={shadow} receiveShadow dispose={null} />;
 }
 
 /** Unlit, tone-mapping-free material for screens and neon. */
@@ -167,12 +186,10 @@ export function Cyl({
   mat?: Surface;
   shadow?: boolean;
 }) {
-  return (
-    <mesh position={p} rotation={rot} castShadow={shadow} receiveShadow>
-      <cylinderGeometry args={[args[0], args[1], args[2], args[3] ?? 24]} />
-      <Material c={c} rough={rough} metal={metal} glow={glow} mat={mat} />
-    </mesh>
-  );
+  const seg = args[3] ?? 24;
+  const g = geometry(`cyl|${args.slice(0, 3).map((n) => r3(n ?? 0))}|${seg}`, () => new CylinderGeometry(args[0], args[1], args[2], seg));
+  const m = useSurface(c, rough, metal, glow, mat);
+  return <mesh geometry={g} material={m} position={p} rotation={rot} castShadow={shadow} receiveShadow dispose={null} />;
 }
 
 export function Ball({
@@ -194,12 +211,9 @@ export function Ball({
   mat?: Surface;
   seg?: number;
 }) {
-  return (
-    <mesh position={p} castShadow receiveShadow>
-      <sphereGeometry args={[r, seg, seg]} />
-      <Material c={c} rough={rough} metal={metal} glow={glow} mat={mat} />
-    </mesh>
-  );
+  const g = geometry(`ball|${r3(r)}|${seg}`, () => new SphereGeometry(r, seg, seg));
+  const m = useSurface(c, rough, metal, glow, mat);
+  return <mesh geometry={g} material={m} position={p} castShadow receiveShadow dispose={null} />;
 }
 
 export type Inst = { p: V3; s: V3; c: string; rot?: V3 };

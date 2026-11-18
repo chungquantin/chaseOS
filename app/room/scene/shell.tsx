@@ -211,7 +211,7 @@ export function Window({ mood }: { mood: Mood }) {
       {/* glass */}
       <mesh position={[-HALF, yc, zc]} rotation={[0, Math.PI / 2, 0]}>
         <planeGeometry args={[w, h]} />
-        <meshPhysicalMaterial color="#dff3ff" transparent opacity={0.12} roughness={0.05} metalness={0} />
+        <meshStandardMaterial color="#dff3ff" transparent opacity={0.12} roughness={0.05} metalness={0} />
       </mesh>
 
       {/* curtain rod + curtains */}
@@ -227,7 +227,7 @@ export function Window({ mood }: { mood: Mood }) {
           rotation={[0, Math.PI / 2, 0]}
           castShadow
         >
-          <meshPhysicalMaterial color={C.curtain} side={DoubleSide} transparent opacity={0.9} roughness={0.9} sheen={1} sheenRoughness={0.5} sheenColor="#e6f2e0" />
+          <meshStandardMaterial color={C.curtain} side={DoubleSide} transparent opacity={0.9} roughness={0.9} />
         </mesh>
       ))}
     </group>

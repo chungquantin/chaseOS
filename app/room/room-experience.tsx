@@ -290,7 +290,7 @@ export function RoomExperience({ posts, children }: { posts: PostSummary[]; chil
       <AnimatePresence>{active && renderPanel(active, posts)}</AnimatePresence>
 
       {/* the music player: stays up over panels so a playing video is always visible */}
-      <MiniPlayer hidden={stage !== "room"} />
+      <MiniPlayer hidden={stage !== "room"} armed={stage !== "loading"} />
 
       {/* route content: the open book on /blog/[slug], crawlable copy elsewhere */}
       {children}

@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useMotionTemplate, useMotionValue, useSpring } from "framer-motion";
 import { BookOpen, Briefcase, CandlestickChart, Mountain, Package, RotateCw } from "lucide-react";
 import { idCard, profile } from "app/data/profile";
-import { live, type Mood } from "../store";
+import { live, useRoom, type Mood } from "../store";
 
 const SEEN_KEY = "tc-room:intro-v1";
 
@@ -25,14 +25,14 @@ export function markIntroSeen() {
 
 /* ================================================================ loading */
 
-const STEPS = [
-  "laying the floorboards",
-  "stacking past jobs on the table",
-  "shelving the essays",
-  "bolting on climbing holds",
-  "plugging in the console",
-  "pouring the coffee",
+/** What's really happening, by loading progress. */
+const PHASES: [number, string[]][] = [
+  [0.3, ["unlocking the door", "finding the light switch"]],
+  [0.8, ["laying the floorboards", "stacking past jobs on the table", "shelving the essays", "bolting on climbing holds"]],
+  [0.95, ["warming up the lamps", "plugging in the console"]],
+  [1.01, ["pouring the coffee"]],
 ];
+const phaseOf = (p: number) => PHASES.find(([max]) => p < max)?.[1] ?? PHASES[PHASES.length - 1][1];
 
 const DOOR = {
   day: "bg-[linear-gradient(180deg,#f0c6a7,#c98b6d)]",
@@ -44,18 +44,21 @@ const DOOR = {
  * onto the room.
  */
 export function LoadingScreen({ ready, mood, onDone }: { ready: boolean; mood: Mood; onDone: () => void }) {
-  const [progress, setProgress] = useState(0.04);
+  // shown progress: real progress, plus a little drift so it never looks frozen
+  const real = useRoom((s) => s.load);
+  const [drift, setDrift] = useState(0);
   const [step, setStep] = useState(0);
   const [opening, setOpening] = useState(false);
   const minTime = useRef(false);
   const [timedOut, setTimedOut] = useState(false);
+  const [done, setDone] = useState(false);
 
   useEffect(() => {
     const t1 = setTimeout(() => (minTime.current = true), 1400);
     const t2 = setTimeout(() => setTimedOut(true), 15000); // never trap anyone here
     const tick = setInterval(() => {
-      setProgress((p) => (p < 0.9 ? p + (0.9 - p) * 0.06 : p));
-      setStep((s) => (s + 1) % STEPS.length);
+      setDrift((d) => d + (0.09 - d) * 0.12);
+      setStep((s) => s + 1);
     }, 420);
     return () => {
       clearTimeout(t1);
@@ -69,12 +72,14 @@ export function LoadingScreen({ ready, mood, onDone }: { ready: boolean; mood: M
     const wait = setInterval(() => {
       if (!minTime.current) return;
       clearInterval(wait);
-      setProgress(1);
+      setDone(true);
       setTimeout(() => setOpening(true), 350);
     }, 100);
     return () => clearInterval(wait);
   }, [ready, timedOut, opening]);
 
+  const progress = done ? 1 : Math.min(0.97, real + drift * (1 - real));
+  const words = phaseOf(real);
   const door = DOOR[mood];
   const dark = mood === "night";
 
@@ -115,8 +120,8 @@ export function LoadingScreen({ ready, mood, onDone }: { ready: boolean; mood: M
         </div>
         <div className="mt-3 h-5 overflow-hidden text-[13px] opacity-75">
           <AnimatePresence mode="wait">
-            <motion.p key={progress >= 1 ? "done" : step} initial={{ y: 12, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: -12, opacity: 0 }} transition={{ duration: 0.2 }}>
-              {progress >= 1 ? "come on in" : `${STEPS[step]}…`}
+            <motion.p key={progress >= 1 ? "done" : `${words[step % words.length]}`} initial={{ y: 12, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: -12, opacity: 0 }} transition={{ duration: 0.2 }}>
+              {progress >= 1 ? "come on in" : `${words[step % words.length]}…`}
             </motion.p>
           </AnimatePresence>
         </div>

@@ -447,7 +447,7 @@ function Tree({ x, z, s = 1 }: { x: number; z: number; s?: number }) {
       ].map(([px, py, pz, r], i) => (
         <mesh key={i} position={[px, py, pz]}>
           <icosahedronGeometry args={[r, 1]} />
-          <meshStandardMaterial color={i % 2 ? "#3f7a45" : "#4f8f4a"} roughness={0.85} flatShading />
+          <meshStandardMaterial color={i % 2 ? "#3f7a45" : "#4f8f4a"} roughness={0.85} />
         </mesh>
       ))}
     </group>
@@ -468,7 +468,7 @@ function FoodStall({ night }: { night: boolean }) {
       <Box p={[0, 0.5, 0]} s={[0.7, 1.0, 1.3]} c="#c9ced6" mat="metal" shadow={false} />
       <mesh position={[0, 1.25, 0]}>
         <boxGeometry args={[0.66, 0.5, 1.26]} />
-        <meshPhysicalMaterial color="#e8f4ff" transparent opacity={0.35} roughness={0.05} />
+        <meshStandardMaterial color="#e8f4ff" transparent opacity={0.35} roughness={0.05} />
       </mesh>
       {night && (
         <mesh position={[0, 1.25, 0]}>

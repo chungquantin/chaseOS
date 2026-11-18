@@ -26,10 +26,12 @@ type State = {
   stage: Stage;
   /** the 3D scene has rendered its first frames */
   ready: boolean;
+  /** real loading progress, 0–1 (code, textures, shaders, first frame) */
+  load: number;
 };
 
 // Night is the hero look (warm room, dark world). The toggle switches to day.
-let state: State = { active: null, action: null, nearby: null, pending: null, mood: "night", stage: "loading", ready: false };
+let state: State = { active: null, action: null, nearby: null, pending: null, mood: "night", stage: "loading", ready: false, load: 0.08 };
 const listeners = new Set<() => void>();
 
 export const live = {
@@ -87,7 +89,11 @@ export const room = {
     set({ pending: null });
   },
   setReady() {
-    set({ ready: true });
+    set({ ready: true, load: 1 });
+  },
+  /** report loading progress; it only ever moves forward */
+  setLoad(p: number) {
+    if (p > state.load) set({ load: Math.min(1, p) });
   },
   setStage(stage: Stage) {
     set({ stage, ...(stage !== "room" ? { active: null, action: null, pending: null } : {}) });

@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Vector3, type Mesh } from "three";
+import { DefaultLoadingManager, Vector3, type Mesh } from "three";
 import { INTERACTABLES } from "../layout";
 import { live, room, useRoom } from "../store";
 import { C } from "./materials";
@@ -20,6 +20,50 @@ preloadPBR();
 
 const ISO_OFFSET = new Vector3(12, 11, 12);
 const UP = new Vector3(0, 1, 0);
+
+/**
+ * Compile every shader before the first frame, in parallel where the GPU
+ * driver allows (KHR_parallel_shader_compile). Rendering the first frame
+ * would otherwise compile them all synchronously and freeze the page,
+ * loading animation included.
+ */
+function Warmup({ onDone }: { onDone: () => void }) {
+  const { gl, scene, camera } = useThree();
+  useEffect(() => {
+    let finished = false;
+    const finish = () => {
+      if (finished) return;
+      finished = true;
+      room.setLoad(0.92);
+      onDone();
+    };
+    const fallback = setTimeout(finish, 7000);
+    // one tick so every mesh in the tree has mounted
+    const raf = requestAnimationFrame(() => {
+      gl.compileAsync(scene, camera).then(finish, finish);
+    });
+    return () => {
+      clearTimeout(fallback);
+      cancelAnimationFrame(raf);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  return null;
+}
+
+/** Texture downloads drive the middle of the loading bar. */
+function useTextureProgress() {
+  useEffect(() => {
+    room.setLoad(0.3); // the 3D code has arrived
+    const prev = DefaultLoadingManager.onProgress;
+    DefaultLoadingManager.onProgress = (_url, loaded, total) => {
+      if (total > 0) room.setLoad(0.3 + 0.5 * (loaded / total));
+    };
+    return () => {
+      DefaultLoadingManager.onProgress = prev;
+    };
+  }, []);
+}
 
 /** Tell the overlay the room has actually drawn (ends the loading screen). */
 function ReadySignal() {
@@ -211,12 +255,22 @@ export default function Scene() {
   const mood = useRoom((s) => s.mood);
   const initial = useInitialQuality();
   const quality: Quality = initial;
+  const [warm, setWarm] = useState(false);
+  useTextureProgress();
   return (
     <Canvas
       orthographic
+      // nothing renders until shaders are compiled (see Warmup)
+      frameloop={warm ? "always" : "never"}
       shadows="percentage"
       dpr={quality === "high" ? [1, 1.5] : 1}
       gl={{ antialias: false, alpha: true, powerPreference: "high-performance", stencil: false }}
+      onCreated={({ gl }) => {
+        // Checking every shader for errors makes the browser wait for each one
+        // to finish compiling, which froze the loading screen. Keep it in dev.
+        gl.debug.checkShaderErrors = process.env.NODE_ENV !== "production";
+        if (process.env.NODE_ENV !== "production") (window as unknown as { __gl?: unknown }).__gl = gl;
+      }}
       camera={{ position: [12, 11, 12], zoom: 50, near: 0.1, far: 100 }}
       fallback={
         <p className="p-6 text-[#efe5d6]">
@@ -234,6 +288,7 @@ export default function Scene() {
       {/* everything textured waits for the PBR maps; the loading screen covers it */}
       <Suspense fallback={null}>
       <PBRProvider>
+      <Warmup onDone={() => setWarm(true)} />
       <ReadySignal />
       <Street mood={mood} />
       <Floor quality={quality} />
