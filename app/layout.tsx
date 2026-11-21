@@ -95,10 +95,6 @@ export const metadata: Metadata = {
   verification: {
     google: "your-google-verification-code", // Add your actual verification code
   },
-  icons: {
-    icon: "/favicon.ico",
-    apple: "/apple-touch-icon.png",
-  },
 };
 
 export const viewport: Viewport = {

@@ -710,7 +710,7 @@ export default function Page() {
       {/* Main Content */}
       <section className="relative z-10 px-8 pt-20 text-white">
         <img
-          src="/brand/profile-avatar.png"
+          src="/brand/mascot/chill.png"
           alt="Tin Chung"
           className="w-20 h-20 rounded-lg"
         />

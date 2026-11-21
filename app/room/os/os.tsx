@@ -11,7 +11,7 @@ import {
 } from "react";
 import { AnimatePresence, motion, useMotionValue, useSpring, useTransform, type MotionValue } from "framer-motion";
 import { Battery, Power, Wifi, X } from "lucide-react";
-import { idCard } from "app/data/profile";
+import { idCard, mascot } from "app/data/profile";
 import { BUILT_APPS } from "app/data/apps";
 import type { PostSummary } from "../panels/writing-panel";
 import { APPS, appById, type AppDef, type AppId } from "./apps";
@@ -69,16 +69,7 @@ function useSize(ref: RefObject<HTMLElement | null>) {
 /* =========================================================== brand mark */
 
 function Mark({ size = 18 }: { size?: number }) {
-  // "TC" monogram inside a rounded lamp-shade shape — RoomOS's own mark
-  return (
-    <svg width={size} height={size} viewBox="0 0 32 32" aria-hidden>
-      <path d="M9 5h14l5 13c0 5-5.4 9-12 9S4 23 4 18L9 5Z" fill="currentColor" opacity="0.18" />
-      <path d="M9 5h14l5 13c0 5-5.4 9-12 9S4 23 4 18L9 5Z" fill="none" stroke="currentColor" strokeWidth="1.6" />
-      <text x="16" y="21" textAnchor="middle" fontSize="10" fontWeight="700" fill="currentColor" fontFamily="var(--font-display), Georgia, serif">
-        TC
-      </text>
-    </svg>
-  );
+  return <img src={mascot.chill} alt="" width={size} height={size} className="rounded-[22%] object-cover" />;
 }
 
 /* ================================================================ boot */
@@ -149,7 +140,7 @@ function Login({ onLogin }: { onLogin: () => void }) {
         </p>
       </div>
       <div className="relative mb-[12%] mt-auto flex flex-col items-center">
-        <img src={idCard.avatar} alt="" className="size-20 rounded-full border border-white/30 object-cover shadow-lg" />
+        <img src={mascot.hello} alt="" className="size-24 rounded-[22%] object-cover shadow-lg" />
         <p className="font-display mt-3 text-[20px]">{idCard.name}</p>
         <button onClick={onLogin} autoFocus className="lamp-btn mt-4 px-6 py-2 text-[14px]">
           Log in

@@ -99,13 +99,25 @@ export const beliefs: Belief[] = [
 ];
 
 /**
+ * The 3D chibi mascot, one render per mood. Pick the one that fits the place:
+ * chill is the default/favicon, hello greets, fist is "let's go", cheer celebrates.
+ * Source scene: tools/logo-render.
+ */
+export const mascot = {
+  chill: "/brand/mascot/chill.png",
+  hello: "/brand/mascot/hello.png",
+  fist: "/brand/mascot/fist.png",
+  cheer: "/brand/mascot/cheer.png",
+} as const;
+
+/**
  * The ID card first-time visitors see. Three pillars, each backed by what's
  * in the CV — edit the wording freely.
  */
 export const idCard = {
   name: "Tin Chung",
   title: "Software Engineer",
-  avatar: "/brand/profile-avatar.png",
+  avatar: mascot.chill,
   pillars: [
     {
       key: "blockchain",
