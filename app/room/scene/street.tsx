@@ -4,7 +4,8 @@ import { useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Line } from "@react-three/drei";
 import { AdditiveBlending, CanvasTexture, DoubleSide, RepeatWrapping, SRGBColorSpace, type Group } from "three";
-import { HALF, WALL_THICKNESS as T } from "../layout";
+import { HALF } from "../layout";
+import { ALLEY, FACADE, FLOOR_H, LEFT, OUTER, RIGHT, ROAD_IN, ROAD_OUT, ROAD_W, ROAD_Y, WALK, rng, type HouseSpec } from "../streetmap";
 import type { Mood } from "../store";
 import { canvasTexture } from "./materials";
 import { Box, Cyl, RBox } from "./primitives";
@@ -19,17 +20,6 @@ import { Chibi, Rider, Scooter, type Outfit } from "./chibi";
  * Only +x / +z faces are seen by the iso camera, so detail goes there.
  * Nothing out here casts shadows (cheap, and it keeps the window light).
  */
-
-const OUTER = -HALF - T / 2; // outer face of the room's walls
-const WALK = -0.3; // sidewalk height
-const ROAD_Y = -0.42;
-const ROAD_IN = 7.6; // curb line
-const ROAD_W = 6;
-const ROAD_OUT = ROAD_IN + ROAD_W;
-const FLOOR_H = 3.2;
-const ALLEY = -9.2; // the left row starts after the alley
-
-const rng = (seed: number) => () => (seed = (seed * 16807) % 2147483647) / 2147483647;
 
 /* ------------------------------------------------------------- textures */
 
@@ -170,10 +160,6 @@ function makeWindowGrid(seed: number, night: boolean) {
 /* ---------------------------------------------------------------- house */
 
 // dusty versions of the street's pastels, so the lit room stays the brightest thing
-const FACADE = ["#d8c690", "#a9c4ba", "#d4b3a8", "#d6d0c2", "#aebdcc", "#cfac8c", "#c3b9cf", "#d9d0a8", "#b7c9a8"];
-
-type HouseSpec = { width: number; depth: number; floors: number; color: string; seed: number; shop: number | null };
-
 /** A tube house in local space: front at z = 0 facing +z, width along x, back at z = -depth. */
 function House({
   spec,
@@ -463,7 +449,7 @@ function FoodStall({ night }: { night: boolean }) {
     [1.9, -0.6, "#d62828"],
   ];
   return (
-    <group position={[(ALLEY + OUTER) / 2 - 0.4, WALK, HALF + 1.15]} rotation={[0, Math.PI / 2, 0]}>
+    <group position={[(ALLEY + OUTER) / 2 - 0.4, WALK, HALF - 1.9]} rotation={[0, Math.PI / 2, 0]}>
       {/* cart */}
       <Box p={[0, 0.5, 0]} s={[0.7, 1.0, 1.3]} c="#c9ced6" mat="metal" shadow={false} />
       <mesh position={[0, 1.25, 0]}>
@@ -517,40 +503,6 @@ export function Street({ mood }: { mood: Mood }) {
     [night]
   );
 
-  const rows = useMemo(() => {
-    const r = rng(42);
-    const make = (count: number) =>
-      Array.from({ length: count }, (_, i): HouseSpec => ({
-        width: 4.4 + Math.round(r() * 3) * 0.6,
-        depth: 10.15,
-        // low next to the room, taller further away: the room stays the subject
-        floors: i === 0 ? 2 : i === 1 ? 2 + Math.floor(r() * 2) : 2 + Math.floor(r() * 3),
-        color: FACADE[Math.floor(r() * FACADE.length)],
-        seed: i + count * 10,
-        shop: r() > 0.25 ? Math.floor(r() * SIGNS.length) : null,
-      }));
-    return { left: make(5), right: make(5) };
-  }, []);
-
-  // left row: fronts at z = HALF facing +z, running toward -x from the alley
-  const left = useMemo(() => {
-    let x = ALLEY;
-    return rows.left.map((h) => {
-      const cx = x - h.width / 2;
-      x -= h.width;
-      return { h, pos: [cx, 0, HALF] as [number, number, number], rot: 0 };
-    });
-  }, [rows]);
-  // right row: fronts at x = HALF facing +x, running toward -z from the room
-  const right = useMemo(() => {
-    let z = OUTER;
-    return rows.right.map((h) => {
-      const cz = z - h.width / 2;
-      z -= h.width;
-      return { h, pos: [HALF, 0, cz] as [number, number, number], rot: Math.PI / 2 };
-    });
-  }, [rows]);
-
   // skyline behind the rows (backs only: plain blocks with water tanks)
   const backs = useMemo(() => {
     const r = rng(5);
@@ -570,8 +522,8 @@ export function Street({ mood }: { mood: Mood }) {
   ];
   const polesZ: [number, number][] = [
     [-10.5, ROAD_IN - 0.4],
-    [-20, ROAD_IN - 0.4],
-    [-30, ROAD_IN - 0.4],
+    [-22.4, ROAD_IN - 0.4], // between the two buildings, never in front of a door
+    [-36, ROAD_IN - 0.4],
   ];
 
   const tiles = useMemo(() => {
@@ -625,20 +577,12 @@ export function Street({ mood }: { mood: Mood }) {
       ))}
 
       {/* tube houses */}
-      {[...left, ...right].map(({ h, pos, rot }, i) => (
-        <group key={i} position={pos} rotation={[0, rot, 0]}>
-          <House spec={h} night={night} sign={h.shop !== null ? tex.signs[h.shop] : null} shutter={tex.shutter} railing={tex.railing} />
-        </group>
-      ))}
-      {/* the side wall facing the alley: small windows, a few lit */}
-      {left[0] && (
-        <mesh
-          position={[ALLEY + 0.02, WALK + (left[0].h.floors * FLOOR_H) / 2 + 0.4, HALF - left[0].h.depth / 2]}
-          rotation={[0, Math.PI / 2, 0]}
-        >
-          <planeGeometry args={[left[0].h.depth - 1.2, left[0].h.floors * FLOOR_H - 1.6]} />
-          <meshBasicMaterial map={tex.windows[2]} transparent toneMapped={false} color={night ? "#ffffff" : "#9aa7b8"} />
-        </mesh>
+      {[...LEFT, ...RIGHT].map(({ h, pos, rot, ...rest }, i) =>
+        "building" in rest && rest.building ? null : (
+          <group key={i} position={pos} rotation={[0, rot, 0]}>
+            <House spec={h} night={night} sign={h.shop !== null ? tex.signs[h.shop] : null} shutter={tex.shutter} railing={tex.railing} />
+          </group>
+        )
       )}
       {backs.map((b, i) => (
         <group key={i}>
@@ -679,12 +623,13 @@ export function Street({ mood }: { mood: Mood }) {
 
       {/* parked bikes along the fronts */}
       {[
-        [HALF + 1.4, -6.5, 0.5],
-        [HALF + 1.4, -8.2, 0.4],
-        [HALF + 1.4, -12.5, 0.55],
-        [-12.5, HALF + 1.4, Math.PI / 2 + 0.4],
-        [-14.2, HALF + 1.4, Math.PI / 2 + 0.5],
-        [-19.5, HALF + 1.4, Math.PI / 2 + 0.35],
+        // parked hard against the house fronts so the sidewalk stays walkable
+        [HALF + 0.65, -6.5, Math.PI / 2 + 0.08],
+        [HALF + 0.65, -8.4, Math.PI / 2 - 0.06],
+        [HALF + 0.65, -11.2, Math.PI / 2 + 0.05],
+        [-11.6, HALF + 0.65, 0.06],
+        [-12.9, HALF + 0.65, -0.05],
+        [-20.2, HALF + 0.65, 0.07],
       ].map(([x, z, ry], i) => (
         <group key={i} position={[x, WALK, z]} rotation={[0, ry, 0]}>
           <Scooter color={BIKE_COLORS[(i * 2 + 1) % BIKE_COLORS.length]} />
@@ -701,18 +646,18 @@ export function Street({ mood }: { mood: Mood }) {
       <Wires poles={polesZ} />
       <Tree x={ROAD_IN - 0.9} z={-15} s={1.1} />
       <Tree x={ROAD_IN - 0.9} z={-25} />
-      <Tree x={-15} z={ROAD_IN - 0.9} s={0.95} />
-      <Tree x={-25} z={ROAD_IN - 0.9} />
+      <Tree x={-11.4} z={ROAD_IN - 0.9} s={0.95} />
+      <Tree x={-23.6} z={ROAD_IN - 0.9} />
       <Tree x={ROAD_OUT + 1.2} z={-8} s={1.15} />
       <Tree x={ROAD_OUT + 1.2} z={3} />
       <Tree x={-6} z={ROAD_OUT + 1.2} s={1.1} />
       <Tree x={ROAD_OUT + 1.5} z={ROAD_OUT + 1.5} />
 
       {/* neighbours */}
-      <group position={[(ALLEY + OUTER) / 2 - 1.5, WALK, HALF + 1.15]} rotation={[0, Math.PI / 2, 0]}>
+      <group position={[(ALLEY + OUTER) / 2 - 1.5, WALK, HALF - 1.9]} rotation={[0, Math.PI / 2, 0]}>
         <Chibi outfit={{ top: "#e9e3d6", pants: "#5a4a3a", hair: "#1a1410", accent: "#b23a3a" }} />
       </group>
-      <group position={[(ALLEY + OUTER) / 2 - 0.4, WALK + 0.06, HALF + 0.4]} rotation={[0, Math.PI, 0]}>
+      <group position={[(ALLEY + OUTER) / 2 - 0.4, WALK + 0.06, HALF - 2.7]} rotation={[0, Math.PI, 0]}>
         <Chibi outfit={OUTFITS[3]} pose="sit" phase={1.3} />
       </group>
       <group position={[HALF + 1.5, WALK, -9.6]} rotation={[0, -0.5, 0]}>

@@ -3,7 +3,8 @@
 import { Suspense, useEffect, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Vector3, type Mesh } from "three";
-import { INTERACTABLES } from "../layout";
+import { SIDE_FAR, WALK } from "../streetmap";
+import { ALL_INTERACTABLES, groundY, isOutside, snapToWalkable } from "../world";
 import { live, room, useRoom } from "../store";
 import { C } from "./materials";
 import { Bookshelf, Chair, CoffeeTable, Desk, FloorLamp, Plant, Sideboard, Sofa } from "./furniture";
@@ -11,6 +12,7 @@ import { ClimbingWall, GameCorner } from "./interests";
 import { ProjectCase } from "./project-case";
 import { Floor, Walls, Window } from "./shell";
 import { Street } from "./street";
+import { Buildings } from "./buildings";
 import { Effects, Lighting } from "./lighting";
 import { Interactable } from "./interactable";
 import { Player } from "./player";
@@ -58,7 +60,7 @@ function CameraRig() {
     // intro: wide, slowly swaying establishing shot; room: follow / close-ups
     const { active, stage } = room.get();
     const intro = stage !== "room";
-    const closeUp = active ? INTERACTABLES.find((i) => i.id === active)?.closeUp : undefined;
+    const closeUp = active ? ALL_INTERACTABLES.find((i) => i.id === active)?.closeUp : undefined;
     let zoom = baseZoom.current;
     const wantAngle = intro && !reduceMotion.current ? 0.32 + Math.sin(clock.elapsedTime * 0.35) * 0.12 : 0;
     if (intro) {
@@ -73,7 +75,9 @@ function CameraRig() {
       const base = size.width < size.height ? 0.6 : 0.25;
       const zoomedIn = Math.min(1, Math.max(0, (live.zoom - 1) / 1.2));
       const follow = base + (1 - base) * zoomedIn;
-      want.current.set(live.player.x * follow, 1.2 - 0.4 * zoomedIn, live.player.z * follow);
+      // out on the street (and inside the buildings) the camera sticks to the character
+      const tight = isOutside(live.player.x, live.player.z) ? 1 : follow;
+      want.current.set(live.player.x * tight, 1.2 - 0.4 * zoomedIn, live.player.z * tight);
     }
     const k = reduceMotion.current ? 1 : intro ? 0.03 : 0.07;
     focus.current.lerp(want.current, k);
@@ -147,9 +151,10 @@ function TargetMarker() {
   const ref = useRef<Mesh>(null);
   useFrame(({ clock }) => {
     const m = ref.current!;
-    m.visible = live.target !== null;
-    if (live.target) {
-      m.position.set(live.target.x, 0.03, live.target.z);
+    const dest = live.goal ?? live.target;
+    m.visible = dest !== null;
+    if (dest) {
+      m.position.set(dest.x, groundY(dest.x, dest.z) + 0.03, dest.z);
       m.scale.setScalar(0.85 + Math.sin(clock.elapsedTime * 6) * 0.1);
     }
   });
@@ -157,6 +162,24 @@ function TargetMarker() {
     <mesh ref={ref} rotation={[-Math.PI / 2, 0, 0]} raycast={() => null}>
       <ringGeometry args={[0.12, 0.17, 24]} />
       <meshBasicMaterial color={C.accent} transparent opacity={0.9} toneMapped={false} />
+    </mesh>
+  );
+}
+
+/** Click anywhere on the street to walk there (snapped to the sidewalk). */
+function StreetFloor() {
+  return (
+    <mesh
+      rotation={[-Math.PI / 2, 0, 0]}
+      position={[(SIDE_FAR + 8) / 2, WALK + 0.01, (SIDE_FAR + 8) / 2]}
+      onClick={(e) => {
+        e.stopPropagation();
+        const [x, z] = snapToWalkable(e.point.x, e.point.z);
+        room.walkTo(x, z);
+      }}
+    >
+      <planeGeometry args={[8 - SIDE_FAR, 8 - SIDE_FAR]} />
+      <meshBasicMaterial transparent opacity={0} depthWrite={false} />
     </mesh>
   );
 }
@@ -236,6 +259,8 @@ export default function Scene() {
       <PBRProvider>
       <ReadySignal />
       <Street mood={mood} />
+      <StreetFloor />
+      <Buildings mood={mood} />
       <Floor quality={quality} />
       <Walls />
       <Window mood={mood} />
