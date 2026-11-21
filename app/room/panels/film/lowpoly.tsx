@@ -53,8 +53,10 @@ export function Solid({
   glow,
   rot,
   sides = 6,
+  tube = 0.12,
   opacity,
   rough = 0.85,
+  shadow = true,
   children,
 }: {
   kind?: Kind;
@@ -64,20 +66,23 @@ export function Solid({
   glow?: number;
   rot?: V3;
   sides?: number;
+  /** torus tube thickness (relative to its 0.5 radius) */
+  tube?: number;
   opacity?: number;
   rough?: number;
+  shadow?: boolean;
   children?: ReactNode;
 }) {
   const scale = typeof s === "number" ? ([s, s, s] as V3) : s;
   return (
-    <mesh position={p} scale={scale} rotation={rot}>
+    <mesh position={p} scale={scale} rotation={rot} castShadow={shadow} receiveShadow>
       {kind === "box" && <boxGeometry />}
       {kind === "octa" && <octahedronGeometry args={[0.5, 0]} />}
       {kind === "ico" && <icosahedronGeometry args={[0.5, 0]} />}
       {kind === "tetra" && <tetrahedronGeometry args={[0.5, 0]} />}
       {kind === "cone" && <coneGeometry args={[0.5, 1, sides]} />}
       {kind === "cyl" && <cylinderGeometry args={[0.5, 0.5, 1, sides]} />}
-      {kind === "torus" && <torusGeometry args={[0.5, 0.12, 5, 10]} />}
+      {kind === "torus" && <torusGeometry args={[0.5, tube, 5, tube < 0.08 ? 28 : 10]} />}
       {kind === "sphere" && <icosahedronGeometry args={[0.5, 1]} />}
       <meshStandardMaterial
         color={c}
@@ -93,12 +98,24 @@ export function Solid({
   );
 }
 
-/** A hexagonal slab to stand a diorama on. */
+/** A hexagonal slab to stand a diorama on, with a glowing rim and a faint grid. */
 export function Island({ r = 10, c = PAL.slate, top = PAL.slate2 }: { r?: number; c?: string; top?: string }) {
+  const inner = r * 0.84;
+  const lines = Array.from({ length: Math.floor((inner * 2) / 2.4) + 1 }, (_, i) => -inner + 1.2 + i * 2.4).filter((v) => Math.abs(v) < inner - 0.4);
   return (
     <group>
       <Solid kind="cyl" p={[0, -0.7, 0]} s={[r * 2, 1.4, r * 2]} c={c} sides={6} rot={[0, Math.PI / 6, 0]} />
-      <Solid kind="cyl" p={[0, 0.03, 0]} s={[r * 2 - 0.5, 0.1, r * 2 - 0.5]} c={top} sides={6} rot={[0, Math.PI / 6, 0]} />
+      <Solid kind="cyl" p={[0, 0.02, 0]} s={[r * 2 - 0.1, 0.06, r * 2 - 0.1]} c={PAL.cyan} glow={0.9} sides={6} rot={[0, Math.PI / 6, 0]} shadow={false} />
+      <Solid kind="cyl" p={[0, 0.045, 0]} s={[r * 2 - 0.5, 0.06, r * 2 - 0.5]} c={top} sides={6} rot={[0, Math.PI / 6, 0]} />
+      {lines.map((v) => {
+        const len = 2 * Math.sqrt(Math.max(0.5, inner * inner - v * v)) * 0.98;
+        return (
+          <group key={v}>
+            <Solid p={[v, 0.085, 0]} s={[0.03, 0.01, len]} c={PAL.slate3} shadow={false} />
+            <Solid p={[0, 0.085, v]} s={[len, 0.01, 0.03]} c={PAL.slate3} shadow={false} />
+          </group>
+        );
+      })}
     </group>
   );
 }

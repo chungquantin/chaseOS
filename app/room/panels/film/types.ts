@@ -9,5 +9,7 @@ export type FilmDef = {
   accent: string;
   chapters: { at: number; title: string }[];
   captions: Caption[];
+  /** voice-over track, laid out on the same clock */
+  narration?: string;
   Scene: ComponentType<{ clock: Clock }>;
 };

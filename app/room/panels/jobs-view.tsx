@@ -50,7 +50,7 @@ function startOf(period: string): number {
 const ORDER: (ChapterId | "resume")[] = ["resume", ...[...chapters].sort((a, b) => startOf(a.period) - startOf(b.period)).map((c) => c.id)];
 
 const card =
-  "rounded-2xl border border-white/10 bg-[#0f1430]/75 p-5 text-[#f3e6d0] shadow-[0_24px_60px_-30px_rgba(0,0,0,0.8),inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-xl sm:p-6";
+  "rounded-2xl border border-white/10 bg-[#0b1024]/95 p-5 text-[#f3e6d0] shadow-[0_24px_60px_-30px_rgba(0,0,0,0.8),inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-xl sm:p-6";
 
 /* ------------------------------------------------------------------- tabs */
 
@@ -116,66 +116,95 @@ function Poster({ c, color }: { c: Chapter; color: string }) {
   );
 }
 
-function Facts({ c, color }: { c: Chapter; color: string }) {
+function Header({ c, color }: { c: Chapter; color: string }) {
   return (
-    <aside className={`${card} flex flex-col`}>
-      <div className="flex items-center gap-3.5">
-        <LogoTile org={c.org} size={52} name={c.company} />
-        <div className="min-w-0">
-          <h3 className="font-display text-[30px] leading-none sm:text-[34px]">{c.company}</h3>
-          <p className="mt-1.5 text-[14px] text-[#f3e6d0]/80">{c.role}</p>
-        </div>
-      </div>
-      <p className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12.5px] tabular-nums">
-        <span style={{ color }}>{c.period}</span>
-        {c.location && (
-          <span className="flex items-center gap-1 text-[#f3e6d0]/60">
-            <MapPin size={12} /> {c.location}
-          </span>
-        )}
-        {c.founding && <span className="rounded-full border border-[#f59e0b]/50 px-2 py-px text-[10.5px] font-semibold text-[#f59e0b]">Founding team</span>}
-      </p>
-      <p className="mt-4 text-[15px] leading-[1.6] text-[#fff4e6]/90">{c.summary}</p>
-
-      {c.metrics.length > 0 && (
-        <div className="mt-5 grid grid-cols-3 gap-3 border-t border-white/10 pt-4">
-          {c.metrics.map((m) => (
-            <div key={m.label}>
-              <p className="font-display text-[26px] leading-none tabular-nums sm:text-[30px]" style={{ color }}>
-                {m.value}
-              </p>
-              <p className="mt-1.5 text-[11.5px] leading-4 text-[#f3e6d0]/60">{m.label}</p>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {c.stack.length > 0 && (
-        <div className="mt-5 flex flex-wrap gap-1.5">
-          {c.stack.map((s) => (
-            <span key={s} className="rounded-full border border-white/12 bg-white/[0.04] px-2.5 py-0.5 text-[11.5px] text-[#f3e6d0]/80">
-              {s}
+    <header className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
+      <div className="flex items-center gap-4">
+        <LogoTile org={c.org} size={60} name={c.company} />
+        <div>
+          <h3 className="font-display text-[38px] leading-none sm:text-[46px]">{c.company}</h3>
+          <p className="mt-2 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[14px] text-[#f3e6d0]/80">
+            {c.role}
+            <span className="opacity-35">·</span>
+            <span className="tabular-nums" style={{ color }}>
+              {c.period}
             </span>
-          ))}
+            {c.location && (
+              <>
+                <span className="opacity-35">·</span>
+                <span className="flex items-center gap-1 opacity-80">
+                  <MapPin size={12} /> {c.location}
+                </span>
+              </>
+            )}
+            {c.founding && <span className="rounded-full border border-[#f59e0b]/50 px-2 py-px text-[10.5px] font-semibold text-[#f59e0b]">Founding team</span>}
+          </p>
         </div>
+      </div>
+      {c.org.website && (
+        <a
+          href={c.org.website}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.05] px-4 py-2 text-[13px] text-[#f3e6d0] transition-colors hover:border-white/35 hover:bg-white/10"
+        >
+          {new URL(c.org.website).hostname.replace("www.", "")} <ArrowUpRight size={14} />
+        </a>
       )}
+    </header>
+  );
+}
 
-      <div className="mt-auto pt-5 text-[12.5px] leading-snug text-[#f3e6d0]/65">
-        <p>{c.org.oneLiner}</p>
-        {c.org.website && (
-          <a href={c.org.website} target="_blank" rel="noreferrer" className="mt-2 inline-flex items-center gap-1 underline decoration-white/25 underline-offset-2 hover:text-white">
-            {new URL(c.org.website).hostname.replace("www.", "")} <ArrowUpRight size={12} />
-          </a>
+function Overview({ c, color }: { c: Chapter; color: string }) {
+  return (
+    <div className="grid gap-6 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)] lg:gap-10">
+      <div>
+        <p className="font-display text-[22px] leading-[1.4] text-[#fff4e6] sm:text-[26px]">{c.summary}</p>
+        {c.stack.length > 0 && (
+          <div className="mt-5 flex flex-wrap gap-1.5">
+            {c.stack.map((s) => (
+              <span key={s} className="rounded-full border border-white/12 bg-white/[0.04] px-3 py-1 text-[12px] text-[#f3e6d0]/80">
+                {s}
+              </span>
+            ))}
+          </div>
         )}
       </div>
-    </aside>
+      <div className="grid content-start gap-3">
+        {c.metrics.length > 0 && (
+          <div className="grid grid-cols-3 gap-3">
+            {c.metrics.map((m) => (
+              <div key={m.label} className="rounded-2xl border border-white/10 bg-white/[0.06] p-3.5 sm:p-4">
+                <p className="font-display text-[26px] leading-none tabular-nums sm:text-[32px]" style={{ color }}>
+                  {m.value}
+                </p>
+                <p className="mt-2 text-[11.5px] leading-4 text-[#f3e6d0]/70">{m.label}</p>
+              </div>
+            ))}
+          </div>
+        )}
+        <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-4 text-[13px] leading-[1.55] text-[#f3e6d0]/80">
+          <p className="text-[#f3e6d0]/90">{c.org.oneLiner}</p>
+          {c.org.facts.length > 0 && (
+            <ul className="mt-2 space-y-1.5">
+              {c.org.facts.map((f) => (
+                <li key={f} className="flex gap-2">
+                  <span className="mt-[7px] size-1.5 shrink-0 rounded-full" style={{ background: color }} />
+                  {f}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
 
 function Details({ c, color }: { c: Chapter; color: string }) {
   if (!c.built && c.bullets.length === 0) return null;
   return (
-    <div className="mt-5 grid gap-5 lg:grid-cols-2">
+    <div className="mt-8 grid gap-5 lg:grid-cols-2">
       {c.built && (
         <section className={card}>
           <div className="space-y-3">
@@ -208,13 +237,16 @@ function Details({ c, color }: { c: Chapter; color: string }) {
 function JobPage({ c }: { c: Chapter }) {
   const color = LANES[TRACK[c.id]].color;
   return (
-    <>
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)]">
-        <div className="min-w-0">{HAS_FILM.has(c.id) ? <FilmFor id={c.id} /> : <Poster c={c} color={color} />}</div>
-        <Facts c={c} color={color} />
+    <div>
+      {HAS_FILM.has(c.id) ? <FilmFor id={c.id} title={`${c.company} · ${c.role}`} badge={<LogoTile org={c.org} size={34} name={c.company} />} /> : <Poster c={c} color={color} />}
+      <div className="mt-6 rounded-3xl border border-white/10 bg-[#0b1024]/95 p-5 shadow-[0_30px_80px_-40px_rgba(0,0,0,0.9)] backdrop-blur-xl sm:p-8">
+        <Header c={c} color={color} />
+        <div className="mt-6 border-t border-white/10 pt-6">
+          <Overview c={c} color={color} />
+        </div>
       </div>
       <Details c={c} color={color} />
-    </>
+    </div>
   );
 }
 
