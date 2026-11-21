@@ -242,7 +242,45 @@ export function Player() {
         <RBox shadow={false} p={[0.09, 1.0, 0.19]} s={[0.05, 0.07, 0.02]} c="#1b1b1b" r={0.02} />
         <RBox shadow={false} p={[-0.14, 0.93, 0.185]} s={[0.06, 0.03, 0.01]} c="#f59f8b" r={0.01} />
         <RBox shadow={false} p={[0.14, 0.93, 0.185]} s={[0.06, 0.03, 0.01]} c="#f59f8b" r={0.01} />
+        {/* eye sparkles + smile */}
+        <RBox shadow={false} p={[-0.1, 1.022, 0.2]} s={[0.02, 0.025, 0.01]} c="#ffffff" r={0.008} />
+        <RBox shadow={false} p={[0.08, 1.022, 0.2]} s={[0.02, 0.025, 0.01]} c="#ffffff" r={0.008} />
+        <mesh position={[0, 0.935, 0.192]} rotation={[0, 0, Math.PI]} scale={[1.2, 0.8, 1]}>
+          <torusGeometry args={[0.04, 0.007, 8, 24, Math.PI]} />
+          <meshStandardMaterial color="#7a4332" roughness={0.5} />
+        </mesh>
+        <Glasses />
       </group>
+    </group>
+  );
+}
+
+/** Thin round glasses, sized to the chibi head (eyes at y 1.0, face at +z). */
+function Glasses() {
+  return (
+    <group>
+      {[-0.09, 0.09].map((x) => (
+        <group key={x} position={[x, 1.0, 0.198]} scale={[1.12, 1, 1]}>
+          <mesh>
+            <torusGeometry args={[0.066, 0.007, 12, 40]} />
+            <meshStandardMaterial color="#14141a" roughness={0.3} metalness={0.5} />
+          </mesh>
+          <mesh position={[0, 0, -0.001]}>
+            <circleGeometry args={[0.066, 32]} />
+            <meshStandardMaterial color="#cfe6ff" transparent opacity={0.14} roughness={0.05} depthWrite={false} />
+          </mesh>
+        </group>
+      ))}
+      <mesh position={[0, 1.015, 0.198]} rotation={[0, 0, Math.PI / 2]}>
+        <cylinderGeometry args={[0.006, 0.006, 0.05, 8]} />
+        <meshStandardMaterial color="#14141a" roughness={0.3} metalness={0.5} />
+      </mesh>
+      {[-0.2, 0.2].map((x) => (
+        <mesh key={x} position={[x, 1.02, 0.1]} rotation={[Math.PI / 2, 0, 0]}>
+          <cylinderGeometry args={[0.006, 0.006, 0.2, 8]} />
+          <meshStandardMaterial color="#14141a" roughness={0.3} metalness={0.5} />
+        </mesh>
+      ))}
     </group>
   );
 }

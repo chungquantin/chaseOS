@@ -8,7 +8,15 @@ export function GET(request: Request) {
     (
       <div tw="flex flex-col w-full h-full items-center justify-center bg-[#faf9f6] text-[#171717]">
         <div tw="flex flex-col w-full h-full justify-between p-16">
-          <div tw="flex text-2xl text-neutral-500">chungquantin</div>
+          <div tw="flex items-center text-2xl text-neutral-500">
+            <img
+              src={`${url.origin}/brand/mascot/chill.png`}
+              width={72}
+              height={72}
+              tw="mr-4 rounded-2xl"
+            />
+            chungquantin
+          </div>
           <h2 tw="flex flex-col text-6xl font-medium tracking-tight text-left max-w-4xl">
             {title}
           </h2>

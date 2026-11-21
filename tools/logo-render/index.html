@@ -1,0 +1,104 @@
+<!doctype html><meta charset="utf-8"><title>logo render</title>
+<style>body{margin:0;background:#222;color:#ddd;font:12px system-ui}.row{display:flex;gap:8px;padding:8px}</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"}}</script>
+<body><div class="row" id="row"></div><script type="module">
+import * as THREE from "three";
+import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
+import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
+
+const C = { skin:"#f0be93", hair:"#2a1d16", hoodie:"#2b2b34", pants:"#34435e", shoe:"#f4f1ea", accent:"#e8642f" };
+const N = 1024;
+const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true, preserveDrawingBuffer:true });
+renderer.setSize(N, N); renderer.setPixelRatio(1);
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = .95;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+const envTex = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
+
+const mc = {};
+const mat = (c, rough=.6, extra={}) => (mc[c+rough+JSON.stringify(extra)] ??= new THREE.MeshStandardMaterial({ color:c, roughness:rough, ...extra }));
+function box(parent, p, s, c, r=.04, rough=.6, extra) {
+  r = Math.max(.002, Math.min(r, Math.min(...s)/2 - .002));
+  const m = new THREE.Mesh(new RoundedBoxGeometry(s[0], s[1], s[2], 4, r), mat(c, rough, extra));
+  m.position.set(...p); m.castShadow = m.receiveShadow = true; parent.add(m); return m;
+}
+
+function build() {
+  const root = new THREE.Group(), body = new THREE.Group(); root.add(body);
+  box(body,[0,.56,0],[.36,.42,.24],C.hoodie,.1,.85);
+  box(body,[0,.48,.115],[.2,.1,.03],C.accent,.015);
+  box(body,[0,.77,-.05],[.3,.08,.18],C.hoodie,.04,.85);           // hood rim
+  const legs = [0,1].map(i => { const g = new THREE.Group(); g.position.set(i?.08:-.08,.36,0);
+    box(g,[0,-.16,0],[.12,.3,.13],C.pants,.05); box(g,[0,-.32,.025],[.13,.07,.19],C.shoe,.03,.4); body.add(g); return g; });
+  // two-segment arms: shoulder -> elbow -> hand
+  const arms = [0,1].map(i => { const sh = new THREE.Group(); sh.position.set(i?.22:-.22,.72,0);
+    box(sh,[0,-.09,0],[.1,.2,.11],C.hoodie,.045,.85);
+    const el = new THREE.Group(); el.position.y = -.17; sh.add(el);
+    box(el,[0,-.09,0],[.1,.2,.11],C.hoodie,.045,.85);
+    const hand = box(el,[0,-.2,0],[.085,.075,.085],C.skin,.035);
+    body.add(sh); return { sh, el, hand }; });
+  const head = new THREE.Group(); head.position.set(0,.86,0); body.add(head);
+  const H = (p,s,c,r,rough,extra) => box(head,[p[0],p[1]-.86,p[2]],s,c,r,rough,extra);
+  H([0,1.0,0],[.42,.4,.38],C.skin,.12,.5);
+  H([0,1.2,-.02],[.46,.13,.42],C.hair,.06,.7);
+  H([0,1.04,-.17],[.44,.3,.1],C.hair,.05,.7);
+  H([0,1.16,.17],[.2,.09,.06],C.hair,.03,.7).rotation.z = -.25;
+  H([-.215,1.07,.06],[.03,.16,.2],C.hair,.012,.7); H([.215,1.07,.06],[.03,.16,.2],C.hair,.012,.7);
+  H([-.09,1.0,.19],[.05,.07,.02],"#1b1b1b",.02,.4); H([.09,1.0,.19],[.05,.07,.02],"#1b1b1b",.02,.4);
+  H([-.145,.925,.185],[.065,.032,.01],"#f08f7a",.01); H([.145,.925,.185],[.065,.032,.01],"#f08f7a",.01);
+  const smile = new THREE.Mesh(new THREE.TorusGeometry(.04,.007,8,24,Math.PI), mat("#7a4332",.5));
+  smile.rotation.z = Math.PI; smile.scale.set(1.2,.8,1); smile.position.set(0,.935-.86,.192); head.add(smile);
+  H([-.1,1.022,.2],[.02,.025,.01],"#fff",.008,.3); H([.08,1.022,.2],[.02,.025,.01],"#fff",.008,.3);
+  // thin round glasses
+  const frame = mat("#14141a",.3,{metalness:.5});
+  for (const x of [-.09,.09]) {
+    const t = new THREE.Mesh(new THREE.TorusGeometry(.066,.007,12,48), frame); t.scale.set(1.12,1,1);
+    t.position.set(x,1.0-.86,.198); t.castShadow = true; head.add(t);
+    const lens = new THREE.Mesh(new THREE.CircleGeometry(.066,40), new THREE.MeshPhysicalMaterial({color:"#cfe6ff",transparent:true,opacity:.14,roughness:.05}));
+    lens.scale.set(1.12,1,1); lens.position.set(x,1.0-.86,.197); head.add(lens);
+  }
+  const bridge = new THREE.Mesh(new THREE.CylinderGeometry(.006,.006,.05,8), frame); bridge.rotation.z = Math.PI/2; bridge.position.set(0,1.015-.86,.198); head.add(bridge);
+  for (const s of [-1,1]) { const tp = new THREE.Mesh(new THREE.CylinderGeometry(.006,.006,.2,8), frame);
+    tp.rotation.x = Math.PI/2; tp.position.set(s*.2,1.02-.86,.1); head.add(tp); }
+  return { root, body, legs, arms, head };
+}
+
+// arm pose = [shoulderX, shoulderZ, elbowX, elbowZ]
+const POSES = {
+  hello:  { ry:.42, headZ:.04,  headY:-.05, arms:[[0,-2.0,0,-1.0],[0,.1,0,0]], fov:20 },
+  chill:  { ry:.5,  headZ:0, headX:-.04, headY:-.1, arms:[[0,-.08,0,0],[0,.08,0,0]], fov:17 },
+  cheer:  { ry:.4, headZ:.03, headX:-.05, arms:[[0,-2.6,0,-.35],[0,2.6,0,.35]], fov:23 },
+  fist:   { ry:.5,  headZ:.03, headX:-.03, arms:[[-.35,.35,-2.35,.15],[0,.08,0,0]], fov:18 },
+};
+async function shot(name, key) {
+  const P = POSES[key];
+  const scene = new THREE.Scene(); scene.environment = envTex; scene.environmentIntensity = .4;
+  const ch = build(); scene.add(ch.root);
+  ch.root.scale.setScalar(1.15); ch.root.rotation.y = P.ry;
+  ch.arms.forEach((a,i)=>{ const [sx,sz,ex,ez]=P.arms[i]; a.sh.rotation.set(sx,0,sz); a.el.rotation.set(ex,0,ez); });
+    ch.head.rotation.set(P.headX??0, P.headY??0, P.headZ??0);
+  const key1 = new THREE.DirectionalLight("#ffd9a8", 2.6); key1.position.set(2.5,4,4); key1.castShadow = true;
+  key1.shadow.mapSize.set(2048,2048); Object.assign(key1.shadow.camera,{left:-1.5,right:1.5,top:1.5,bottom:-1.5,near:.5,far:12}); key1.shadow.radius=6; key1.shadow.bias=-.0004;
+  const fill = new THREE.DirectionalLight("#ff9a5c", .6); fill.position.set(-3,-.5,3);
+  const rim = new THREE.DirectionalLight("#ffe6c8", 1.6); rim.position.set(-3,3,-4);
+  scene.add(key1, fill, rim, new THREE.HemisphereLight("#ffe9d2","#8a5a3a",.45));
+  const cam = new THREE.PerspectiveCamera(P.fov, 1, .1, 50);
+  cam.position.set(1.1,1.5,3.5); cam.lookAt(-.02,.97,0);
+  renderer.setClearColor(0,0); renderer.render(scene, cam);
+  const fg = new Image(); fg.src = renderer.domElement.toDataURL("image/png"); await fg.decode();
+  // rounded tile with warm radial glow
+  const cv = document.createElement("canvas"); cv.width = cv.height = N; const g = cv.getContext("2d");
+  const rr = (x,y,w,h,r)=>{g.beginPath();g.roundRect(x,y,w,h,r)};
+  rr(0,0,N,N,N*.22); g.save(); g.clip();
+  const bg = g.createRadialGradient(N*.5,N*.42,N*.05,N*.5,N*.5,N*.78);
+  bg.addColorStop(0,"#ffd7a6"); bg.addColorStop(.55,"#f4a86c"); bg.addColorStop(1,"#d9693a");
+  g.fillStyle = bg; g.fillRect(0,0,N,N);
+  g.drawImage(fg,0,0); g.restore();
+  const data = cv.toDataURL("image/png");
+  await fetch("/save",{method:"POST",body:JSON.stringify({name,data})});
+  await fetch("/save",{method:"POST",body:JSON.stringify({name:name.replace(".png","-transparent.png"),data:fg.src})});
+  const im = new Image(); im.src = data; im.width = 330; document.getElementById("row").append(im);
+}
+for (const k of Object.keys(POSES)) await shot(`bust-${k}.png`, k);
+document.title = "done";
+</script>

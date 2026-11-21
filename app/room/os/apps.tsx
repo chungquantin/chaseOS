@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { BUILT_APPS } from "app/data/apps";
 import { chapters } from "app/data/career";
-import { idCard, profile } from "app/data/profile";
+import { idCard, mascot, profile } from "app/data/profile";
 import { MarketsTerminal } from "../panels/markets-panel";
 import type { PostSummary } from "../panels/writing-panel";
 import { media } from "../media";
@@ -90,7 +90,7 @@ function About({ closeSelf }: AppProps) {
     <div className="h-full overflow-y-auto bg-[#fbfaf7] text-[#1c1917]">
       <div className="relative h-28 bg-[radial-gradient(120%_140%_at_20%_0%,#ffc27d_0%,#e6007a_45%,#3b2a7a_100%)]" />
       <div className="-mt-12 px-5 pb-7 @min-[520px]:px-7">
-        <img src={idCard.avatar} alt={idCard.name} className="relative size-24 rounded-[28px] border-4 border-[#fbfaf7] object-cover shadow-md" />
+        <img src={mascot.fist} alt={idCard.name} className="relative size-24 rounded-[28px] border-4 border-[#fbfaf7] object-cover shadow-md" />
         <h1 className="font-display mt-3 text-[32px] leading-none">{idCard.name}</h1>
         <p className="mt-1.5 text-[14px] text-[#57534e]">
           {idCard.title}, @{profile.handle}
