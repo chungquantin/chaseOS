@@ -4,7 +4,8 @@ import { useRef, useState, type ReactNode } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Html, useCursor } from "@react-three/drei";
 import type { Group, Mesh } from "three";
-import { INTERACTABLES, type TargetId } from "../layout";
+import type { TargetId } from "../layout";
+import { ALL_INTERACTABLES, groundY } from "../world";
 import { room, useRoom } from "../store";
 import { C } from "./materials";
 
@@ -14,7 +15,7 @@ import { C } from "./materials";
  * it's interactive; the label appears on hover or when the player is close.
  */
 export function Interactable({ id, children }: { id: TargetId; children: ReactNode }) {
-  const it = INTERACTABLES.find((i) => i.id === id)!;
+  const it = ALL_INTERACTABLES.find((i) => i.id === id)!;
   const nearby = useRoom((s) => s.nearby === id);
   const [hovered, setHovered] = useState(false);
   const marker = useRef<Group>(null);
@@ -67,7 +68,7 @@ export function Interactable({ id, children }: { id: TargetId; children: ReactNo
       {/* ring on the floor where the character will stand */}
       <mesh
         ref={ring}
-        position={[it.spot[0], 0.03, it.spot[1]]}
+        position={[it.spot[0], groundY(it.spot[0], it.spot[1]) + 0.03, it.spot[1]]}
         rotation={[-Math.PI / 2, 0, 0]}
         raycast={() => null}
       >

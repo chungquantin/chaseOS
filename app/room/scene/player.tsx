@@ -4,8 +4,9 @@ import { useEffect, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import type { Group } from "three";
 import { moveWithCollision } from "../collision";
-import { INNER, INTERACTABLES, INTERACT_RADIUS } from "../layout";
+import { INNER, INTERACT_RADIUS } from "../layout";
 import { live, room } from "../store";
+import { ALL_INTERACTABLES, groundY } from "../world";
 import { C } from "./materials";
 import { RBox } from "./primitives";
 
@@ -50,9 +51,9 @@ function usePressedKeys() {
 }
 
 function nearestInteractable(x: number, z: number) {
-  let best: (typeof INTERACTABLES)[number] | null = null;
+  let best: (typeof ALL_INTERACTABLES)[number] | null = null;
   let bestDist = INTERACT_RADIUS;
-  for (const it of INTERACTABLES) {
+  for (const it of ALL_INTERACTABLES) {
     const d = Math.hypot(it.spot[0] - x, it.spot[1] - z);
     if (d < bestDist) {
       best = it;
@@ -90,7 +91,7 @@ export function Player() {
     const p = live.player;
     const g = root.current!;
     const anyKey = pressed.current.size > 0;
-    g.visible = !(state.active && INTERACTABLES.find((i) => i.id === state.active)?.closeUp);
+    g.visible = !(state.active && ALL_INTERACTABLES.find((i) => i.id === state.active)?.closeUp);
 
     /* ---------------- actions: climbing / gaming ---------------- */
     if (state.action) {
@@ -164,9 +165,15 @@ export function Player() {
         if (dist < SPEED * dt) {
           p.x = live.target.x;
           p.z = live.target.z;
-          live.target = null;
-          if (state.pending) room.use(state.pending);
-          else room.cancelWalk();
+          const nextStop = live.route.shift();
+          if (nextStop) {
+            live.target = nextStop;
+          } else if (state.pending) {
+            const id = state.pending;
+            live.target = null;
+            live.goal = null;
+            room.use(id);
+          } else room.cancelWalk();
         } else {
           dirX = tx / dist;
           dirZ = tz / dist;
@@ -191,7 +198,8 @@ export function Player() {
 
     room.setNearby(nearestInteractable(p.x, p.z)?.id ?? null);
 
-    g.position.set(p.x, 0, p.z);
+    const gy = groundY(p.x, p.z);
+    g.position.set(p.x, gy, p.z);
     if (moving) {
       g.rotation.y = lerpAngle(g.rotation.y, Math.atan2(dirX, dirZ), Math.min(1, dt * 14));
       walkPhase.current += dt * 11;

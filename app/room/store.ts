@@ -2,6 +2,7 @@
 
 import { useSyncExternalStore } from "react";
 import { isAction, PLAYER_START, type ActionId, type PanelId, type TargetId } from "./layout";
+import { routeTo } from "./world";
 
 export type Mood = "day" | "night";
 /** loading screen → ID card → free to roam */
@@ -16,6 +17,8 @@ export type Stage = "loading" | "intro" | "room";
 type State = {
   /** overlay currently open, if any */
   active: PanelId | null;
+  /** what the open overlay should show (a chapter or app id), if it takes one */
+  arg: string | null;
   /** what the character is doing (climbing, gaming), if anything */
   action: ActionId | null;
   /** interactable the player is standing close to */
@@ -29,13 +32,16 @@ type State = {
 };
 
 // Night is the hero look (warm room, dark world). The toggle switches to day.
-let state: State = { active: null, action: null, nearby: null, pending: null, mood: "night", stage: "loading", ready: false };
+let state: State = { active: null, arg: null, action: null, nearby: null, pending: null, mood: "night", stage: "loading", ready: false };
 const listeners = new Set<() => void>();
 
 export const live = {
   player: { x: PLAYER_START[0], z: PLAYER_START[1] },
   /** click-to-move destination, null when idle or using the keyboard */
   target: null as { x: number; z: number } | null,
+  /** waypoints still to walk after `target`, and the final destination */
+  route: [] as { x: number; z: number }[],
+  goal: null as { x: number; z: number } | null,
   /** seconds since the current action started (advanced by the player) */
   actionTime: 0,
   /** visitor zoom on top of the fitted zoom (1 = whole room) */
@@ -61,15 +67,23 @@ export const room = {
   /** Use an interactable: open its overlay or start its action. */
   use(id: TargetId) {
     live.target = null;
-    if (isAction(id)) {
+    live.route = [];
+    live.goal = null;
+    if (isAction(id as TargetId)) {
       live.actionTime = 0;
-      set({ action: id, active: null, pending: null });
+      set({ action: id as "climb" | "game", active: null, pending: null });
+    } else if (id.startsWith("job:")) {
+      set({ active: "jobs", arg: id.slice(4), action: null, pending: null });
+    } else if (id.startsWith("app:")) {
+      set({ active: "app", arg: id.slice(4), action: null, pending: null });
+    } else if (id === "repos") {
+      set({ active: "projects", arg: null, action: null, pending: null });
     } else {
-      set({ active: id, action: null, pending: null });
+      set({ active: id as PanelId, arg: null, action: null, pending: null });
     }
   },
   close() {
-    set({ active: null });
+    set({ active: null, arg: null });
   },
   stopAction() {
     set({ action: null });
@@ -79,11 +93,16 @@ export const room = {
   },
   walkTo(x: number, z: number, pending: TargetId | null = null) {
     if (state.stage !== "room") return;
-    live.target = { x, z };
+    const path = routeTo(live.player, { x, z });
+    live.target = path[0];
+    live.route = path.slice(1);
+    live.goal = { x, z };
     set({ pending, action: null });
   },
   cancelWalk() {
     live.target = null;
+    live.route = [];
+    live.goal = null;
     set({ pending: null });
   },
   setReady() {

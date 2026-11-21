@@ -421,8 +421,8 @@ const ORDER: (ChapterId | "resume")[] = [
   ...[...chapters].sort((a, b) => parsePeriod(a.period)[0] - parsePeriod(b.period)[0]).map((c) => c.id),
 ];
 
-export function JobsView({ onClose }: { onClose: () => void }) {
-  const [selected, setSelected] = useState<ChapterId | "resume">(ORDER[ORDER.length - 1]);
+export function JobsView({ onClose, initial }: { onClose: () => void; initial?: ChapterId }) {
+  const [selected, setSelected] = useState<ChapterId | "resume">(initial ?? ORDER[ORDER.length - 1]);
   const [dir, setDir] = useState(1);
   const i = ORDER.indexOf(selected);
 
