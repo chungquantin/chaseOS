@@ -22,6 +22,8 @@ export type BuiltApp = {
   /** tile colour, also used as the accent in the detail view */
   color: string;
   tags: string[];
+  /** how it's doing, shown as a tag on its statue */
+  status?: "Live" | "Shipped";
   /** where it came from, e.g. the company */
   from?: string;
   /** a few facts worth showing as numbers */
@@ -31,6 +33,7 @@ export type BuiltApp = {
 export const BUILT_APPS: BuiltApp[] = [
   {
     id: "liquid-inference",
+    status: "Live",
     name: "Liquid Inference",
     kind: "AI gateway",
     tagline: "Providers compete on price for every AI request; you pay the lowest offer that meets your rules.",
@@ -56,6 +59,7 @@ export const BUILT_APPS: BuiltApp[] = [
   },
   {
     id: "ax",
+    status: "Live",
     name: "AX Exchange",
     kind: "Trading venue",
     tagline: "Perpetual futures on forex, equities, commodities and indices, on a regulated exchange.",
@@ -77,6 +81,7 @@ export const BUILT_APPS: BuiltApp[] = [
   },
   {
     id: "ai-keeper",
+    status: "Shipped",
     name: "AI Keeper",
     kind: "Mac app",
     tagline: "Finds the gigabytes your coding agents leave behind and clears them safely.",
@@ -97,6 +102,7 @@ export const BUILT_APPS: BuiltApp[] = [
   },
   {
     id: "liquid-pet",
+    status: "Live",
     name: "Liquid Pet",
     kind: "Browser pet",
     tagline: "A pet that lives in your browser and answers when you talk to it.",
@@ -117,6 +123,7 @@ export const BUILT_APPS: BuiltApp[] = [
   },
   {
     id: "mario-classic",
+    status: "Live",
     name: "Mario Classic",
     kind: "Browser game",
     tagline: "The 1985 side-scroller, rebuilt to run in the browser.",
@@ -140,6 +147,7 @@ export const BUILT_APPS: BuiltApp[] = [
   },
   {
     id: "amazely",
+    status: "Shipped",
     name: "Amazely",
     kind: "SaaS",
     tagline: "Reputation marketing for local businesses, trusted by 1,200+ of them.",

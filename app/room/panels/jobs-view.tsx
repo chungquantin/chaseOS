@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, ArrowRight, ArrowUpRight, FileText, MapPin } from "lucide-react";
 import { chapters, cvSummary, type Chapter, type ChapterId } from "app/data/career";
@@ -8,6 +9,13 @@ import { beliefs, idCard, profile } from "app/data/profile";
 import { BuildFlow } from "./build-flow";
 import { BoxStamp, LogoSticker, RubberStamp, Tape, wobble } from "./paper-bits";
 import { CloseUpShell } from "./close-up-shell";
+import { HAS_FILM } from "./film/registry";
+
+// the animated stories pull in three.js scenes: load them only when a job has one
+const FilmFor = dynamic(() => import("./film/film-for"), {
+  ssr: false,
+  loading: () => <div className="aspect-video animate-pulse rounded-[4px] bg-[#2a1f14]/15" />,
+});
 
 /* ------------------------------------------------------------ timeline data */
 
@@ -162,7 +170,7 @@ function CareerLine({ selected, onSelect }: { selected: ChapterId | "resume"; on
                           className="washi font-hand flex size-full items-center gap-1.5 overflow-hidden pl-1.5 pr-2.5 text-[15px] font-bold text-[#2a1f14]"
                           style={{ "--tape": TAPE[lane.id] } as React.CSSProperties}
                         >
-                          <LogoSticker org={r.c.org} seed={r.c.id} size={ROW_H - 12} />
+                          <LogoSticker org={r.c.org} seed={r.c.id} size={ROW_H - 12} name={r.c.company} />
                           <span className="truncate">{r.c.company}</span>
                         </span>
                       </motion.button>
@@ -199,12 +207,38 @@ function stampYears(period: string) {
   return `${a}–${b.slice(2)}`;
 }
 
+/**
+ * The top of a job sheet: the job's animated story, pasted in like a
+ * photograph. Jobs without one get a hand-written note about the object
+ * that stands for them in the room.
+ */
+function Story({ c }: { c: Chapter }) {
+  if (HAS_FILM.has(c.id)) {
+    return (
+      <div className="relative mb-9 rotate-[-0.4deg] bg-white p-2 pb-3 shadow-[0_2px_3px_rgba(60,35,10,0.3),0_18px_30px_-14px_rgba(60,35,10,0.6)]">
+        <Tape className="-top-2.5 left-10 rotate-[-6deg]" />
+        <Tape className="-top-2.5 right-10 rotate-[5deg]" />
+        <FilmFor id={c.id} title={`${c.company} · ${c.role}`} badge={<LogoSticker org={c.org} seed={c.id} size={34} name={c.company} />} />
+      </div>
+    );
+  }
+  return (
+    <div className="mb-8 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+      <p className="font-marker text-[18px] leading-none">{c.symbol.name}</p>
+      <p className="font-hand min-w-0 flex-1 text-[17px] leading-[30px] opacity-80">{c.symbol.why}</p>
+      <BoxStamp seed={c.id + "film"} color="#6b4a2a" className="!text-[12px]">
+        film coming soon
+      </BoxStamp>
+    </div>
+  );
+}
+
 function IdentityPage({ c }: { c: Chapter }) {
   const place = c.location?.split(",")[0] ?? "";
   return (
     <div className="flex flex-col">
       <div className="relative flex items-start justify-between gap-3">
-        <LogoSticker org={c.org} seed={c.id} size={84} />
+        <LogoSticker org={c.org} seed={c.id} size={84} name={c.company} />
         <RubberStamp
           seed={c.id}
           top={place ? `${c.company} · ${place}` : c.company}
@@ -419,6 +453,11 @@ function Dossier({
           />
           <div className="legal-sheet">
             <div className="relative grid gap-10 pb-8 pl-[calc(var(--m)+18px)] pr-5 pt-10 sm:pr-9 md:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] md:gap-0">
+              {c && (
+                <div className="md:col-span-2">
+                  <Story c={c} />
+                </div>
+              )}
               {c ? (
                 <>
                   <div className="md:pr-9">
@@ -457,8 +496,8 @@ const ORDER: (ChapterId | "resume")[] = [
   ...[...chapters].sort((a, b) => parsePeriod(a.period)[0] - parsePeriod(b.period)[0]).map((c) => c.id),
 ];
 
-export function JobsView({ onClose }: { onClose: () => void }) {
-  const [selected, setSelected] = useState<ChapterId | "resume">(ORDER[ORDER.length - 1]);
+export function JobsView({ onClose, initial }: { onClose: () => void; initial?: ChapterId }) {
+  const [selected, setSelected] = useState<ChapterId | "resume">(initial ?? ORDER[ORDER.length - 1]);
   const [dir, setDir] = useState(1);
   const i = ORDER.indexOf(selected);
 

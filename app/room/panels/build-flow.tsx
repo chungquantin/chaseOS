@@ -1,24 +1,25 @@
 "use client";
 
-import { Fragment } from "react";
+import { Fragment, useState } from "react";
 import { motion } from "framer-motion";
 import type { Chapter } from "app/data/career";
 
-/** Company logo, or a monogram tile when there isn't one. */
-export function LogoTile({ org, size = 40 }: { org: Chapter["org"]; size?: number }) {
-  return org.logo ? (
+/** Company logo, or a monogram tile when there isn't one (or it fails to load). */
+export function LogoTile({ org, size = 40, name }: { org: Chapter["org"]; size?: number; name?: string }) {
+  const [broken, setBroken] = useState(false);
+  return org.logo && !broken ? (
     <span
       className="grid shrink-0 place-items-center overflow-hidden rounded-[22%] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.12),inset_0_0_0_1px_rgba(0,0,0,0.06)]"
       style={{ width: size, height: size }}
     >
-      <img src={org.logo} alt="" className="h-[78%] w-[78%] object-contain" />
+      <img src={org.logo} alt="" className="h-[78%] w-[78%] object-contain" onError={() => setBroken(true)} />
     </span>
   ) : (
     <span
       className="grid shrink-0 place-items-center rounded-[22%] font-serif font-bold text-white shadow-[0_1px_2px_rgba(0,0,0,0.15)]"
       style={{ width: size, height: size, background: org.brand, fontSize: size * 0.42 }}
     >
-      {org.monogram}
+      {org.monogram ?? name?.slice(0, 1) ?? "•"}
     </span>
   );
 }

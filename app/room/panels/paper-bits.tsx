@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, type CSSProperties, type ReactNode } from "react";
+import { useId, useState, type CSSProperties, type ReactNode } from "react";
 import type { Chapter } from "app/data/career";
 
 /** Small stable pseudo-random number from a string, so each company keeps its own tilt. */
@@ -11,21 +11,22 @@ export function wobble(seed: string, range: number) {
 }
 
 /** The company logo as a die-cut vinyl sticker, slightly crooked. */
-export function LogoSticker({ org, seed, size = 72, round }: { org: Chapter["org"]; seed: string; size?: number; round?: boolean }) {
+export function LogoSticker({ org, seed, size = 72, round, name }: { org: Chapter["org"]; seed: string; size?: number; round?: boolean; name?: string }) {
+  const [broken, setBroken] = useState(false);
   const pad = Math.max(3, Math.round(size * 0.08));
   return (
     <span
       className={`sticker inline-grid shrink-0 place-items-center ${round ? "rounded-full" : "rounded-[24%]"}`}
       style={{ width: size, height: size, padding: pad, transform: `rotate(${wobble(seed, 7)}deg)` }}
     >
-      {org.logo ? (
-        <img src={org.logo} alt="" className={`size-full object-contain ${round ? "rounded-full" : "rounded-[20%]"}`} />
+      {org.logo && !broken ? (
+        <img src={org.logo} alt="" onError={() => setBroken(true)} className={`size-full object-contain ${round ? "rounded-full" : "rounded-[20%]"}`} />
       ) : (
         <span
           className={`grid size-full place-items-center font-serif font-bold text-white ${round ? "rounded-full" : "rounded-[20%]"}`}
           style={{ background: org.brand, fontSize: size * 0.42 }}
         >
-          {org.monogram}
+          {org.monogram ?? name?.slice(0, 1) ?? "•"}
         </span>
       )}
     </span>

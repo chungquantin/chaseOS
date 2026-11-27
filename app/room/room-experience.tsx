@@ -8,11 +8,14 @@ import { BookOpen, Briefcase, Maximize, Monitor, Minus, Moon, Music2, Package, P
 import { media, useMedia } from "./media";
 import { MiniPlayer } from "./mini-player";
 import { interests } from "app/data/interests";
-import { INTERACTABLES, type PanelId } from "./layout";
+import { type PanelId } from "./layout";
+import { ALL_INTERACTABLES } from "./world";
 import { room, useRoom } from "./store";
 import { visit } from "./tour";
 import { Coach, hasSeenIntro, HudBadge, IdCard, LoadingScreen, markIntroSeen } from "./intro/intro";
 import { JobsView } from "./panels/jobs-view";
+import { AppPanel } from "./panels/app-panel";
+import type { ChapterId } from "app/data/career";
 import { ComputerOS } from "./os/os";
 import { ProjectsView } from "./panels/projects-view";
 import { WritingPanel, type PostSummary } from "./panels/writing-panel";
@@ -63,10 +66,12 @@ function useRoomHotkeys() {
   }, []);
 }
 
-function renderPanel(id: PanelId, posts: PostSummary[]) {
+function renderPanel(id: PanelId, posts: PostSummary[], arg: string | null) {
   switch (id) {
     case "jobs":
-      return <JobsView key="jobs" onClose={room.close} />;
+      return <JobsView key={`jobs-${arg}`} initial={(arg as ChapterId) ?? undefined} onClose={room.close} />;
+    case "app":
+      return <AppPanel key={`app-${arg}`} id={arg ?? ""} onClose={room.close} />;
     case "writing":
       return <WritingPanel key="writing" posts={posts} onClose={room.close} />;
     case "projects":
@@ -163,7 +168,8 @@ export function RoomExperience({ posts, children }: { posts: PostSummary[]; chil
   const nearby = useRoom((s) => s.nearby);
   const mood = useRoom((s) => s.mood);
   const t = THEME[mood];
-  const nearbyItem = INTERACTABLES.find((i) => i.id === nearby);
+  const arg = useRoom((s) => s.arg);
+  const nearbyItem = ALL_INTERACTABLES.find((i) => i.id === nearby);
   const hud = active || stage !== "room" ? "pointer-events-none opacity-0" : "";
   const doing = action === "climb" ? interests.climbing : action === "game" ? interests.gaming : null;
 
@@ -259,10 +265,10 @@ export function RoomExperience({ posts, children }: { posts: PostSummary[]; chil
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 10 }}
-              onClick={() => visit("jobs")}
+              onClick={() => visit("job:architect")}
               className="lamp-btn pointer-events-auto px-5 py-2.5 text-[14px]"
             >
-              <Briefcase size={15} strokeWidth={2} /> See my past jobs
+              <Briefcase size={15} strokeWidth={2} /> Visit my past jobs
             </motion.button>
           ) : null}
         </AnimatePresence>
@@ -287,7 +293,8 @@ export function RoomExperience({ posts, children }: { posts: PostSummary[]; chil
         <span>scroll to zoom</span>
       </div>
 
-      <AnimatePresence>{active && renderPanel(active, posts)}</AnimatePresence>
+      <AnimatePresence>{active && renderPanel(active, posts, arg)}</AnimatePresence>
+
 
       {/* the music player: stays up over panels so a playing video is always visible,
           but folds to a small strip so it doesn't cover the panel */}

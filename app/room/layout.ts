@@ -44,10 +44,16 @@ export const FURNITURE = {
 export const COLLIDERS: Box[] = Object.values(FURNITURE);
 
 /** Things that open an overlay. */
-export type PanelId = "jobs" | "writing" | "projects" | "desk";
+export type PanelId = "jobs" | "writing" | "projects" | "desk" | "app";
+
 /** Things the character does. */
 export type ActionId = "climb" | "game";
-export type TargetId = PanelId | ActionId;
+/**
+ * Anything you can walk up to. Beyond the room's own panels/actions:
+ * a statue in one of the two buildings (`job:<chapter>` / `app:<id>`) and
+ * the open-source wall.
+ */
+export type TargetId = PanelId | ActionId | "repos" | `job:${string}` | `app:${string}`;
 
 export const isAction = (id: TargetId): id is ActionId => id === "climb" || id === "game";
 
