@@ -148,14 +148,14 @@ export function BookReader({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
     >
-      <div className="absolute inset-0 bg-[#140e0a]/60 backdrop-blur-[3px]" onClick={close} />
+      <div className="absolute inset-0 bg-[#000000]/60 backdrop-blur-[3px]" onClick={close} />
 
       {/* top bar */}
-      <div className="absolute inset-x-0 top-0 flex items-center justify-between gap-3 px-4 py-3 text-[#fbf5ec] sm:px-6">
+      <div className="absolute inset-x-0 top-0 flex items-center justify-between gap-3 px-4 py-3 text-[#fafafa] sm:px-6">
         <button onClick={close} className="flex items-center gap-1.5 rounded-full bg-black/30 px-3 py-1.5 text-[13px] backdrop-blur-md hover:bg-black/45">
           <ArrowLeft size={14} /> Back to the shelf
         </button>
-        <p className="hidden truncate text-[13px] text-[#fbf5ec]/75 sm:block">{title}</p>
+        <p className="hidden truncate text-[13px] text-[#fafafa]/75 sm:block">{title}</p>
         <button onClick={close} aria-label="Close book (Esc)" className="grid size-8 place-items-center rounded-full bg-black/30 backdrop-blur-md hover:bg-black/45">
           <X size={16} />
         </button>
@@ -185,10 +185,10 @@ export function BookReader({
         }}
       >
         {/* cover */}
-        <div className="absolute inset-0 rounded-[14px] bg-[linear-gradient(135deg,#8a4632,#5e2d20)] shadow-[0_40px_100px_-20px_rgba(0,0,0,0.75)]" />
+        <div className="absolute inset-0 rounded-[14px] bg-[linear-gradient(135deg,#262626,#0a0a0a)] shadow-[0_40px_100px_-20px_rgba(0,0,0,0.75)]" />
         {/* stacked page edges */}
-        <div className="absolute inset-x-[10px] bottom-[4px] top-[12px] rounded-[6px] bg-[#e9dfcc]" />
-        <div className="absolute inset-x-[10px] bottom-[7px] top-[11px] rounded-[6px] bg-[#f1e8d7]" />
+        <div className="absolute inset-x-[10px] bottom-[4px] top-[12px] rounded-[6px] bg-[#e5e5e5]" />
+        <div className="absolute inset-x-[10px] bottom-[7px] top-[11px] rounded-[6px] bg-[#f0f0f0]" />
 
         {/* paper */}
         <div
@@ -242,7 +242,7 @@ export function BookReader({
 
           {/* folios */}
           {geo && (
-            <div className="pointer-events-none absolute inset-x-0 bottom-3 flex justify-between px-8 font-serif text-[12px] text-[#a89b85]">
+            <div className="pointer-events-none absolute inset-x-0 bottom-3 flex justify-between px-8 font-serif text-[12px] text-[#a3a3a3]">
               <span>{first}</span>
               {geo.perView === 2 && last > first && <span>{last}</span>}
             </div>
@@ -275,7 +275,7 @@ export function BookReader({
           onClick={() => go(-1)}
           disabled={spread === 0}
           aria-label="Previous page"
-          className="absolute -left-2 top-1/2 hidden size-11 -translate-x-full -translate-y-1/2 place-items-center rounded-full bg-[#fbf5ec]/90 text-[#3b2a1e] shadow-lg transition-opacity hover:bg-white disabled:opacity-0 md:grid"
+          className="absolute -left-2 top-1/2 hidden size-11 -translate-x-full -translate-y-1/2 place-items-center rounded-full bg-[#fafafa]/90 text-[#171717] shadow-lg transition-opacity hover:bg-white disabled:opacity-0 md:grid"
         >
           <ChevronLeft size={20} />
         </button>
@@ -283,18 +283,18 @@ export function BookReader({
           onClick={() => go(1)}
           disabled={spread >= spreads - 1}
           aria-label="Next page"
-          className="absolute -right-2 top-1/2 hidden size-11 -translate-y-1/2 translate-x-full place-items-center rounded-full bg-[#fbf5ec]/90 text-[#3b2a1e] shadow-lg transition-opacity hover:bg-white disabled:opacity-0 md:grid"
+          className="absolute -right-2 top-1/2 hidden size-11 -translate-y-1/2 translate-x-full place-items-center rounded-full bg-[#fafafa]/90 text-[#171717] shadow-lg transition-opacity hover:bg-white disabled:opacity-0 md:grid"
         >
           <ChevronRight size={20} />
         </button>
       </motion.div>
 
       {/* bottom controls */}
-      <div className="relative mt-3 flex items-center gap-3 text-[#fbf5ec]">
+      <div className="relative mt-3 flex items-center gap-3 text-[#fafafa]">
         <button onClick={() => go(-1)} disabled={spread === 0} aria-label="Previous page" className="grid size-8 place-items-center rounded-full bg-black/30 disabled:opacity-30 md:hidden">
           <ChevronLeft size={16} />
         </button>
-        <span className="text-[12.5px] tabular-nums text-[#fbf5ec]/80">
+        <span className="text-[12.5px] tabular-nums text-[#fafafa]/80">
           {first === last ? `page ${first}` : `pages ${first}–${last}`} of {pages}
         </span>
         <button onClick={() => go(1)} disabled={spread >= spreads - 1} aria-label="Next page" className="grid size-8 place-items-center rounded-full bg-black/30 disabled:opacity-30 md:hidden">

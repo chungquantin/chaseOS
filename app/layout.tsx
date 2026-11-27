@@ -2,7 +2,7 @@ import "./global.css";
 import type { Metadata, Viewport } from "next";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
-import { Fraunces } from "next/font/google";
+import { Fraunces, Kalam, Permanent_Marker } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { baseUrl } from "./sitemap";
@@ -12,6 +12,22 @@ const display = Fraunces({
   subsets: ["latin"],
   axes: ["opsz", "SOFT"],
   variable: "--font-display",
+  display: "swap",
+});
+
+// Notebook ink: a steady felt-tip print for the body of the ID card
+const notebookBody = Kalam({
+  subsets: ["latin"],
+  weight: ["300", "400", "700"],
+  variable: "--font-notebook",
+  display: "swap",
+});
+
+// Notebook marker: thick Sharpie for titles and section headings
+const notebookMarker = Permanent_Marker({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-marker",
   display: "swap",
 });
 
@@ -117,7 +133,9 @@ export default function RootLayout({
         "text-black bg-white dark:text-white dark:bg-black",
         GeistSans.variable,
         GeistMono.variable,
-        display.variable
+        display.variable,
+        notebookBody.variable,
+        notebookMarker.variable
       )}
     >
       <body className="min-h-screen antialiased">

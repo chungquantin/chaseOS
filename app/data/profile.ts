@@ -123,19 +123,19 @@ export const idCard = {
       key: "blockchain",
       label: "Blockchain",
       line: "Substrate runtimes, XCM SDKs, real-time chain data in Rust",
-      color: "#e6007a",
+      color: "#f0a04b",
     },
     {
       key: "inference",
       label: "Inference",
       line: "Built the Liquid Inference LLM gateway from zero; AI streaming for 1,200+ businesses",
-      color: "#3fb8ff",
+      color: "#8a8a8a",
     },
     {
       key: "gtm",
       label: "GTM",
       line: "Polkadot DevRel lead for SEA, co-founded OpenGuild, founding engineer ×2",
-      color: "#f59e0b",
+      color: "#a65f0c",
     },
   ],
   stats: [

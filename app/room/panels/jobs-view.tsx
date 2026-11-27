@@ -5,7 +5,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, ArrowRight, ArrowUpRight, FileText, MapPin } from "lucide-react";
 import { chapters, cvSummary, type Chapter, type ChapterId } from "app/data/career";
 import { beliefs, idCard, profile } from "app/data/profile";
-import { BuildFlow, LogoTile } from "./build-flow";
+import { BuildFlow } from "./build-flow";
+import { BoxStamp, LogoSticker, RubberStamp, Tape, wobble } from "./paper-bits";
 import { CloseUpShell } from "./close-up-shell";
 
 /* ------------------------------------------------------------ timeline data */
@@ -13,9 +14,9 @@ import { CloseUpShell } from "./close-up-shell";
 type LaneId = "blockchain" | "ai" | "gtm";
 
 const LANES: { id: LaneId; label: string; color: string }[] = [
-  { id: "blockchain", label: "Blockchain", color: "#e6007a" },
-  { id: "ai", label: "AI & data", color: "#3fb8ff" },
-  { id: "gtm", label: "Community & GTM", color: "#f59e0b" },
+  { id: "blockchain", label: "Blockchain", color: "#f0a04b" },
+  { id: "ai", label: "AI & data", color: "#8a8a8a" },
+  { id: "gtm", label: "Community & GTM", color: "#a65f0c" },
 ];
 
 /** Which track each job runs on, by what the work mostly was. */
@@ -73,11 +74,12 @@ function layoutRibbons(): { ribbons: Ribbon[]; rows: Record<LaneId, number>; fro
   return { ribbons, rows, from, to: Math.ceil(NOW + 0.01) };
 }
 
-const laneColor = (id: LaneId) => LANES.find((l) => l.id === id)!.color;
-
 /* ------------------------------------------------------------- career line */
 
-const ROW_H = 34;
+const ROW_H = 36;
+
+/** Washi tape colour for each track: amber, pencil grey, burnt amber. */
+const TAPE: Record<LaneId, string> = { blockchain: "#f0a04b", ai: "#b8b2a6", gtm: "#c98a3c" };
 
 function CareerLine({ selected, onSelect }: { selected: ChapterId | "resume"; onSelect: (id: ChapterId | "resume") => void }) {
   const { ribbons, rows, from, to } = useMemo(layoutRibbons, []);
@@ -89,27 +91,29 @@ function CareerLine({ selected, onSelect }: { selected: ChapterId | "resume"; on
   // on phones the line scrolls sideways: start at the present
   useEffect(() => {
     const el = scroller.current;
-    if (el) el.scrollLeft = el.scrollWidth;
+    if (el && el.scrollWidth - el.clientWidth > 40) el.scrollLeft = el.scrollWidth;
   }, []);
 
   return (
-    <div className="wood-board rounded-[18px] p-3 sm:p-4">
+    <div className="kraft-board relative rounded-[10px] p-3 sm:p-4">
       <div className="flex items-center justify-between gap-3 px-1">
-        <p className="font-display engraved text-[18px] sm:text-[20px]">The career line</p>
+        <p className="font-marker text-[22px] leading-none sm:text-[26px]">The career line</p>
         <button
           onClick={() => onSelect("resume")}
           aria-pressed={selected === "resume"}
-          className="paper-chip flex shrink-0 items-center gap-1.5 rounded-md px-3 py-1.5 text-[12.5px] font-semibold"
+          className="washi-btn relative shrink-0"
         >
-          <FileText size={14} /> Résumé
+          <span className="washi font-hand flex items-center gap-1.5 px-4 py-1.5 text-[16px] font-bold text-[#2a1f14]" style={{ "--tape": "#fafafa" } as React.CSSProperties}>
+            <FileText size={14} /> Résumé
+          </span>
         </button>
       </div>
 
-      <div ref={scroller} className="mt-2 overflow-x-auto pb-1 [scrollbar-width:thin]">
-        <div className="grid min-w-[640px] grid-cols-[112px_minmax(0,1fr)] gap-x-3">
-          {/* year axis */}
+      <div ref={scroller} className="mt-2 overflow-x-auto overflow-y-hidden pb-1 [scrollbar-color:rgba(42,31,20,0.35)_transparent] [scrollbar-width:thin]">
+        <div className="grid min-w-[680px] grid-cols-[150px_minmax(0,1fr)] gap-x-3 px-2 pr-4">
+          {/* year axis, pencilled in */}
           <span />
-          <div className="engraved relative h-6 text-[11px] font-semibold tabular-nums">
+          <div className="font-hand relative h-7 text-[15px] font-bold tabular-nums opacity-80">
             {years.map((y) => (
               <span key={y} className="absolute -translate-x-1/2" style={{ left: pct(y) }}>
                 {y}
@@ -120,17 +124,18 @@ function CareerLine({ selected, onSelect }: { selected: ChapterId | "resume"; on
           {LANES.map((lane) => (
             <div key={lane.id} className="contents">
               <div className="flex items-center py-2">
-                <span className="brass-plate flex items-center gap-1.5 rounded-[5px] px-2 py-1 text-[11.5px] font-semibold leading-tight">
-                  <span className="size-2 shrink-0 rounded-full shadow-[inset_0_1px_1px_rgba(0,0,0,0.4)]" style={{ background: lane.color }} />
+                <span
+                  className="washi font-hand px-3 py-0.5 text-[15px] font-bold leading-tight text-[#2a1f14]"
+                  style={{ "--tape": TAPE[lane.id], transform: `rotate(${wobble(lane.id, 3)}deg)` } as React.CSSProperties}
+                >
                   {lane.label}
                 </span>
               </div>
               <div className="relative" style={{ height: rows[lane.id] * ROW_H + 14 }}>
-                {/* the track: a groove routed along the board */}
-                <span className="groove absolute inset-x-0 top-1/2 h-[3px] -translate-y-1/2 rounded-full bg-black/25" />
-                {/* year marks */}
+                {/* pencil guide line + year ticks */}
+                <span className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-[#2a1f14]/30" />
                 {years.map((y) => (
-                  <span key={y} className="groove absolute inset-y-1 w-px bg-black/20" style={{ left: pct(y) }} />
+                  <span key={y} className="absolute inset-y-1 w-px border-l border-dashed border-[#2a1f14]/20" style={{ left: pct(y) }} />
                 ))}
                 {ribbons
                   .filter((r) => r.lane === lane.id)
@@ -142,34 +147,36 @@ function CareerLine({ selected, onSelect }: { selected: ChapterId | "resume"; on
                         onClick={() => onSelect(r.c.id)}
                         aria-pressed={on}
                         aria-label={`${r.c.company}, ${r.c.role}, ${r.c.period}`}
-                        className="wood-block absolute flex items-center gap-1.5 overflow-hidden rounded-[7px] pl-[3px] pr-2.5 text-left text-[12px] font-semibold"
-                        style={
-                          {
-                            "--block": lane.color,
-                            left: pct(r.start),
-                            width: `max(30px, calc(${pct(r.end)} - ${pct(r.start)}))`,
-                            top: 4 + r.row * ROW_H,
-                            height: ROW_H - 8,
-                            color: on ? "#1b1206" : "#fff4e6",
-                          } as React.CSSProperties
-                        }
+                        className="washi-btn absolute text-left"
+                        style={{
+                          left: pct(r.start),
+                          width: `max(34px, calc(${pct(r.end)} - ${pct(r.start)}))`,
+                          top: 4 + r.row * ROW_H,
+                          height: ROW_H - 8,
+                          rotate: wobble(r.c.id, 1.2),
+                        }}
                         whileHover={on ? undefined : { y: -2 }}
                         transition={{ type: "spring", stiffness: 500, damping: 30 }}
                       >
-                        <LogoTile org={r.c.org} size={ROW_H - 10} />
-                        <span className="truncate">{r.c.company}</span>
+                        <span
+                          className="washi font-hand flex size-full items-center gap-1.5 overflow-hidden pl-1.5 pr-2.5 text-[15px] font-bold text-[#2a1f14]"
+                          style={{ "--tape": TAPE[lane.id] } as React.CSSProperties}
+                        >
+                          <LogoSticker org={r.c.org} seed={r.c.id} size={ROW_H - 12} />
+                          <span className="truncate">{r.c.company}</span>
+                        </span>
                       </motion.button>
                     );
                   })}
-                {/* the present: a brass rod */}
-                <span className="absolute inset-y-0 w-[3px] -translate-x-1/2 bg-gradient-to-r from-[#f3d79c] to-[#a8813c] shadow-[1px_0_2px_rgba(0,0,0,0.5)]" style={{ left: pct(NOW) }} />
+                {/* the present: a red pencil line */}
+                <span className="absolute inset-y-0 w-[2px] -translate-x-1/2 rounded-full bg-[#b4232a]/80" style={{ left: pct(NOW) }} />
               </div>
             </div>
           ))}
           <span />
-          <div className="relative h-5">
-            <span className="brass-plate absolute top-0.5 -translate-x-1/2 whitespace-nowrap rounded-[4px] px-1.5 text-[10.5px] font-bold" style={{ left: pct(NOW) }}>
-              now
+          <div className="relative h-6">
+            <span className="font-marker absolute top-0.5 -translate-x-1/2 whitespace-nowrap text-[15px] text-[#b4232a]" style={{ left: pct(NOW) }}>
+              now ↑
             </span>
           </div>
         </div>
@@ -180,43 +187,62 @@ function CareerLine({ selected, onSelect }: { selected: ChapterId | "resume"; on
 
 /* ----------------------------------------------------------------- dossier */
 
-function Stamp() {
-  return (
-    <span className="inline-block rotate-[-6deg] rounded-[3px] border-2 border-[#c2410c]/70 px-2 py-0.5 text-[11px] font-bold tracking-[0.08em] text-[#c2410c]/85">
-      Founding team
-    </span>
-  );
+const STAMP_INK = "#1f4fd1";
+const RED_INK = "#b4232a";
+
+/** "Feb 2022 – Dec 2022" → "2022", "Jan 2023 – Jul 2024" → "2023–24", "2026 –" → "2026 → NOW" */
+function stampYears(period: string) {
+  const [a, b] = period.match(/\d{4}/g) ?? [];
+  if (!a) return "";
+  if (/[–-]\s*$/.test(period.trim())) return `${a} → now`;
+  if (!b || a === b) return a;
+  return `${a}–${b.slice(2)}`;
 }
 
-function IdentityPage({ c, color }: { c: Chapter; color: string }) {
+function IdentityPage({ c }: { c: Chapter }) {
+  const place = c.location?.split(",")[0] ?? "";
   return (
     <div className="flex flex-col">
-      <div className="flex items-start justify-between gap-3">
-        <LogoTile org={c.org} size={64} />
-        {c.founding && <Stamp />}
+      <div className="relative flex items-start justify-between gap-3">
+        <LogoSticker org={c.org} seed={c.id} size={84} />
+        <RubberStamp
+          seed={c.id}
+          top={place ? `${c.company} · ${place}` : c.company}
+          middle={stampYears(c.period)}
+          color={STAMP_INK}
+          size={112}
+          className="-mr-1 -mt-1"
+        />
       </div>
-      <h3 className="font-display mt-4 text-[34px] leading-[1.05] sm:text-[40px]">{c.company}</h3>
-      <p className="mt-1.5 text-[15px] font-medium">{c.role}</p>
-      <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-[#78716c]">
-        <span className="tabular-nums" style={{ color }}>
-          {c.period}
-        </span>
+      <div className="relative mt-4">
+        <h3 className="font-marker text-[38px] leading-[1.05] sm:text-[46px]">{c.company}</h3>
+        {c.founding && (
+          <BoxStamp seed={c.id} color={RED_INK} className="absolute -top-3 right-0 sm:right-6">
+            {/co-?founder/i.test(c.role) ? "Co-founder" : "Founding team"}
+          </BoxStamp>
+        )}
+      </div>
+      <p className="font-hand mt-1 text-[19px] font-bold leading-[30px]">{c.role}</p>
+      <p className="font-hand flex flex-wrap items-center gap-x-3 text-[16px] leading-[30px] opacity-75">
+        <span className="tabular-nums">{c.period}</span>
         {c.location && (
           <span className="flex items-center gap-1">
-            <MapPin size={12} /> {c.location}
+            <MapPin size={13} /> {c.location}
           </span>
         )}
       </p>
-      <p className="mt-5 text-[17px] leading-[1.55] text-[#292524]">{c.summary}</p>
+      <p className="font-hand mt-[30px] text-[19px] leading-[30px]">{c.summary}</p>
 
-      <div className="mt-6 rounded-xl bg-[#f3eee4] p-4">
-        <p className="text-[12px] font-semibold text-[#78716c]">About {c.company}</p>
-        <p className="mt-1 text-[14px] leading-snug">{c.org.oneLiner}</p>
+      {/* the company, on an index card taped to the page */}
+      <div className="relative mt-8 rotate-[-0.8deg] bg-[#fdfaf0] px-4 pb-4 pt-5 shadow-[0_1px_1px_rgba(60,35,10,0.2),0_8px_18px_-8px_rgba(60,35,10,0.45)] [background-image:linear-gradient(to_bottom,transparent_34px,rgba(190,50,50,0.4)_34px,rgba(190,50,50,0.4)_35px,transparent_35px),repeating-linear-gradient(to_bottom,transparent_0_23px,rgba(70,80,180,0.13)_23px_24px)]">
+        <Tape className="-top-2.5 left-1/2 -translate-x-1/2 rotate-[-3deg]" />
+        <p className="font-marker text-[15px] leading-none opacity-80">About {c.company}</p>
+        <p className="font-hand mt-2.5 text-[16px] leading-[24px]">{c.org.oneLiner}</p>
         {c.org.facts.length > 0 && (
-          <ul className="mt-2.5 space-y-1.5">
+          <ul className="mt-1">
             {c.org.facts.map((f) => (
-              <li key={f} className="flex gap-2 text-[13px] leading-[1.45] text-[#57534e]">
-                <span className="mt-[7px] size-1.5 shrink-0 rounded-full" style={{ background: color }} />
+              <li key={f} className="font-hand flex gap-2 text-[15px] leading-[24px] opacity-85">
+                <span className="shrink-0">–</span>
                 {f}
               </li>
             ))}
@@ -227,17 +253,21 @@ function IdentityPage({ c, color }: { c: Chapter; color: string }) {
             href={c.org.website}
             target="_blank"
             rel="noreferrer"
-            className="mt-3 inline-flex items-center gap-1 text-[12.5px] text-[#57534e] underline decoration-black/20 underline-offset-2 hover:text-[#b4521c]"
+            className="font-hand nb-link -ml-2 mt-1 inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[15px]"
           >
-            {new URL(c.org.website).hostname.replace("www.", "")} <ArrowUpRight size={12} />
+            {new URL(c.org.website).hostname.replace("www.", "")} <ArrowUpRight size={13} />
           </a>
         )}
       </div>
 
       {c.stack.length > 0 && (
-        <div className="mt-5 flex flex-wrap gap-1.5">
+        <div className="mt-7 flex flex-wrap gap-x-2 gap-y-2.5">
           {c.stack.map((s) => (
-            <span key={s} className="rounded-full border border-black/10 px-2.5 py-0.5 text-[12px] text-[#57534e]">
+            <span
+              key={s}
+              className="washi font-hand px-2.5 py-0.5 text-[15px] font-bold"
+              style={{ "--tape": "#fffaf0", transform: `rotate(${wobble(s, 2.5)}deg)` } as React.CSSProperties}
+            >
               {s}
             </span>
           ))}
@@ -251,39 +281,32 @@ function WorkPage({ c, color }: { c: Chapter; color: string }) {
   return (
     <div className="flex flex-col">
       {c.metrics.length > 0 && (
-        <div className="grid grid-cols-2 gap-x-4 gap-y-4 border-b border-black/[0.08] pb-5 sm:grid-cols-3">
+        <div className="grid grid-cols-2 gap-x-4 gap-y-4 pb-5 sm:grid-cols-3">
           {c.metrics.map((m) => (
             <div key={m.label}>
-              <p className="font-display text-[30px] leading-none tabular-nums" style={{ color }}>
+              <p className="font-marker relative inline-block text-[30px] leading-none tabular-nums">
+                {/* a highlighter swipe behind the number */}
+                <span className="absolute -inset-x-1 bottom-0 top-[45%] -z-10 -rotate-1 rounded-sm opacity-60" style={{ background: color }} />
                 {m.value}
               </p>
-              <p className="mt-1.5 text-[12px] leading-4 text-[#78716c]">{m.label}</p>
+              <p className="font-hand mt-1.5 text-[15px] leading-5 opacity-75">{m.label}</p>
             </div>
           ))}
         </div>
       )}
       {c.built && (
-        <div className={c.metrics.length > 0 ? "mt-5" : ""}>
+        <div className={`space-y-6 ${c.metrics.length > 0 ? "border-t border-dashed border-[#2a1f14]/25 pt-5" : ""}`}>
           <BuildFlow built={c.built} color={color} />
-          {c.alsoBuilt?.map((b) => (
-            <div key={b.title} className="mt-2.5">
-              <BuildFlow built={b} color={color} also />
-            </div>
-          ))}
+          {c.alsoBuilt?.map((b) => <BuildFlow key={b.title} built={b} color={color} also />)}
         </div>
       )}
       {c.bullets.length > 0 && (
         <>
-          <p className="font-display mt-6 text-[19px]">What I did</p>
-          <ol className="mt-3 space-y-3">
+          <p className="font-marker mt-7 text-[22px] leading-none">What I did</p>
+          <ol className="mt-3">
             {c.bullets.map((b, i) => (
-              <li key={b} className="grid grid-cols-[26px_minmax(0,1fr)] gap-2 text-[14px] leading-6 text-[#44403c]">
-                <span
-                  className="grid size-[22px] place-items-center rounded-full text-[11px] font-semibold tabular-nums text-white"
-                  style={{ background: color }}
-                >
-                  {i + 1}
-                </span>
+              <li key={b} className="font-hand grid grid-cols-[26px_minmax(0,1fr)] gap-1 text-[17px] leading-[30px]">
+                <span className="font-marker text-[17px] opacity-70">{i + 1}.</span>
                 {b}
               </li>
             ))}
@@ -291,7 +314,7 @@ function WorkPage({ c, color }: { c: Chapter; color: string }) {
         </>
       )}
       {!c.built && c.bullets.length === 0 && c.metrics.length === 0 && (
-        <p className="text-[14px] leading-6 text-[#78716c]">The details of this role are being written up.</p>
+        <p className="font-hand text-[17px] leading-[30px] opacity-70">Still writing this one up.</p>
       )}
     </div>
   );
@@ -301,38 +324,46 @@ function ResumeSpread() {
   return (
     <>
       <div className="flex flex-col">
-        <img src={idCard.avatar} alt={idCard.name} className="size-16 rounded-[22%] object-cover shadow-md" />
-        <h3 className="font-display mt-4 text-[34px] leading-[1.05] sm:text-[40px]">{idCard.name}</h3>
-        <p className="mt-1.5 text-[15px] font-medium">{idCard.title}</p>
-        <p className="mt-5 text-[17px] leading-[1.55] text-[#292524]">{profile.headline}</p>
-        <p className="mt-3 text-[14.5px] leading-7 text-[#44403c]">{cvSummary}</p>
-        <div className="mt-5 flex flex-wrap gap-2 text-[13px]">
+        <div className="flex items-start justify-between">
+          <span className="sticker inline-block rotate-[-4deg] rounded-full p-1.5">
+            <img src={idCard.avatar} alt={idCard.name} className="size-20 rounded-full object-cover" />
+          </span>
+          <RubberStamp seed="resume" top="Tin Chung · Ho Chi Minh" middle="Résumé" color={STAMP_INK} size={108} />
+        </div>
+        <h3 className="font-marker mt-4 text-[38px] leading-[1.05] sm:text-[46px]">{idCard.name}</h3>
+        <p className="font-hand mt-1 text-[19px] font-bold leading-[30px]">{idCard.title}</p>
+        <p className="font-hand mt-[30px] text-[19px] leading-[30px]">{profile.headline}</p>
+        <p className="font-hand mt-[30px] text-[17px] leading-[30px] opacity-85">{cvSummary}</p>
+        <div className="font-hand -ml-2 mt-4 flex flex-wrap text-[17px]">
           {[
             ["LinkedIn", profile.links.linkedin],
             ["GitHub", profile.links.github],
             ["X", profile.links.x],
           ].map(([label, href]) => (
-            <a key={label} href={href} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 rounded-full border border-black/10 px-3 py-1 hover:border-[#e2571f]">
-              {label} <ArrowUpRight size={12} />
+            <a key={label} href={href} target="_blank" rel="noreferrer" className="nb-link inline-flex items-center gap-1 rounded-md px-2 py-1">
+              {label} <ArrowUpRight size={13} />
             </a>
           ))}
         </div>
       </div>
       <div className="flex flex-col">
-        <div className="grid grid-cols-2 gap-4 border-b border-black/[0.08] pb-5">
+        <div className="grid grid-cols-2 gap-4 pb-5">
           {idCard.stats.map((s) => (
             <div key={s.label}>
-              <p className="font-display text-[30px] leading-none text-[#b4521c]">{s.value}</p>
-              <p className="mt-1.5 text-[12px] text-[#78716c]">{s.label}</p>
+              <p className="font-marker relative inline-block text-[30px] leading-none">
+                <span className="absolute -inset-x-1 bottom-0 top-[45%] -z-10 -rotate-1 rounded-sm bg-[#f0a04b] opacity-60" />
+                {s.value}
+              </p>
+              <p className="font-hand mt-1.5 text-[15px] opacity-75">{s.label}</p>
             </div>
           ))}
         </div>
-        <p className="font-display mt-6 text-[19px]">Working beliefs</p>
-        <div className="mt-3 space-y-4">
+        <p className="font-marker mt-4 border-t border-dashed border-[#2a1f14]/25 pt-5 text-[22px] leading-none">Working beliefs</p>
+        <div className="mt-3 space-y-3">
           {beliefs.map((b) => (
             <div key={b.title}>
-              <p className="text-[14.5px] font-semibold">{b.title}</p>
-              <p className="mt-0.5 text-[14px] leading-6 text-[#57534e]">{b.body}</p>
+              <p className="font-hand text-[18px] font-bold leading-[30px]">{b.title}</p>
+              <p className="font-hand text-[17px] leading-[30px] opacity-85">{b.body}</p>
             </div>
           ))}
         </div>
@@ -355,7 +386,8 @@ function Dossier({
   position: string;
 }) {
   const c = id === "resume" ? null : chapters.find((x) => x.id === id)!;
-  const color = c ? laneColor(TRACK[c.id]) : "#f59e0b";
+  const lane = c ? TRACK[c.id] : null;
+  const color = lane ? TAPE[lane] : "#f0a04b";
   return (
     <div className="relative">
       <AnimatePresence mode="popLayout" custom={dir} initial={false}>
@@ -363,49 +395,53 @@ function Dossier({
           key={id}
           custom={dir}
           variants={{
-            enter: (d: number) => ({ opacity: 0, x: d * 60, rotate: d * 1.2 }),
-            center: { opacity: 1, x: 0, rotate: 0 },
-            exit: (d: number) => ({ opacity: 0, x: d * -60, rotate: d * -1.2 }),
+            enter: (d: number) => ({ opacity: 0, x: d * 60, rotate: d * 1.5 }),
+            center: { opacity: 1, x: 0, rotate: wobble(id, 0.5) },
+            exit: (d: number) => ({ opacity: 0, x: d * -60, rotate: d * -1.5 }),
           }}
           initial="enter"
           animate="center"
           exit="exit"
           transition={{ type: "spring", stiffness: 300, damping: 32 }}
-          className="relative mt-7"
+          className="legal-sheet-wrap relative mt-6"
         >
-          {/* folder tab: colour and name of the track it runs on */}
+          {/* washi tape holding the sheet down, labelled with the track */}
           <span
-            className="folder-tab absolute -top-7 left-5 flex h-7 items-center gap-1.5 px-3.5 text-[12px] font-semibold text-[#1b1206]"
-            style={{ background: color }}
+            className="washi font-hand absolute -top-3 left-8 z-10 px-4 py-1 text-[15px] font-bold text-[#2a1f14] sm:left-16"
+            style={{ "--tape": color, transform: "rotate(-3deg)" } as React.CSSProperties}
           >
-            {c ? LANES.find((l) => l.id === TRACK[c.id])!.label : "Résumé"}
+            {lane ? LANES.find((l) => l.id === lane)!.label : "Résumé"}
           </span>
-          <div className="paper-stack relative rounded-[6px] rounded-tl-none text-[#1c1917]">
-          <span className="absolute inset-x-0 top-0 h-1 rounded-tr-[6px]" style={{ background: color }} />
-          <div className="grid gap-8 px-5 pb-6 pt-7 sm:px-8 md:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] md:gap-0">
-            {c ? (
-              <>
-                <div className="md:pr-8">
-                  <IdentityPage c={c} color={color} />
-                </div>
-                <div className="md:border-l md:border-dashed md:border-black/[0.12] md:pl-8">
-                  <WorkPage c={c} color={color} />
-                </div>
-              </>
-            ) : (
-              <ResumeSpread />
-            )}
-          </div>
+          <span
+            className="washi absolute -top-3 right-10 z-10 h-7 w-20"
+            style={{ "--tape": color, transform: "rotate(4deg)" } as React.CSSProperties}
+            aria-hidden
+          />
+          <div className="legal-sheet">
+            <div className="relative grid gap-10 pb-8 pl-[calc(var(--m)+18px)] pr-5 pt-10 sm:pr-9 md:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] md:gap-0">
+              {c ? (
+                <>
+                  <div className="md:pr-9">
+                    <IdentityPage c={c} />
+                  </div>
+                  <div className="md:border-l md:border-dashed md:border-[#2a1f14]/25 md:pl-9">
+                    <WorkPage c={c} color={color} />
+                  </div>
+                </>
+              ) : (
+                <ResumeSpread />
+              )}
+            </div>
           </div>
         </motion.article>
       </AnimatePresence>
 
-      <div className="mt-3 flex items-center justify-center gap-2">
-        <button onClick={onPrev} disabled={!onPrev} aria-label="Earlier job" className="glass glass-btn size-9 justify-center disabled:opacity-30">
+      <div className="mt-5 flex items-center justify-center gap-2">
+        <button onClick={onPrev} disabled={!onPrev} aria-label="Earlier job" className="paper-chip grid size-9 place-items-center rounded-full disabled:opacity-30">
           <ArrowLeft size={16} />
         </button>
-        <span className="glass rounded-full px-3 py-1.5 text-[12px] tabular-nums">{position}</span>
-        <button onClick={onNext} disabled={!onNext} aria-label="Later job" className="glass glass-btn size-9 justify-center disabled:opacity-30">
+        <span className="font-hand rounded-full bg-[#fafafa] px-3.5 py-1 text-[15px] font-bold text-[#2a1f14] tabular-nums shadow-[0_3px_0_#c4c4c4]">{position}</span>
+        <button onClick={onNext} disabled={!onNext} aria-label="Later job" className="paper-chip grid size-9 place-items-center rounded-full disabled:opacity-30">
           <ArrowRight size={16} />
         </button>
       </div>

@@ -78,12 +78,12 @@ function renderPanel(id: PanelId, posts: PostSummary[]) {
 
 const THEME = {
   day: {
-    bg: "bg-[radial-gradient(ellipse_at_50%_42%,#f3cdb0_0%,#d39a7b_55%,#a86d55_100%)]",
-    text: "text-[#3b2216]",
+    bg: "bg-[radial-gradient(ellipse_at_50%_42%,#ffffff_0%,#ececec_55%,#cfcfcf_100%)]",
+    text: "text-[#0a0a0a]",
   },
   night: {
-    bg: "bg-[radial-gradient(ellipse_at_50%_45%,#24305e_0%,#111833_50%,#060914_100%)]",
-    text: "text-[#dfe3f3]",
+    bg: "bg-[radial-gradient(ellipse_at_50%_45%,#1f1f1f_0%,#0f0f0f_50%,#000000_100%)]",
+    text: "text-[#f5f5f5]",
   },
 };
 
@@ -289,8 +289,9 @@ export function RoomExperience({ posts, children }: { posts: PostSummary[]; chil
 
       <AnimatePresence>{active && renderPanel(active, posts)}</AnimatePresence>
 
-      {/* the music player: stays up over panels so a playing video is always visible */}
-      <MiniPlayer hidden={stage !== "room"} />
+      {/* the music player: stays up over panels so a playing video is always visible,
+          but folds to a small strip so it doesn't cover the panel */}
+      <MiniPlayer hidden={stage !== "room"} compact={!!active} />
 
       {/* route content: the open book on /blog/[slug], crawlable copy elsewhere */}
       {children}

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ListMusic, Pause, Play, SkipBack, SkipForward, X } from "lucide-react";
+import { ChevronDown, ChevronUp, ListMusic, Pause, Play, SkipBack, SkipForward, X } from "lucide-react";
 import { PLAYLIST, ytThumb } from "app/data/playlist";
 import { media, useMedia } from "./media";
 
@@ -57,7 +57,7 @@ function Eq({ on }: { on: boolean }) {
       {[0, 1, 2].map((i) => (
         <span
           key={i}
-          className="w-[3px] rounded-full bg-[#ffc27d]"
+          className="w-[3px] rounded-full bg-[#a65f0c]"
           style={{
             height: on ? "100%" : "30%",
             animation: on ? `eq ${0.6 + i * 0.17}s ease-in-out ${i * 0.1}s infinite alternate` : "none",
@@ -69,18 +69,50 @@ function Eq({ on }: { on: boolean }) {
   );
 }
 
+/* a small pencil-stroke icon button, for the paper player */
+function PaperBtn({
+  children,
+  onClick,
+  label,
+  big,
+  pressed,
+}: {
+  children: React.ReactNode;
+  onClick: () => void;
+  label: string;
+  big?: boolean;
+  pressed?: boolean;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      aria-label={label}
+      aria-pressed={pressed}
+      className={`grid place-items-center rounded-full border border-[#2a1f14]/40 bg-[#fff2b3]/60 text-[#2a1f14] shadow-[inset_0_-1px_0_rgba(90,55,25,0.25)] transition hover:bg-[#ffc27d]/80 ${
+        big ? "size-8" : "size-7"
+      } ${pressed ? "bg-[#ffc27d]/80" : ""}`}
+    >
+      {children}
+    </button>
+  );
+}
+
 /**
  * The room's music player, docked in a corner. YouTube tracks show their
  * video here (it has to stay visible while it plays); the generative track
  * shows a little equaliser instead.
  */
-export function MiniPlayer({ hidden }: { hidden: boolean }) {
+export function MiniPlayer({ hidden, compact = false }: { hidden: boolean; compact?: boolean }) {
   const host = useRef<HTMLDivElement>(null);
   const index = useMedia((s) => s.index);
   const playing = useMedia((s) => s.playing);
   const engaged = useMedia((s) => s.engaged);
   const [list, setList] = useState(false);
   const [failed, setFailed] = useState(false);
+  // folds to a small strip while a panel is open; the visitor can override it
+  const [manual, setManual] = useState<boolean | null>(null);
+  useEffect(() => setManual(null), [compact]);
+  const folded = manual ?? compact;
   const track = PLAYLIST[index];
   const isYT = track.kind === "youtube";
 
@@ -125,48 +157,89 @@ export function MiniPlayer({ hidden }: { hidden: boolean }) {
       aria-hidden={!show}
       data-music-toggle
     >
-      <div className="glass w-[260px] overflow-hidden rounded-2xl p-1.5 text-[var(--hud-text,#f4ecff)] sm:w-[300px]">
-        <div className="flex items-center gap-2.5">
-          {/* the video: always mounted so the player survives track changes */}
-          <div className="relative aspect-video w-[104px] shrink-0 overflow-hidden rounded-xl bg-black sm:w-[128px]">
-            <div ref={host} className={`absolute inset-0 [&>iframe]:size-full ${isYT ? "" : "invisible"}`} />
-            {!isYT && (
-              <div className="absolute inset-0 grid place-items-center bg-[radial-gradient(circle_at_30%_20%,#ffc27d,#e6007a_55%,#2a1d5c)]">
+      <div className={`nb-page !h-auto rotate-[-0.6deg] transition-[width] duration-300 ${folded ? "w-[230px]" : "w-[280px] sm:w-[320px]"}`}>
+        <div className="nb-grid" aria-hidden />
+        <div className="nb-margin !left-[30px]" aria-hidden />
+        <div className="nb-holes" aria-hidden />
+        <div className={`flex flex-col gap-2 pl-10 pr-3 ${folded ? "py-2" : "py-3"}`}>
+          {!folded && (
+            <div className="flex items-baseline justify-between">
+              <p className="font-marker text-[17px] leading-none">Now playing</p>
+              <div className="flex items-center gap-2">
                 <Eq on={playing} />
+                <button
+                  onClick={() => { setManual(true); setList(false); }}
+                  aria-label="Fold the music player"
+                  className="nb-link rounded-md px-1 text-[#2a1f14]"
+                >
+                  <ChevronDown size={15} />
+                </button>
               </div>
+            </div>
+          )}
+          <div className={`flex items-center ${folded ? "gap-2" : "gap-3"}`}>
+            {/* the video, taped to the page. Always mounted so the player survives track changes */}
+            <div className={`relative shrink-0 rotate-[-2deg] bg-white shadow-[0_2px_6px_rgba(60,35,10,0.35)] ${folded ? "p-0.5" : "p-1 pb-1.5"}`}>
+              {!folded && (
+                <span
+                  className="absolute -top-2 left-1/2 z-10 h-3.5 w-10 -translate-x-1/2 rotate-[3deg] bg-[#fff8d6]/70 shadow-[0_1px_2px_rgba(60,35,10,0.2)]"
+                  aria-hidden
+                />
+              )}
+              <div className={`relative aspect-video overflow-hidden bg-black ${folded ? "w-[64px]" : "w-[96px] sm:w-[112px]"}`}>
+                <div ref={host} className={`absolute inset-0 [&>iframe]:size-full ${isYT ? "" : "invisible"}`} />
+                {!isYT && (
+                  <div className="absolute inset-0 grid place-items-center bg-[radial-gradient(circle_at_30%_20%,#ffc27d,#f0a04b_45%,#171717)]" />
+                )}
+              </div>
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className={`font-hand truncate leading-tight ${folded ? "text-[15px]" : "text-[17px]"}`}>{track.title}</p>
+              <p className={`font-hand truncate leading-tight opacity-70 ${folded ? "text-[12px]" : "text-[14px]"}`}>
+                {track.artist}
+                {track.kind === "youtube" && track.live ? " (live)" : ""}
+              </p>
+            </div>
+            {folded && (
+              <>
+                <PaperBtn onClick={media.toggle} label={playing ? "Pause music" : "Play music"}>
+                  {playing ? <Pause size={13} /> : <Play size={13} />}
+                </PaperBtn>
+                <button
+                  onClick={() => setManual(false)}
+                  aria-label="Open the music player"
+                  className="nb-link -mr-1 rounded-md px-1 text-[#2a1f14]"
+                >
+                  <ChevronUp size={15} />
+                </button>
+              </>
             )}
           </div>
-          <div className="min-w-0 flex-1 pr-1">
-            <div className="flex items-center gap-1.5">
-              <Eq on={playing} />
-              <p className="truncate text-[13px] font-semibold">{track.title}</p>
-            </div>
-            <p className="truncate text-[11.5px] opacity-70">
-              {track.artist}
-              {track.kind === "youtube" && track.live ? " (live)" : ""}
-            </p>
-            <div className="mt-1 flex items-center gap-0.5">
-              <button onClick={media.prev} aria-label="Previous song" className="glass-btn size-7 justify-center p-0">
-                <SkipBack size={13} />
-              </button>
-              <button onClick={media.toggle} aria-label={playing ? "Pause music" : "Play music"} className="glass-btn size-8 justify-center p-0">
-                {playing ? <Pause size={15} /> : <Play size={15} />}
-              </button>
-              <button onClick={media.next} aria-label="Next song" className="glass-btn size-7 justify-center p-0">
-                <SkipForward size={13} />
-              </button>
-              <button
-                onClick={() => setList((l) => !l)}
-                aria-label={list ? "Hide playlist" : "Choose a song"}
-                aria-expanded={list}
-                className={`glass-btn ml-auto size-7 justify-center p-0 ${list ? "bg-white/15" : ""}`}
-              >
-                {list ? <X size={13} /> : <ListMusic size={14} />}
-              </button>
-            </div>
+          {!folded && (
+          <div className="flex items-center gap-1.5">
+            <PaperBtn onClick={media.prev} label="Previous song">
+              <SkipBack size={13} />
+            </PaperBtn>
+            <PaperBtn onClick={media.toggle} label={playing ? "Pause music" : "Play music"} big>
+              {playing ? <Pause size={15} /> : <Play size={15} />}
+            </PaperBtn>
+            <PaperBtn onClick={media.next} label="Next song">
+              <SkipForward size={13} />
+            </PaperBtn>
+            <button
+              onClick={() => setList((l) => !l)}
+              aria-label={list ? "Hide playlist" : "Choose a song"}
+              aria-expanded={list}
+              className="font-hand nb-link ml-auto flex items-center gap-1 rounded-md px-2 py-1 text-[15px]"
+            >
+              {list ? <X size={13} /> : <ListMusic size={14} />}
+              {list ? "close" : "playlist"}
+            </button>
           </div>
-        </div>
-        {failed && isYT && <p className="px-1.5 pt-1.5 text-[11.5px] opacity-75">YouTube didn’t load. Pick Lamplight to keep the music going.</p>}
+          )}
+          {failed && isYT && (
+            <p className="font-hand text-[14px] leading-snug opacity-75">YouTube didn’t load. Pick Lamplight to keep the music going.</p>
+          )}
         <AnimatePresence initial={false}>
           {list && (
             <motion.ul
@@ -174,23 +247,23 @@ export function MiniPlayer({ hidden }: { hidden: boolean }) {
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.22 }}
-              className="mt-1.5 max-h-[min(320px,50vh)] overflow-y-auto"
+              className="-mr-1 max-h-[min(300px,45vh)] overflow-y-auto border-t border-dashed border-[#2a1f14]/30 pt-1"
             >
               {PLAYLIST.map((t, i) => (
                 <li key={t.id}>
                   <button
                     onClick={() => media.select(i)}
-                    className={`flex w-full items-center gap-2.5 rounded-xl p-1.5 text-left hover:bg-white/10 ${i === index ? "bg-white/[0.12]" : ""}`}
+                    className={`flex w-full items-center gap-2.5 rounded-md p-1 text-left hover:bg-[#a65f0c]/10 ${i === index ? "bg-[#a65f0c]/15" : ""}`}
                     aria-current={i === index}
                   >
                     {t.kind === "youtube" ? (
-                      <img src={ytThumb(t.id)} alt="" className="aspect-video w-14 shrink-0 rounded-md object-cover" loading="lazy" />
+                      <img src={ytThumb(t.id)} alt="" className="aspect-video w-12 shrink-0 border-2 border-white object-cover shadow-[0_1px_3px_rgba(60,35,10,0.3)]" loading="lazy" />
                     ) : (
-                      <span className="aspect-video w-14 shrink-0 rounded-md bg-[radial-gradient(circle_at_30%_20%,#ffc27d,#e6007a_55%,#2a1d5c)]" />
+                      <span className="aspect-video w-12 shrink-0 border-2 border-white bg-[radial-gradient(circle_at_30%_20%,#ffc27d,#f0a04b_45%,#171717)] shadow-[0_1px_3px_rgba(60,35,10,0.3)]" />
                     )}
                     <span className="min-w-0">
-                      <span className="block truncate text-[12.5px] font-medium">{t.title}</span>
-                      <span className="block truncate text-[11px] opacity-65">{t.artist}</span>
+                      <span className="font-hand block truncate text-[15px] leading-tight">{t.title}</span>
+                      <span className="font-hand block truncate text-[13px] leading-tight opacity-65">{t.artist}</span>
                     </span>
                     {i === index && playing && <span className="ml-auto pr-1"><Eq on /></span>}
                   </button>
@@ -199,6 +272,7 @@ export function MiniPlayer({ hidden }: { hidden: boolean }) {
             </motion.ul>
           )}
         </AnimatePresence>
+        </div>
       </div>
     </div>
   );

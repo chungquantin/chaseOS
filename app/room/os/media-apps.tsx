@@ -24,13 +24,13 @@ export function MusicApp() {
   const playing = useMedia((s) => s.playing);
   const track = PLAYLIST[index];
   return (
-    <div className="flex h-full flex-col bg-[radial-gradient(120%_90%_at_50%_0%,#2a2350,#0c0f1c)] text-[#e7e2ff] @min-[560px]:flex-row">
+    <div className="flex h-full flex-col bg-[radial-gradient(120%_90%_at_50%_0%,#1c1c1c,#0a0a0a)] text-[#fafafa] @min-[560px]:flex-row">
       <div className="flex shrink-0 flex-col items-center justify-center gap-4 p-6 @min-[560px]:w-[46%]">
         <div className="relative aspect-square w-full max-w-[220px] overflow-hidden rounded-[22px] shadow-[0_24px_60px_-20px_rgba(230,0,122,0.55)]">
           {track.kind === "youtube" ? (
             <img src={ytThumb(track.id, "hq")} alt="" className="size-full scale-[1.35] object-cover" />
           ) : (
-            <div className="size-full bg-[radial-gradient(circle_at_30%_20%,#ffc27d,#e6007a_55%,#2a1d5c)]" />
+            <div className="size-full bg-[radial-gradient(circle_at_30%_20%,#ffc27d,#f0a04b_45%,#171717)]" />
           )}
         </div>
         <div className="w-full text-center">
@@ -62,7 +62,7 @@ export function MusicApp() {
               {t.kind === "youtube" ? (
                 <img src={ytThumb(t.id)} alt="" loading="lazy" className="aspect-video w-16 shrink-0 rounded-md object-cover" />
               ) : (
-                <span className="aspect-video w-16 shrink-0 rounded-md bg-[radial-gradient(circle_at_30%_20%,#ffc27d,#e6007a_55%,#2a1d5c)]" />
+                <span className="aspect-video w-16 shrink-0 rounded-md bg-[radial-gradient(circle_at_30%_20%,#ffc27d,#f0a04b_45%,#171717)]" />
               )}
               <span className="min-w-0">
                 <span className={`block truncate text-[13.5px] font-medium ${i === index ? "text-[#ffc27d]" : ""}`}>{t.title}</span>
@@ -95,7 +95,7 @@ function VideoCard({ v, onPlay }: { v: Video; onPlay: () => void }) {
     <button onClick={onPlay} className="group text-left">
       <span className="relative block aspect-video overflow-hidden rounded-xl bg-black/40">
         <img src={ytThumb(v.id)} alt="" loading="lazy" className="size-full object-cover transition-transform duration-300 group-hover:scale-[1.04]" />
-        {v.live && <span className="absolute bottom-1.5 left-1.5 rounded bg-[#e11d48] px-1.5 py-px text-[10.5px] font-semibold text-white">LIVE</span>}
+        {v.live && <span className="absolute bottom-1.5 left-1.5 rounded bg-[#f0a04b] px-1.5 py-px text-[10.5px] font-semibold text-[#1a1206]">LIVE</span>}
       </span>
       <span className="mt-2 block text-[13px] font-medium leading-snug text-[#f1f1f1]" style={{ display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
         {v.title}
@@ -151,7 +151,7 @@ export function YouTubeApp() {
   const list = results ?? HOME;
 
   return (
-    <div className="flex h-full flex-col bg-[#0f0f0f] text-white">
+    <div className="flex h-full flex-col bg-[#0a0a0a] text-white">
       <form onSubmit={submit} className="flex shrink-0 items-center gap-3 border-b border-white/10 px-4 py-2.5">
         <button
           type="button"
@@ -164,12 +164,12 @@ export function YouTubeApp() {
           aria-label="YouTube home"
         >
           <svg viewBox="0 0 28 20" className="h-[18px] w-auto" aria-hidden>
-            <rect width="28" height="20" rx="5" fill="#ff0033" />
-            <path d="M11 6v8l7-4-7-4Z" fill="#fff" />
+            <rect width="28" height="20" rx="5" fill="#f0a04b" />
+            <path d="M11 6v8l7-4-7-4Z" fill="#0a0a0a" />
           </svg>
           <span className="hidden text-[15px] font-semibold tracking-tight @min-[420px]:inline">YouTube</span>
         </button>
-        <label className="flex min-w-0 flex-1 items-center gap-2 rounded-full border border-white/15 bg-[#121212] px-3.5 py-1.5 focus-within:border-[#3ea6ff]">
+        <label className="flex min-w-0 flex-1 items-center gap-2 rounded-full border border-white/15 bg-[#121212] px-3.5 py-1.5 focus-within:border-[#f0a04b]">
           <Search size={15} className="shrink-0 opacity-60" />
           <input
             value={query}
@@ -231,14 +231,14 @@ export function YouTubeApp() {
 type Bookmark = { title: string; url: string; color: string; letter: string };
 
 const BOOKMARKS: Bookmark[] = [
-  { title: "Wikipedia", url: "https://en.m.wikipedia.org/wiki/Special:Random", color: "#1f2937", letter: "W" },
-  { title: "Hacker News", url: "https://news.ycombinator.com/", color: "#ff6600", letter: "Y" },
-  { title: "The Rust Book", url: "https://doc.rust-lang.org/book/", color: "#b7410e", letter: "R" },
-  { title: "docs.rs", url: "https://docs.rs", color: "#353535", letter: "D" },
-  { title: "Polkadot", url: "https://polkadot.com", color: "#e6007a", letter: "P" },
-  { title: "AI Keeper", url: "https://chungquantin.github.io/ai-keeper/", color: "#4f46e5", letter: "A" },
-  { title: "React", url: "https://react.dev", color: "#087ea4", letter: "R" },
-  { title: "Map", url: "https://www.openstreetmap.org/export/embed.html?bbox=-40,-45,170,70&layer=mapnik", color: "#7ebc6f", letter: "M" },
+  { title: "Wikipedia", url: "https://en.m.wikipedia.org/wiki/Special:Random", color: "#171717", letter: "W" },
+  { title: "Hacker News", url: "https://news.ycombinator.com/", color: "#f0a04b", letter: "Y" },
+  { title: "The Rust Book", url: "https://doc.rust-lang.org/book/", color: "#a65f0c", letter: "R" },
+  { title: "docs.rs", url: "https://docs.rs", color: "#262626", letter: "D" },
+  { title: "Polkadot", url: "https://polkadot.com", color: "#f0a04b", letter: "P" },
+  { title: "AI Keeper", url: "https://chungquantin.github.io/ai-keeper/", color: "#262626", letter: "A" },
+  { title: "React", url: "https://react.dev", color: "#404040", letter: "R" },
+  { title: "Map", url: "https://www.openstreetmap.org/export/embed.html?bbox=-40,-45,170,70&layer=mapnik", color: "#737373", letter: "M" },
 ];
 
 /** Typed text → a URL: real URLs as-is, everything else becomes a Wikipedia search. */
@@ -294,9 +294,9 @@ export function BrowserApp() {
   } catch {}
 
   return (
-    <div className="flex h-full flex-col bg-white text-[#1c1917]">
+    <div className="flex h-full flex-col bg-white text-[#0a0a0a]">
       {/* toolbar */}
-      <div className="flex shrink-0 items-center gap-1 border-b border-black/[0.08] bg-[#f4f1ec] px-2 py-1.5">
+      <div className="flex shrink-0 items-center gap-1 border-b border-black/[0.08] bg-[#f2f2f2] px-2 py-1.5">
         <button onClick={() => setPos((p) => p - 1)} disabled={pos < 0} aria-label="Back" className="grid size-7 place-items-center rounded-md hover:bg-black/5 disabled:opacity-30">
           <ArrowLeft size={15} />
         </button>
@@ -337,9 +337,9 @@ export function BrowserApp() {
       {/* page */}
       <div className="relative min-h-0 flex-1">
         {!page && (
-          <div className="h-full overflow-y-auto bg-[radial-gradient(120%_80%_at_50%_0%,#fff6e8,#ffffff_60%)] px-6 py-10">
+          <div className="h-full overflow-y-auto bg-[radial-gradient(120%_80%_at_50%_0%,#fff7ea,#ffffff_60%)] px-6 py-10">
             <p className="font-display text-center text-[30px]">Where to?</p>
-            <p className="mt-1 text-center text-[13px] text-[#78716c]">Search Wikipedia from the address bar, or open a bookmark.</p>
+            <p className="mt-1 text-center text-[13px] text-[#737373]">Search Wikipedia from the address bar, or open a bookmark.</p>
             <div className="mx-auto mt-8 grid max-w-[560px] grid-cols-3 gap-4 @min-[520px]:grid-cols-4">
               {BOOKMARKS.map((b) => (
                 <button key={b.title} onClick={() => go(b.url)} className="group flex flex-col items-center gap-2 rounded-2xl p-2 hover:bg-black/[0.04]">
@@ -372,7 +372,7 @@ export function BrowserApp() {
             <div className="max-w-[380px]">
               <Globe size={34} className="mx-auto opacity-30" />
               <p className="font-display mt-4 text-[22px]">{page.state === "blocked" ? `${host} can’t open in here` : `Couldn’t reach ${host || "that page"}`}</p>
-              <p className="mt-2 text-[13.5px] leading-6 text-[#78716c]">
+              <p className="mt-2 text-[13.5px] leading-6 text-[#737373]">
                 {page.state === "blocked"
                   ? "This site doesn’t allow other pages to show it inside a frame. You can still open it in a real tab."
                   : "Check the address and try again, or open it in a real tab."}

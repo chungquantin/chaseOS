@@ -38,10 +38,10 @@ export function CloseUpShell({
         className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(20,14,10,0.15)_0%,rgba(20,14,10,0.55)_70%,rgba(20,14,10,0.75)_100%)]"
         onClick={onClose}
       />
-      <header className="relative flex items-start justify-between gap-4 px-5 pt-5 text-[#fbf5ec] sm:px-8 sm:pt-7">
+      <header className="relative flex items-start justify-between gap-4 px-5 pt-5 text-[#fafafa] sm:px-8 sm:pt-7">
         <div>
           <h2 className="font-display text-[30px] leading-tight drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)] sm:text-[38px]">{title}</h2>
-          {hint && <p className="mt-1 text-[14px] text-[#fbf5ec]/75">{hint}</p>}
+          {hint && <p className="mt-1 text-[14px] text-[#fafafa]/75">{hint}</p>}
         </div>
         <button
           ref={closeBtn}

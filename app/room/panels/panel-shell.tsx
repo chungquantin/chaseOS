@@ -35,7 +35,7 @@ export function PanelShell({
       exit={{ opacity: 0, pointerEvents: "none" }}
       transition={{ duration: 0.18 }}
     >
-      <div className="absolute inset-0 bg-[#0f0e0c]/45 backdrop-blur-[2px]" onClick={onClose} />
+      <div className="absolute inset-0 bg-[#000000]/45 backdrop-blur-[2px]" onClick={onClose} />
       <motion.div
         role="dialog"
         aria-modal="true"
@@ -44,8 +44,8 @@ export function PanelShell({
           "relative flex max-h-[88vh] w-full flex-col overflow-hidden rounded-[18px]",
           wide ? "max-w-[960px]" : "max-w-[680px]",
           dark
-            ? "bg-[#0b0f14] text-[#e6edf3] shadow-[0_30px_80px_-20px_rgba(0,0,0,0.7),0_0_0_1px_rgba(255,255,255,0.06)]"
-            : "bg-[#fbf8f1] text-[#1b1a17] shadow-[0_30px_80px_-20px_rgba(0,0,0,0.55),0_0_0_1px_rgba(0,0,0,0.06)]",
+            ? "bg-[#0a0a0a] text-[#fafafa] shadow-[0_30px_80px_-20px_rgba(0,0,0,0.7),0_0_0_1px_rgba(255,255,255,0.06)]"
+            : "bg-[#fafafa] text-[#0a0a0a] shadow-[0_30px_80px_-20px_rgba(0,0,0,0.55),0_0_0_1px_rgba(0,0,0,0.06)]",
         ].join(" ")}
         initial={{ y: 24, scale: 0.98 }}
         animate={{ y: 0, scale: 1 }}
@@ -60,7 +60,7 @@ export function PanelShell({
         >
           <div>
             {eyebrow && (
-              <p className={["text-[12.5px]", dark ? "text-[#7d889b]" : "text-[#8a8579]"].join(" ")}>
+              <p className={["text-[12.5px]", dark ? "text-[#a3a3a3]" : "text-[#737373]"].join(" ")}>
                 {eyebrow}
               </p>
             )}

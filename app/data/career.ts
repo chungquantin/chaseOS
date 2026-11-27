@@ -69,7 +69,7 @@ export const chapters: Chapter[] = [
     stack: ["Rust", "Anchor", "Multisig", "RPC", "React.js"],
     org: {
       logo: "/logos/snowflake.svg",
-      brand: "#7c3aed",
+      brand: "#f0a04b",
       website: "https://snowflake.so",
       oneLiner: "Institutional-grade multisig wallet and on-chain automation for Solana.",
       facts: [
@@ -116,7 +116,7 @@ export const chapters: Chapter[] = [
     stack: ["Node.js", "Redis", "WebSockets", "Docker", "CI/CD", "AI streaming"],
     org: {
       logo: "/logos/amazely.png",
-      brand: "#7e22ce",
+      brand: "#262626",
       website: "https://amazely.co",
       oneLiner: "All-in-one, AI-assisted reputation marketing software for local businesses.",
       facts: [
@@ -154,7 +154,7 @@ export const chapters: Chapter[] = [
     stack: ["Community", "Education", "Polkadot"],
     org: {
       logo: "/logos/openguild.png",
-      brand: "#4c1d95",
+      brand: "#525252",
       website: "https://openguild.wtf",
       oneLiner: "An open community of Web3 builders elevating Polkadot.",
       facts: [
@@ -191,7 +191,7 @@ export const chapters: Chapter[] = [
     stack: ["DevRel", "Workshops", "Substrate", "Rust"],
     org: {
       logo: "/logos/polkadot.svg",
-      brand: "#e6007a",
+      brand: "#f0a04b",
       website: "https://polkadot.com",
       oneLiner: "A multichain network: many specialised chains sharing one relay chain's security.",
       facts: [
@@ -236,7 +236,7 @@ export const chapters: Chapter[] = [
     stack: ["Rust", "Substrate", "XCM", "ink!", "Pop CLI"],
     org: {
       logo: "/logos/r0gue.png",
-      brand: "#dc2626",
+      brand: "#a65f0c",
       website: "https://www.r0gue.io",
       oneLiner: "Strategic engineering for private AI and Web3 systems.",
       facts: [
@@ -284,7 +284,7 @@ export const chapters: Chapter[] = [
     stack: ["Rust", "ClickHouse", "Dagster", "DSL / compiler", "OLAP"],
     org: {
       monogram: "R",
-      brand: "#0f766e",
+      brand: "#262626",
       oneLiner: "Real-time blockchain data infrastructure.",
       facts: [],
     },
@@ -327,7 +327,7 @@ export const chapters: Chapter[] = [
     stack: ["Rust", "HFT", "TypeScript", "React", "LLM gateways", "Risk engines"],
     org: {
       logo: "/logos/architect.png",
-      brand: "#0f172a",
+      brand: "#0a0a0a",
       website: "https://architect.co",
       oneLiner: "The intelligence exchange: a market for compute, inference, commodities and currencies.",
       facts: [

@@ -8,7 +8,7 @@ import { CloseUpShell } from "./close-up-shell";
 
 export type PostSummary = { slug: string; title: string; date: string; summary?: string };
 
-const SPINES = ["#b45348", "#3f6c8f", "#d6a64b", "#4e7a4b", "#7c5a8a", "#2f3e46", "#e07a5f", "#5b7c99", "#a16207"];
+const SPINES = ["#fafafa", "#f0a04b", "#3a3a3a", "#d4d4d4", "#ffc27d", "#737373", "#e5e5e5", "#c9852f", "#a3a3a3"];
 
 /** Bookshelf close-up: each post is a book. Pull one out to see its cover. */
 export function WritingPanel({ posts, onClose }: { posts: PostSummary[]; onClose: () => void }) {
@@ -52,7 +52,7 @@ export function WritingPanel({ posts, onClose }: { posts: PostSummary[]; onClose
               );
             })}
           </div>
-          <div className="h-4 rounded-sm bg-gradient-to-b from-[#7a5236] to-[#4f3424] shadow-[0_10px_20px_-8px_rgba(0,0,0,0.6)]" />
+          <div className="h-4 rounded-sm bg-gradient-to-b from-[#3a3a3a] to-[#1c1c1c] shadow-[0_10px_20px_-8px_rgba(0,0,0,0.6)]" />
         </div>
 
         {/* the cover of the pulled-out book */}
@@ -60,7 +60,7 @@ export function WritingPanel({ posts, onClose }: { posts: PostSummary[]; onClose
           {post && (
             <motion.div
               key={post.slug}
-              className="mx-auto mt-6 max-w-[620px] overflow-hidden rounded-[6px] bg-[#fbf8f1] text-[#1c1917] shadow-[0_30px_80px_-20px_rgba(0,0,0,0.7)]"
+              className="mx-auto mt-6 max-w-[620px] overflow-hidden rounded-[6px] bg-[#fafafa] text-[#0a0a0a] shadow-[0_30px_80px_-20px_rgba(0,0,0,0.7)]"
               initial={{ opacity: 0, y: 16, scale: 0.98 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 8, scale: 0.98 }}
@@ -68,9 +68,9 @@ export function WritingPanel({ posts, onClose }: { posts: PostSummary[]; onClose
             >
               <div className="h-2" style={{ background: SPINES[picked! % SPINES.length] }} />
               <div className="px-6 py-5 sm:px-8">
-                <p className="text-[13px] text-[#78716c]">{post.date}</p>
+                <p className="text-[13px] text-[#737373]">{post.date}</p>
                 <h3 className="font-display mt-1 text-[28px] leading-tight">{post.title}</h3>
-                {post.summary && <p className="mt-3 text-[15px] leading-7 text-[#44403c]">{post.summary}</p>}
+                {post.summary && <p className="mt-3 text-[15px] leading-7 text-[#404040]">{post.summary}</p>}
                 <div className="mt-5 flex items-center justify-between">
                   <Link
                     href={`/blog/${post.slug}`}
@@ -79,7 +79,7 @@ export function WritingPanel({ posts, onClose }: { posts: PostSummary[]; onClose
                   >
                     Open the book
                   </Link>
-                  <span className="text-[13px] text-[#a8a29e]">opens right here</span>
+                  <span className="text-[13px] text-[#a3a3a3]">opens right here</span>
                 </div>
               </div>
             </motion.div>

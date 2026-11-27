@@ -12,8 +12,8 @@ import { useKlines, type Candle } from "../use-klines";
 const SYMBOLS = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "DOTUSDT"];
 const INTERVALS = ["15m", "1h", "4h", "1d"];
 
-const UP = "#26a69a";
-const DOWN = "#ef5350";
+const UP = "#fafafa";
+const DOWN = "#f0a04b";
 
 const toBar = (c: Candle) => ({
   time: c.time as UTCTimestamp,
@@ -48,7 +48,7 @@ export function MarketsTerminal() {
       autoSize: true,
       layout: {
         background: { color: "transparent" },
-        textColor: "#8b98a9",
+        textColor: "#a3a3a3",
         fontFamily: "ui-monospace, Menlo, monospace",
       },
       grid: {
@@ -102,18 +102,18 @@ export function MarketsTerminal() {
   const pill = (active: boolean) =>
     [
       "rounded-md px-2.5 py-1 font-mono text-[12px] transition-colors",
-      active ? "bg-white/10 text-white" : "text-[#6b7685] hover:text-[#c9d1d9]",
+      active ? "bg-white/10 text-white" : "text-[#8a8a8a] hover:text-[#e5e5e5]",
     ].join(" ");
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-[#0b0f14] text-[#e6edf3]">
+    <div className="flex h-full min-h-0 flex-col bg-[#0a0a0a] text-[#fafafa]">
       <div className="flex flex-wrap items-end justify-between gap-4 px-6 pt-5">
         <div>
-          <div className="flex items-center gap-2 font-mono text-[12px] text-[#6b7685]">
+          <div className="flex items-center gap-2 font-mono text-[12px] text-[#8a8a8a]">
             <span
               className={[
                 "size-2 rounded-full",
-                data.status === "live" ? "bg-[#22c55e]" : data.status === "error" ? "bg-[#ef4444]" : "bg-[#eab308]",
+                data.status === "live" ? "bg-[#fafafa]" : data.status === "error" ? "bg-[#737373]" : "bg-[#f0a04b]",
               ].join(" ")}
             />
             {symbol.replace("USDT", "/USDT")} · {data.status}
@@ -130,7 +130,7 @@ export function MarketsTerminal() {
             )}
           </div>
           {last && (
-            <p className="mt-0.5 font-mono text-[11px] text-[#6b7685] tabular-nums">
+            <p className="mt-0.5 font-mono text-[11px] text-[#8a8a8a] tabular-nums">
               H {fmt(hi)} · L {fmt(lo)} · window of {rows.length} candles
             </p>
           )}
@@ -155,12 +155,12 @@ export function MarketsTerminal() {
       <div className="relative mx-2 mb-2 mt-3 min-h-[220px] flex-1">
         <div ref={el} className="absolute inset-0" />
         {data.status === "error" && (
-          <p className="absolute inset-0 grid place-items-center font-mono text-[13px] text-[#6b7685]">
+          <p className="absolute inset-0 grid place-items-center font-mono text-[13px] text-[#8a8a8a]">
             {data.message}
           </p>
         )}
       </div>
-      <p className="px-6 pb-4 font-mono text-[10px] text-[#4b5563]">
+      <p className="px-6 pb-4 font-mono text-[10px] text-[#737373]">
         Public spot market data from Binance. Not financial advice.
       </p>
     </div>

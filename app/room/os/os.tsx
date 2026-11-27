@@ -324,9 +324,9 @@ type WinActions = {
 };
 
 const LIGHTS = [
-  { c: "#ff5f57", label: "Close", glyph: "M3.5 3.5l5 5M8.5 3.5l-5 5" },
-  { c: "#febc2e", label: "Minimize", glyph: "M3 6h6" },
-  { c: "#28c840", label: "Zoom", glyph: "M3.5 6h5M6 3.5v5" },
+  { c: "#f0a04b", label: "Close", glyph: "M3.5 3.5l5 5M8.5 3.5l-5 5" },
+  { c: "#8a8a8a", label: "Minimize", glyph: "M3 6h6" },
+  { c: "#8a8a8a", label: "Zoom", glyph: "M3.5 6h5M6 3.5v5" },
 ] as const;
 
 function Window({
@@ -369,7 +369,7 @@ function Window({
       {/* title bar */}
       <div
         className={`relative flex h-9 shrink-0 cursor-default select-none items-center border-b px-3 transition-colors ${
-          app.dark ? "border-white/[0.06] bg-[#1d2033] text-[#c9cfee]" : "border-black/[0.06] bg-[#efebe4] text-[#57534e]"
+          app.dark ? "border-white/[0.06] bg-[#171717] text-[#d4d4d4]" : "border-black/[0.06] bg-[#ececec] text-[#525252]"
         } ${focused ? "" : "opacity-[0.92]"}`}
         onPointerDown={compact ? undefined : drag}
         onDoubleClick={compact ? undefined : actions.toggleMax}
@@ -381,7 +381,7 @@ function Window({
               onClick={handlers[l.label]}
               aria-label={`${l.label} ${app.name}`}
               className="grid size-3 place-items-center rounded-full shadow-[inset_0_0_0_0.5px_rgba(0,0,0,0.25)]"
-              style={{ background: focused || compact ? l.c : app.dark ? "#4b4f66" : "#cfc9bf" }}
+              style={{ background: focused || compact ? l.c : app.dark ? "#525252" : "#c8c8c8" }}
             >
               <svg viewBox="0 0 12 12" className="size-2.5 opacity-0 transition-opacity group-hover:opacity-100" aria-hidden>
                 <path d={l.glyph} stroke="rgba(0,0,0,0.55)" strokeWidth="1.3" strokeLinecap="round" fill="none" />
@@ -606,7 +606,7 @@ export function ComputerOS({ posts, onClose }: { posts: PostSummary[]; onClose: 
 
       {/* the monitor */}
       <motion.div
-        className="relative h-full w-full sm:h-[min(860px,calc(100dvh-40px))] sm:w-[min(1360px,calc(100vw-40px))] sm:rounded-[24px] sm:bg-[linear-gradient(180deg,#2a2d36,#15171d)] sm:p-[12px] sm:shadow-[0_50px_120px_-30px_rgba(0,0,0,0.9),0_0_80px_-20px_rgba(120,140,255,0.35),inset_0_1px_0_rgba(255,255,255,0.12)]"
+        className="relative h-full w-full sm:h-[min(860px,calc(100dvh-40px))] sm:w-[min(1360px,calc(100vw-40px))] sm:rounded-[24px] sm:bg-[linear-gradient(180deg,#262626,#101010)] sm:p-[12px] sm:shadow-[0_50px_120px_-30px_rgba(0,0,0,0.9),0_0_80px_-20px_rgba(255,194,125,0.3),inset_0_1px_0_rgba(255,255,255,0.12)]"
         initial={{ scale: 0.86, y: 30 }}
         animate={{ scale: 1, y: 0 }}
         exit={{ scale: 0.9, opacity: 0 }}
