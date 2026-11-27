@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import { AnimatePresence, motion } from "framer-motion";
-import { Captions, CaptionsOff, Pause, Play, RotateCcw, Volume2, VolumeX } from "lucide-react";
+import { Captions, CaptionsOff, Volume2, VolumeX } from "lucide-react";
 import type { FilmDef } from "./types";
 
 const fmt = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
@@ -114,132 +114,159 @@ export default function FilmPlayer({ film, title, badge }: { film: FilmDef; titl
   const caption = film.captions.find((c) => t >= c.from && t <= c.to);
   const segEnd = (i: number) => (i + 1 < film.chapters.length ? film.chapters[i + 1].at : film.duration);
 
+  // VCR tape counter, e.g. 0:42 → "0:00:42"
+  const counter = (s: number) => `0:${String(Math.floor(s / 60)).padStart(2, "0")}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
+  const mode = ended ? "STOP ■" : playing ? "PLAY ▶" : "PAUSE ❚❚";
+
   return (
     <>
-    <div className="group relative aspect-video overflow-hidden rounded-[22px] border border-white/10 bg-[#0a1128] shadow-[0_40px_100px_-40px_rgba(0,0,0,0.9),0_0_0_1px_rgba(255,255,255,0.03)]">
-      <div className="absolute inset-0" onClick={toggle}>
-        <Canvas shadows dpr={[1, 1.6]} camera={{ fov: 36, near: 0.1, far: 220, position: [15, 12, 23] }} gl={{ antialias: false, powerPreference: "high-performance" }}>
+    {/* the TV: a CRT in a plastic bezel */}
+    <div className="vhs-tv rounded-[18px] p-2.5 sm:p-3.5">
+    <div className={`vhs-screen group relative aspect-video overflow-hidden rounded-[14px_14px_14px_14px/18px_18px_18px_18px] bg-[#0a0d14] ${playing ? "" : "vhs-paused"}`}>
+      <div className="vhs-picture absolute inset-0" onClick={toggle}>
+        <Canvas shadows dpr={[1, 1.25]} camera={{ fov: 36, near: 0.1, far: 220, position: [15, 12, 23] }} gl={{ antialias: false, powerPreference: "high-performance" }}>
           <film.Scene clock={clock} />
         </Canvas>
       </div>
       {film.narration && <audio ref={audio} src={film.narration} preload="auto" onEnded={() => (audioLive.current = false)} />}
 
-      {/* top: what you're watching */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between gap-3 bg-gradient-to-b from-[#050914]/70 to-transparent p-3 sm:p-4">
-        <div className="flex min-w-0 items-center gap-2.5">
-          {badge}
-          <div className="hidden min-w-0 leading-tight sm:block">
-            <p className="truncate text-[12.5px] font-medium text-white sm:text-[14px]">{title}</p>
-            <p className="truncate text-[11.5px] text-[#cbd5e1]/80">
-              <span className="tabular-nums" style={{ color: film.accent }}>
-                {chapterIndex + 1}/{film.chapters.length}
-              </span>{" "}
-              {film.chapters[chapterIndex].title}
-            </p>
-          </div>
+      {/* tape artefacts over the picture: scanlines, noise, a rolling tracking band, glass */}
+      <div className="vhs-scanlines pointer-events-none absolute inset-0" aria-hidden />
+      <div className="vhs-noise pointer-events-none absolute -inset-[50%]" aria-hidden />
+      <div className="vhs-tracking pointer-events-none absolute inset-x-0 h-[9%]" aria-hidden />
+      <div className="vhs-glass pointer-events-none absolute inset-0" aria-hidden />
+
+      {/* VCR on-screen display */}
+      <div className="vhs-osd pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between gap-3 p-3 sm:p-5">
+        <div className="leading-[0.95]">
+          <p className="text-[20px] sm:text-[30px]">{mode}</p>
+          <p className="mt-1 text-[15px] opacity-90 sm:text-[22px]">
+            CH {chapterIndex + 1} · {film.chapters[chapterIndex].title.toUpperCase()}
+          </p>
         </div>
-        <div className="pointer-events-auto flex items-center gap-1.5">
-          <IconBtn label={captionsOn ? "Hide captions" : "Show captions"} on={captionsOn} onClick={() => setCaptionsOn((v) => !v)}>
-            {captionsOn ? <Captions size={16} /> : <CaptionsOff size={16} />}
-          </IconBtn>
-          {film.narration && (
-            <IconBtn label={muted ? "Unmute narration" : "Mute narration"} on={!muted} onClick={() => setMuted((v) => !v)}>
-              {muted ? <VolumeX size={16} /> : <Volume2 size={16} />}
+        <div className="flex items-start gap-3 text-right leading-[0.95]">
+          <div className="hidden sm:block">
+            <p className="text-[30px]">SP</p>
+            <p className="mt-1 text-[22px] tabular-nums">{counter(t)}</p>
+          </div>
+          <div className="pointer-events-auto flex items-center gap-1.5">
+            <IconBtn label={captionsOn ? "Hide captions" : "Show captions"} on={captionsOn} onClick={() => setCaptionsOn((v) => !v)}>
+              {captionsOn ? <Captions size={16} /> : <CaptionsOff size={16} />}
             </IconBtn>
-          )}
+            {film.narration && (
+              <IconBtn label={muted ? "Unmute narration" : "Mute narration"} on={!muted} onClick={() => setMuted((v) => !v)}>
+                {muted ? <VolumeX size={16} /> : <Volume2 size={16} />}
+              </IconBtn>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* paused / ended / sound blocked: a big play button */}
+      {/* paused / ended / sound blocked */}
       <AnimatePresence>
         {(!playing || needsTap) && (
           <motion.button
             key="big"
             onClick={toggle}
             aria-label={ended ? "Replay" : "Play with sound"}
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center gap-2.5 rounded-full border border-white/20 bg-[#0a1128]/70 py-2 pl-2 pr-2 text-[14px] text-white sm:py-2.5 sm:pl-3 sm:pr-5 shadow-[0_20px_60px_-20px_rgba(0,0,0,0.8)] backdrop-blur-xl"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="vhs-osd vhs-blink absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 border-2 border-current bg-[#0018a8]/70 px-4 py-1 text-[24px] sm:px-6 sm:text-[36px]"
           >
-            <span className="grid size-10 place-items-center rounded-full text-[#0a1128]" style={{ background: film.accent }}>
-              {ended ? <RotateCcw size={17} strokeWidth={2.4} /> : <Play size={17} strokeWidth={2.4} className="translate-x-px" />}
-            </span>
-            <span className="hidden sm:inline">{ended ? "Watch again" : needsTap && playing ? "Tap for sound" : "Play"}</span>
+            {ended ? "↺ REWIND" : needsTap && playing ? "▶ PRESS FOR SOUND" : "▶ PLAY"}
           </motion.button>
         )}
       </AnimatePresence>
 
-      {/* captions */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[52%] hidden sm:block bg-gradient-to-t from-[#050914]/90 via-[#050914]/45 to-transparent" />
-      <div className="pointer-events-none absolute inset-x-4 bottom-[4.6rem] hidden sm:inset-x-8 sm:bottom-[5.4rem] sm:block">
+      {/* captions, as VCR subtitles */}
+      <div className="pointer-events-none absolute inset-x-4 bottom-4 hidden text-center sm:inset-x-10 sm:bottom-6 sm:block">
         <AnimatePresence mode="wait">
           {captionsOn && caption && (
-            <motion.div key={caption.text} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.3 }} className="max-w-[40rem]">
-              <p className="font-display text-[20px] leading-tight text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.6)] sm:text-[32px]">{caption.text}</p>
-              {caption.sub && <p className="mt-1.5 text-[12.5px] leading-snug text-[#dbe4f5] drop-shadow sm:text-[15px]">{caption.sub}</p>}
+            <motion.div key={caption.text} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.12 }}>
+              <p className="vhs-osd inline bg-black/75 px-2 text-[26px] leading-[1.15] [box-decoration-break:clone] sm:text-[34px]">{caption.text}</p>
+              {caption.sub && (
+                <p className="mt-1.5">
+                  <span className="vhs-osd bg-black/75 px-2 text-[18px] leading-[1.2] !text-[#ffe38a] [box-decoration-break:clone] sm:text-[22px]">{caption.sub}</span>
+                </p>
+              )}
             </motion.div>
           )}
         </AnimatePresence>
       </div>
-
-      {/* controls: play, chapter-segmented scrub bar, time */}
-      <div className="absolute inset-x-3 bottom-3 flex items-center gap-3 rounded-2xl border border-white/10 bg-[#0a1128]/70 px-2.5 py-2 text-[#e2e8f0] backdrop-blur-xl sm:inset-x-5 sm:bottom-5 sm:gap-4 sm:px-3">
-        <button
-          onClick={toggle}
-          aria-label={ended ? "Replay" : playing ? "Pause" : "Play"}
-          className="grid size-9 shrink-0 place-items-center rounded-full text-[#0a1128] transition-transform active:scale-95"
-          style={{ background: film.accent }}
-        >
-          {ended ? <RotateCcw size={15} strokeWidth={2.4} /> : playing ? <Pause size={15} strokeWidth={2.4} /> : <Play size={15} strokeWidth={2.4} className="translate-x-px" />}
-        </button>
-
-        <div className="relative min-w-0 flex-1">
-          <div className="flex gap-1">
-            {film.chapters.map((c, i) => {
-              const len = segEnd(i) - c.at;
-              const fill = Math.min(1, Math.max(0, (t - c.at) / len));
-              return (
-                <button
-                  key={c.at}
-                  onClick={() => seek(c.at)}
-                  aria-label={`Jump to ${c.title}`}
-                  style={{ flex: len }}
-                  className="group/seg min-w-0 text-left"
-                >
-                  <span className={`hidden truncate pb-1 text-[10.5px] transition-colors sm:block ${i === chapterIndex ? "text-white" : "text-white/45 group-hover/seg:text-white/80"}`}>{c.title}</span>
-                  <span className="relative block h-1 overflow-hidden rounded-full bg-white/15">
-                    <span className="absolute inset-y-0 left-0 rounded-full" style={{ width: `${fill * 100}%`, background: film.accent }} />
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-          <input
-            type="range"
-            min={0}
-            max={film.duration}
-            step={0.01}
-            value={t}
-            onChange={(e) => seek(Number(e.target.value))}
-            aria-label="Seek"
-            className="absolute inset-x-0 bottom-[-4px] h-3 w-full cursor-pointer opacity-0"
-          />
-        </div>
-
-        <span className="shrink-0 text-[11.5px] tabular-nums text-white/70">
-          {fmt(t)} <span className="opacity-50">/ {fmt(film.duration)}</span>
-        </span>
-      </div>
     </div>
+    </div>
+
+    {/* the deck: a cassette label + VCR transport keys */}
+    <div className="vhs-deck mt-3 flex flex-wrap items-center gap-3 rounded-[10px] px-3 py-2.5 sm:flex-nowrap sm:gap-4 sm:px-4">
+      <div className="vhs-label hidden min-w-0 shrink-0 items-center gap-2 px-3 py-1 sm:flex">
+        {badge}
+        <div className="min-w-0 leading-tight">
+          <p className="font-marker truncate text-[15px] !text-[#1a120a]">{title}</p>
+          <p className="font-hand text-[12px] opacity-75">T-120 · VHS · {fmt(film.duration)}</p>
+        </div>
+      </div>
+
+      <div className="flex shrink-0 items-center gap-1">
+        <DeckKey label="Rewind 10 seconds" onClick={() => seek(clock.current - 10)}>◀◀</DeckKey>
+        <DeckKey label={ended ? "Replay" : playing ? "Pause" : "Play"} onClick={toggle} wide lit={playing}>
+          {ended ? "↺" : playing ? "❚❚" : "▶"}
+        </DeckKey>
+        <DeckKey label="Fast-forward 10 seconds" onClick={() => seek(clock.current + 10)}>▶▶</DeckKey>
+      </div>
+
+      {/* tape position: chapters as segments of the reel */}
+      <div className="relative min-w-0 flex-1 basis-full sm:basis-auto">
+        <div className="flex gap-1">
+          {film.chapters.map((c, i) => {
+            const len = segEnd(i) - c.at;
+            const fill = Math.min(1, Math.max(0, (t - c.at) / len));
+            return (
+              <button key={c.at} onClick={() => seek(c.at)} aria-label={`Jump to ${c.title}`} style={{ flex: len }} className="group/seg min-w-0 text-left">
+                <span className={`vhs-lcd hidden truncate pb-1 text-[15px] leading-none transition-opacity sm:block ${i === chapterIndex ? "opacity-100" : "opacity-40 group-hover/seg:opacity-75"}`}>
+                  {c.title}
+                </span>
+                <span className="relative block h-1.5 overflow-hidden rounded-[1px] bg-black/60 shadow-[inset_0_1px_1px_rgba(0,0,0,0.8)]">
+                  <span className="absolute inset-y-0 left-0 bg-[#ffb347] shadow-[0_0_6px_#ffb347]" style={{ width: `${fill * 100}%` }} />
+                </span>
+              </button>
+            );
+          })}
+        </div>
+        <input
+          type="range"
+          min={0}
+          max={film.duration}
+          step={0.01}
+          value={t}
+          onChange={(e) => seek(Number(e.target.value))}
+          aria-label="Seek"
+          className="absolute inset-x-0 bottom-[-4px] h-3 w-full cursor-pointer opacity-0"
+        />
+      </div>
+
+      <span className="vhs-lcd shrink-0 rounded-[3px] bg-black/70 px-2 py-0.5 text-[20px] leading-none tabular-nums shadow-[inset_0_1px_2px_rgba(0,0,0,0.9)]">
+        {counter(t)}
+      </span>
+    </div>
+
     {/* phones: captions sit under the picture instead of over it */}
     {captionsOn && caption && (
-      <div className="mt-3 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 sm:hidden">
-        <p className="font-display text-[18px] leading-tight text-white">{caption.text}</p>
-        {caption.sub && <p className="mt-1 text-[12.5px] leading-snug text-[#dbe4f5]/80">{caption.sub}</p>}
+      <div className="mt-3 bg-black px-4 py-3 sm:hidden">
+        <p className="vhs-osd text-[22px] leading-tight">{caption.text}</p>
+        {caption.sub && <p className="vhs-osd mt-1 text-[17px] leading-snug !text-[#ffe38a]">{caption.sub}</p>}
       </div>
     )}
     </>
+  );
+}
+
+function DeckKey({ children, label, onClick, wide, lit }: { children: React.ReactNode; label: string; onClick: () => void; wide?: boolean; lit?: boolean }) {
+  return (
+    <button onClick={onClick} aria-label={label} className={`vhs-key relative grid h-9 place-items-center text-[13px] font-bold ${wide ? "w-14" : "w-11"}`}>
+      {children}
+      {lit !== undefined && <span className={`absolute right-1.5 top-1 size-1.5 rounded-full ${lit ? "bg-[#ff4d3d] shadow-[0_0_6px_#ff4d3d]" : "bg-[#5a2a24]"}`} aria-hidden />}
+    </button>
   );
 }
 
@@ -249,7 +276,7 @@ function IconBtn({ children, label, on, onClick }: { children: React.ReactNode; 
       onClick={onClick}
       aria-label={label}
       aria-pressed={on}
-      className={`grid size-8 place-items-center rounded-full border border-white/15 backdrop-blur-md transition-colors ${on ? "bg-white/15 text-white" : "bg-black/30 text-white/55"}`}
+      className={`grid size-8 place-items-center rounded-[4px] border border-white/30 transition-colors ${on ? "bg-white/20 text-white" : "bg-black/40 text-white/55"}`}
     >
       {children}
     </button>

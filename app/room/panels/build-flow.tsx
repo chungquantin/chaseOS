@@ -26,25 +26,26 @@ export function LogoTile({ org, size = 40, name }: { org: Chapter["org"]; size?:
 
 /**
  * "What I built", drawn by hand on the page: wonky boxes joined by inked
- * arrows (top-to-bottom on phones), with packets running along them.
+ * arrows. The flow runs down the page when its column is narrow and across
+ * when there is room, decided by the container rather than the viewport.
  */
 export function BuildFlow({ built, color, also }: { built: NonNullable<Chapter["built"]>; color: string; also?: boolean }) {
   return (
-    <div>
+    <div className="build-flow">
       <p className="font-marker text-[20px] leading-tight">{also ? "Also built" : "What I built"}</p>
       <p className="font-hand mt-0.5 text-[16px] opacity-80">{built.title}</p>
-      <div className="mt-3 flex flex-col items-stretch sm:flex-row sm:items-center">
+      <div className="build-flow-track mt-3">
         {built.flow.map((node, i) => (
           <Fragment key={node.label}>
             {i > 0 && (
-              <span className="relative mx-auto h-6 w-[2px] shrink-0 sm:mx-0 sm:h-[2px] sm:w-6" aria-hidden>
-                <span className="absolute inset-0 rounded-full bg-[#2a1f14]/60" />
-                <span className="absolute -bottom-[3px] -left-[3px] size-0 border-x-[4px] border-t-[6px] border-x-transparent border-t-[#2a1f14]/60 sm:-right-[4px] sm:bottom-auto sm:left-auto sm:-top-[3px] sm:border-y-[4px] sm:border-l-[6px] sm:border-r-0 sm:border-y-transparent sm:border-l-[#2a1f14]/60 sm:border-t-transparent" />
-                <span className="flow-packet absolute -left-[2px] top-0 size-[6px] rounded-full sm:-top-[2px] sm:left-0" style={{ background: color, animationDelay: `${i * 0.25}s` }} />
+              <span className="flow-link relative shrink-0" aria-hidden>
+                <span className="flow-link-line absolute inset-0 rounded-full bg-[#2a1f14]/60" />
+                <span className="flow-link-head absolute" />
+                <span className="flow-packet absolute rounded-full" style={{ background: color, animationDelay: `${i * 0.25}s` }} />
               </span>
             )}
             <motion.div
-              className="hand-box min-w-0 flex-1 bg-[#fff6c9]/45 px-2 py-1.5 text-center"
+              className="hand-box build-node min-w-0 bg-[#fff6c9]/45 px-2.5 py-1.5 text-center"
               style={{ rotate: `${((i * 37) % 5) - 2}deg` }}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}

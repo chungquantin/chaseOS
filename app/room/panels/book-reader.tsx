@@ -185,10 +185,10 @@ export function BookReader({
         }}
       >
         {/* cover */}
-        <div className="absolute inset-0 rounded-[14px] bg-[linear-gradient(135deg,#262626,#0a0a0a)] shadow-[0_40px_100px_-20px_rgba(0,0,0,0.75)]" />
+        <div className="absolute inset-0 rounded-[14px] bg-[linear-gradient(135deg,#3a2a18,#150e07)] shadow-[0_40px_100px_-20px_rgba(0,0,0,0.75)]" />
         {/* stacked page edges */}
-        <div className="absolute inset-x-[10px] bottom-[4px] top-[12px] rounded-[6px] bg-[#e5e5e5]" />
-        <div className="absolute inset-x-[10px] bottom-[7px] top-[11px] rounded-[6px] bg-[#f0f0f0]" />
+        <div className="absolute inset-x-[10px] bottom-[4px] top-[12px] rounded-[6px] bg-[#dcc79a]" />
+        <div className="absolute inset-x-[10px] bottom-[7px] top-[11px] rounded-[6px] bg-[#e8d7b0]" />
 
         {/* paper */}
         <div
@@ -242,7 +242,7 @@ export function BookReader({
 
           {/* folios */}
           {geo && (
-            <div className="pointer-events-none absolute inset-x-0 bottom-3 flex justify-between px-8 font-serif text-[12px] text-[#a3a3a3]">
+            <div className="pointer-events-none absolute inset-x-0 bottom-3 flex justify-between px-8 font-hand text-[13px] text-[#8a6b3d]">
               <span>{first}</span>
               {geo.perView === 2 && last > first && <span>{last}</span>}
             </div>

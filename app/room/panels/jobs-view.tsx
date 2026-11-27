@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, ArrowRight, ArrowUpRight, FileText, MapPin } from "lucide-react";
@@ -59,134 +59,148 @@ function parsePeriod(period: string): [number, number] {
   return [start, Math.min(end ?? NOW, NOW)];
 }
 
-type Ribbon = { c: Chapter; lane: LaneId; start: number; end: number; row: number };
+/* ------------------------------------------------------- document stack */
 
-function layoutRibbons(): { ribbons: Ribbon[]; rows: Record<LaneId, number>; from: number; to: number } {
-  const ribbons: Ribbon[] = [];
-  const rows: Record<LaneId, number> = { blockchain: 1, ai: 1, gtm: 1 };
-  for (const lane of LANES) {
-    const ends: number[] = []; // per row: when it's free again
-    chapters
-      .filter((c) => TRACK[c.id] === lane.id)
-      .map((c) => ({ c, span: parsePeriod(c.period) }))
-      .sort((x, y) => x.span[0] - y.span[0])
-      .forEach(({ c, span }) => {
-        let row = ends.findIndex((e) => e <= span[0] + 0.01);
-        if (row === -1) row = ends.push(0) - 1;
-        ends[row] = span[1];
-        ribbons.push({ c, lane: lane.id, start: span[0], end: Math.max(span[1], span[0] + 0.25), row });
-      });
-    rows[lane.id] = Math.max(1, ends.length);
-  }
-  const from = Math.floor(Math.min(...ribbons.map((r) => r.start)));
-  return { ribbons, rows, from, to: Math.ceil(NOW + 0.01) };
-}
-
-/* ------------------------------------------------------------- career line */
-
-const ROW_H = 36;
+type DocId = ChapterId | "resume";
 
 /** Washi tape colour for each track: amber, pencil grey, burnt amber. */
 const TAPE: Record<LaneId, string> = { blockchain: "#f0a04b", ai: "#b8b2a6", gtm: "#c98a3c" };
 
-function CareerLine({ selected, onSelect }: { selected: ChapterId | "resume"; onSelect: (id: ChapterId | "resume") => void }) {
-  const { ribbons, rows, from, to } = useMemo(layoutRibbons, []);
-  const span = to - from;
-  const pct = (y: number) => `${((y - from) / span) * 100}%`;
-  const years = Array.from({ length: to - from + 1 }, (_, i) => from + i);
-  const scroller = useRef<HTMLDivElement>(null);
+/** One archival tint per document, so the tabs read as separate files. */
+const DOC_TINT: Record<DocId, string> = {
+  resume: "#fafafa",
+  snowflake: "#f0a04b",
+  rogue: "#a65f0c",
+  amazely: "#e0cfa6",
+  rover: "#c2bcb0",
+  architect: "#eab86f",
+  openguild: "#c98a3c",
+  polkadot: "#8f7f68",
+};
 
-  // on phones the line scrolls sideways: start at the present
-  useEffect(() => {
-    const el = scroller.current;
-    if (el && el.scrollWidth - el.clientWidth > 40) el.scrollLeft = el.scrollWidth;
-  }, []);
+/** "Snowflake Network" → "Snowflake", so the tab stays legible. */
+function tabName(company: string) {
+  return company.split(/\s+/)[0];
+}
+
+/** The face of one sheet: a job, or the résumé that sits under the rest. */
+function SheetFace({ id, no, total }: { id: DocId; no: number; total: number }) {
+  if (id === "resume") {
+    return (
+      <div className="flex h-full gap-4">
+        <span className="sticker mt-1 inline-block shrink-0 rotate-[-3deg] self-start rounded-full p-1">
+          <img src={idCard.avatar} alt="" className="size-14 rounded-full object-cover" />
+        </span>
+        <div className="flex min-w-0 flex-1 flex-col">
+          <p className="font-marker truncate text-[24px] leading-none">{idCard.name}</p>
+          <p className="font-hand mt-1.5 truncate text-[16px] font-bold leading-[22px]">{idCard.title}</p>
+          <p className="font-hand mt-1 text-[14px] leading-[20px] opacity-70">The short version, before the pile.</p>
+          <p className="font-hand mt-auto flex items-center gap-1.5 pt-2 text-[13px] leading-none opacity-55">
+            <FileText size={11} /> sheet {String(no).padStart(2, "0")} / {String(total).padStart(2, "0")}
+          </p>
+        </div>
+      </div>
+    );
+  }
+  const c = chapters.find((x) => x.id === id)!;
+  return (
+    <div className="flex h-full gap-3.5">
+      <LogoSticker org={c.org} seed={c.id} size={46} name={c.company} />
+      <div className="flex min-w-0 flex-1 flex-col">
+        <div className="flex items-baseline justify-between gap-3">
+          <p className="font-marker truncate text-[23px] leading-none">{c.company}</p>
+          <span className="font-hand shrink-0 text-[14px] font-bold tabular-nums opacity-65">{stampYears(c.period)}</span>
+        </div>
+        <p className="font-hand mt-1.5 truncate text-[16px] font-bold leading-[22px]">{c.role}</p>
+        <p className="font-hand mt-1 line-clamp-2 text-[14px] leading-[20px] opacity-75">{c.summary}</p>
+        <p className="font-hand mt-auto flex flex-wrap items-center gap-x-1.5 gap-y-1 pt-2 text-[13px] leading-none opacity-55">
+          {c.location && (
+            <span className="hidden items-center gap-1 sm:flex">
+              <MapPin size={11} /> {c.location}
+            </span>
+          )}
+          <span className="ml-auto tabular-nums">sheet {String(no).padStart(2, "0")} / {String(total).padStart(2, "0")}</span>
+        </p>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Past jobs as a pile of documents. Each job is a sheet with a coloured index
+ * tab down the right edge; pulling a tab lifts that sheet to the top of the
+ * pile, where it can be read before opening the full sheet below.
+ */
+function DocumentStack({ selected, onSelect }: { selected: DocId; onSelect: (id: DocId) => void }) {
+  // tabs follow the same order as ← →: the résumé, then oldest job to newest
+  const tabs = useMemo<{ id: DocId; label: string }[]>(
+    () => [
+      { id: "resume", label: "Résumé" },
+      ...[...chapters]
+        .sort((a, b) => parsePeriod(a.period)[0] - parsePeriod(b.period)[0])
+        .map((c) => ({ id: c.id as DocId, label: c.company })),
+    ],
+    [],
+  );
+
+  // the chosen sheet is pulled to the top; the rest fan out underneath it
+  const pile: DocId[] = [selected, ...tabs.map((t) => t.id).filter((id) => id !== selected)];
 
   return (
     <div className="kraft-board relative rounded-[10px] p-3 sm:p-4">
-      <div className="flex items-center justify-between gap-3 px-1">
-        <p className="font-marker text-[22px] leading-none sm:text-[26px]">The career line</p>
-        <button
-          onClick={() => onSelect("resume")}
-          aria-pressed={selected === "resume"}
-          className="washi-btn relative shrink-0"
-        >
-          <span className="washi font-hand flex items-center gap-1.5 px-4 py-1.5 text-[16px] font-bold text-[#2a1f14]" style={{ "--tape": "#fafafa" } as React.CSSProperties}>
-            <FileText size={14} /> Résumé
-          </span>
-        </button>
+      <div className="flex items-baseline justify-between gap-3 px-1">
+        <p className="font-marker text-[22px] leading-none sm:text-[26px]">The pile</p>
+        <p className="font-hand hidden text-[14px] opacity-70 sm:block">Pull a tab, or use ← →</p>
       </div>
 
-      <div ref={scroller} className="mt-2 overflow-x-auto overflow-y-hidden pb-1 [scrollbar-color:rgba(42,31,20,0.35)_transparent] [scrollbar-width:thin]">
-        <div className="grid min-w-[680px] grid-cols-[150px_minmax(0,1fr)] gap-x-3 px-2 pr-4">
-          {/* year axis, pencilled in */}
-          <span />
-          <div className="font-hand relative h-7 text-[15px] font-bold tabular-nums opacity-80">
-            {years.map((y) => (
-              <span key={y} className="absolute -translate-x-1/2" style={{ left: pct(y) }}>
-                {y}
-              </span>
-            ))}
-          </div>
+      <div className="doc-stack mt-3">
+        <div className="doc-pile">
+          {pile.map((id, i) => {
+            const c = id === "resume" ? null : chapters.find((x) => x.id === id)!;
+            const label = c ? `${c.company}, ${c.role}, ${c.period}` : "Résumé";
+            return (
+              <motion.button
+                key={id}
+                type="button"
+                onClick={() => onSelect(id)}
+                aria-pressed={selected === id}
+                aria-label={label}
+                className="doc-sheet"
+                style={{ zIndex: 200 - i }}
+                initial={false}
+                animate={{ y: i * 14, x: i === 0 ? 0 : i % 2 ? 2 : -2, rotate: i === 0 ? wobble(id, 0.35) : wobble(id, 1.1) }}
+                transition={{ type: "spring", stiffness: 320, damping: 34 }}
+              >
+                {i === 0 && <SheetFace id={id} no={tabs.findIndex((t) => t.id === id) + 1} total={tabs.length} />}
+              </motion.button>
+            );
+          })}
+        </div>
 
-          {LANES.map((lane) => (
-            <div key={lane.id} className="contents">
-              <div className="flex items-center py-2">
-                <span
-                  className="washi font-hand px-3 py-0.5 text-[15px] font-bold leading-tight text-[#2a1f14]"
-                  style={{ "--tape": TAPE[lane.id], transform: `rotate(${wobble(lane.id, 3)}deg)` } as React.CSSProperties}
-                >
-                  {lane.label}
-                </span>
-              </div>
-              <div className="relative" style={{ height: rows[lane.id] * ROW_H + 14 }}>
-                {/* pencil guide line + year ticks */}
-                <span className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-[#2a1f14]/30" />
-                {years.map((y) => (
-                  <span key={y} className="absolute inset-y-1 w-px border-l border-dashed border-[#2a1f14]/20" style={{ left: pct(y) }} />
-                ))}
-                {ribbons
-                  .filter((r) => r.lane === lane.id)
-                  .map((r) => {
-                    const on = selected === r.c.id;
-                    return (
-                      <motion.button
-                        key={r.c.id}
-                        onClick={() => onSelect(r.c.id)}
-                        aria-pressed={on}
-                        aria-label={`${r.c.company}, ${r.c.role}, ${r.c.period}`}
-                        className="washi-btn absolute text-left"
-                        style={{
-                          left: pct(r.start),
-                          width: `max(34px, calc(${pct(r.end)} - ${pct(r.start)}))`,
-                          top: 4 + r.row * ROW_H,
-                          height: ROW_H - 8,
-                          rotate: wobble(r.c.id, 1.2),
-                        }}
-                        whileHover={on ? undefined : { y: -2 }}
-                        transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                      >
-                        <span
-                          className="washi font-hand flex size-full items-center gap-1.5 overflow-hidden pl-1.5 pr-2.5 text-[15px] font-bold text-[#2a1f14]"
-                          style={{ "--tape": TAPE[lane.id] } as React.CSSProperties}
-                        >
-                          <LogoSticker org={r.c.org} seed={r.c.id} size={ROW_H - 12} name={r.c.company} />
-                          <span className="truncate">{r.c.company}</span>
-                        </span>
-                      </motion.button>
-                    );
-                  })}
-                {/* the present: a red pencil line */}
-                <span className="absolute inset-y-0 w-[2px] -translate-x-1/2 rounded-full bg-[#b4232a]/80" style={{ left: pct(NOW) }} />
-              </div>
-            </div>
-          ))}
-          <span />
-          <div className="relative h-6">
-            <span className="font-marker absolute top-0.5 -translate-x-1/2 whitespace-nowrap text-[15px] text-[#b4232a]" style={{ left: pct(NOW) }}>
-              now ↑
-            </span>
-          </div>
+        <div className="doc-tabs" role="tablist" aria-label="Documents">
+          {tabs.map((t, i) => {
+            const on = selected === t.id;
+            return (
+              <button
+                key={t.id}
+                type="button"
+                role="tab"
+                aria-selected={on}
+                onClick={() => onSelect(t.id)}
+                className="doc-tab"
+                style={
+                  {
+                    "--tab": DOC_TINT[t.id],
+                    "--r": `${wobble(t.id, 0.8)}deg`,
+                    top: 12 + i * 29,
+                  } as React.CSSProperties
+                }
+              >
+                {t.id === "resume" && <FileText size={12} className="shrink-0 opacity-60" />}
+                <span className="font-marker truncate text-[13px] leading-none">{tabName(t.label)}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
     </div>
@@ -527,9 +541,9 @@ export function JobsView({ onClose, initial }: { onClose: () => void; initial?: 
   });
 
   return (
-    <CloseUpShell title="Past jobs" hint={`${chapters.length} roles across blockchain, AI and community. Pick one on the line, or use ← →.`} onClose={onClose}>
+    <CloseUpShell title="Past jobs" hint={`${chapters.length} roles across blockchain, AI and community. Pull a tab, or use ← →.`} onClose={onClose}>
       <div className="mx-auto grid max-w-[1080px] gap-4">
-        <CareerLine selected={selected} onSelect={select} />
+        <DocumentStack selected={selected} onSelect={select} />
         <Dossier
           id={selected}
           dir={dir}

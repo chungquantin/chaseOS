@@ -2,7 +2,7 @@ import "./global.css";
 import type { Metadata, Viewport } from "next";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
-import { Fraunces, Kalam, Permanent_Marker } from "next/font/google";
+import { Fraunces, Kalam, Permanent_Marker, VT323 } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { baseUrl } from "./sitemap";
@@ -28,6 +28,14 @@ const notebookMarker = Permanent_Marker({
   subsets: ["latin"],
   weight: "400",
   variable: "--font-marker",
+  display: "swap",
+});
+
+// VCR on-screen display: the blocky type a tape deck draws over the picture
+const vcr = VT323({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-vcr",
   display: "swap",
 });
 
@@ -135,7 +143,8 @@ export default function RootLayout({
         GeistMono.variable,
         display.variable,
         notebookBody.variable,
-        notebookMarker.variable
+        notebookMarker.variable,
+        vcr.variable
       )}
     >
       <body className="min-h-screen antialiased">

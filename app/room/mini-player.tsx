@@ -151,17 +151,17 @@ export function MiniPlayer({ hidden, compact = false }: { hidden: boolean; compa
 
   return (
     <div
-      className={`fixed z-[45] transition-[opacity,transform] duration-300 max-sm:right-3 max-sm:top-[64px] sm:bottom-5 sm:right-5 ${
+      className={`fixed bottom-3 right-3 z-[45] max-w-[calc(100vw-24px)] transition-[opacity,transform] duration-300 sm:bottom-5 sm:right-5 ${
         show ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-3 opacity-0"
       }`}
       aria-hidden={!show}
       data-music-toggle
     >
-      <div className={`nb-page !h-auto rotate-[-0.6deg] transition-[width] duration-300 ${folded ? "w-[230px]" : "w-[280px] sm:w-[320px]"}`}>
+      <div className={`nb-page !h-auto rotate-[-0.6deg] transition-[width] duration-300 ${folded ? "!w-[266px] sm:!w-[272px]" : "!w-[280px] sm:!w-[320px]"}`}>
         <div className="nb-grid" aria-hidden />
         <div className="nb-margin !left-[30px]" aria-hidden />
         <div className="nb-holes" aria-hidden />
-        <div className={`flex flex-col gap-2 pl-10 pr-3 ${folded ? "py-2" : "py-3"}`}>
+        <div className={`flex flex-col gap-2 ${folded ? "py-2 pl-8 pr-2.5" : "py-3 pl-10 pr-3"}`}>
           {!folded && (
             <div className="flex items-baseline justify-between">
               <p className="font-marker text-[17px] leading-none">Now playing</p>
@@ -186,7 +186,7 @@ export function MiniPlayer({ hidden, compact = false }: { hidden: boolean; compa
                   aria-hidden
                 />
               )}
-              <div className={`relative aspect-video overflow-hidden bg-black ${folded ? "w-[64px]" : "w-[96px] sm:w-[112px]"}`}>
+              <div className={`relative aspect-video overflow-hidden bg-black ${folded ? "w-[46px] sm:w-[52px]" : "w-[96px] sm:w-[112px]"}`}>
                 <div ref={host} className={`absolute inset-0 [&>iframe]:size-full ${isYT ? "" : "invisible"}`} />
                 {!isYT && (
                   <div className="absolute inset-0 grid place-items-center bg-[radial-gradient(circle_at_30%_20%,#ffc27d,#f0a04b_45%,#171717)]" />
@@ -194,11 +194,13 @@ export function MiniPlayer({ hidden, compact = false }: { hidden: boolean; compa
               </div>
             </div>
             <div className="min-w-0 flex-1">
-              <p className={`font-hand truncate leading-tight ${folded ? "text-[15px]" : "text-[17px]"}`}>{track.title}</p>
-              <p className={`font-hand truncate leading-tight opacity-70 ${folded ? "text-[12px]" : "text-[14px]"}`}>
-                {track.artist}
-                {track.kind === "youtube" && track.live ? " (live)" : ""}
-              </p>
+              <p className={`font-hand truncate leading-tight ${folded ? "text-[14px]" : "text-[17px]"}`}>{track.title}</p>
+              {!folded && (
+                <p className="font-hand truncate text-[14px] leading-tight opacity-70">
+                  {track.artist}
+                  {track.kind === "youtube" && track.live ? " (live)" : ""}
+                </p>
+              )}
             </div>
             {folded && (
               <>
